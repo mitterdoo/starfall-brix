@@ -1,0 +1,63 @@
+--@name BRIX: Targeting
+--@shared
+
+--[[
+
+	If only target is K.O.'d, re-run target condition
+
+	K.O.s
+		On Retarget/attack: 
+
+	Badges
+		On Retarget/attack: Targets the player with the most badges. If there is a tie, the player is chosen randomly at the time of targeting
+		(target time is when the player selects "Badges", or sends an attack with "Badges" active)
+
+	Attackers
+		All attackers, or hovers on a random person
+	
+	Randoms
+		Randomizes the instant before an attack is sent
+
+]]
+
+brix.battlefieldWidth = 4
+brix.battlefieldHeight = 8
+brix.targetModes = {
+	KO = 0,
+	BADGES = 1,
+	ATTACKERS = 2,
+	RANDOM = 3
+}
+local w, h = brix.battlefieldWidth, brix.battlefieldHeight
+
+brix.onInit(function(self)
+
+	self.targets = {}		-- UniqueIDs of targets
+	self.attackers = {}		-- UniqueIDs of attackers
+	self.targetMode = brix.targetModes.KO
+
+end)
+
+-- With the provided coordinates (x = 0 = left, y = 0 = top), returns the uniqueId of the player at the given position
+function BRIX:getUniqueIDFromCoord(x, y)
+	local id = y * w + x
+	if id >= self.uniqueId then
+		return id + 1
+	else
+		return id
+	end
+end
+
+-- Returns the enemy at the coordinates (x = 0 = left, y = 0 = top), or nil if the enemy does NOT exist (dead enemies are not nil)
+function BRIX:getEnemyFromCoord(x, y)
+	return self.arena.playerLookup[self:getUniqueIDFromCoord(x, y)]
+end
+
+function BRIX:changeTargetMode(mode)
+
+	self.targetMode = mode
+	self:updateTargets()
+
+end
+
+

@@ -1,0 +1,161 @@
+--@name BRIX: Coroutine Elements
+--@shared
+
+brix.onInit(function(self)
+
+    self.inputs = {}
+    self.timers = {}
+    self.timerCallbacks = {}
+	
+end)
+
+function BRIX:sleep(uniqueTimer, delay)
+
+    self:startTimer(uniqueTimer, delay)
+    
+    while true do
+    
+        local event, what = self:pullEvent()
+        if event == "timer" and what == uniqueTimer then
+            break
+        end
+    end
+
+end
+
+function BRIX:startMain()
+
+    local func = self.co_main
+
+    local throwError
+    
+    local function wrapper()
+    
+        local ok, err = xpcall(func, function(err, stack)
+			if type(err) ~= "string" then return err end
+			return tostring(err) .. "\n" .. tostring(stack)
+        end, self)
+		if not ok then
+			error(err)
+		end
+        
+    end
+
+    self.mainCoroutine = coroutine.create(wrapper)
+    self.timers["begin"] = 0
+    self:updateMain(0)
+
+end
+
+
+local function timerSort(a,b)
+    return a.finish < b.finish
+end
+
+
+-- returns whether game is alive
+function BRIX:updateMain(frame)
+
+    frame = math.ceil(frame)
+    while true do
+    
+        local timers = {}
+        for timerName, timerFinish in pairs( self.timers ) do
+            table.insert(timers, {name = timerName, finish = timerFinish})
+        end
+        if #timers == 0 then
+            print("no timers")
+            self.dead = true
+            return false
+        end
+        
+        table.sort(timers, timerSort)
+        local thisTimer = timers[1]
+        if thisTimer.finish > frame then break end -- not ready yet
+        self.timers[thisTimer.name] = nil
+        
+        if not self:callEvent(thisTimer.finish, "timer", thisTimer.name) then
+            print("coroutine finished")
+            return false
+        end
+        
+        
+    end
+    
+    return true
+
+end
+
+function BRIX:callEvent(frame, name, ...)
+
+    if coroutine.status(self.mainCoroutine) == "dead" then self.dead = true return false end
+
+	if math.ceil(frame) < self.frame then
+		error("CONTRADICTION (" .. tostring(frame) .. ", " .. tostring(name) .. " [" .. tostring(self.name) .. "])")
+	end
+
+    self:onUpdate(frame)
+    coroutine.resume(self.mainCoroutine, name, ...)
+    if coroutine.status(self.mainCoroutine) == "dead" then self.dead = true return false end
+    return true
+
+end
+
+function BRIX:pullEvent()
+
+    while true do
+        local ret = {coroutine.yield()}
+        if ret[1] == "timer" and self.timerCallbacks[ret[2]] then
+            local args = self.timerCallbacks[ret[2]]
+            local func = table.remove(args, 1)
+            func(self, unpack(args))
+            self.timerCallbacks[ret[2]] = nil
+        else
+            return unpack(ret)
+        end
+    end
+            
+
+end
+
+function BRIX:startTimer(name, duration, callback, ...)
+
+    self.timers[name] = self.frame + math.max(0, duration)
+    if callback then
+        self.timerCallbacks[name] = {callback, ...}
+    end
+
+end
+
+function BRIX:cancelTimer(name)
+
+    self.timers[name] = nil
+    if self.timerCallbacks[name] then
+        self.timerCallbacks[name] = nil
+    end
+    
+end
+
+function BRIX:userInput(when, inp, down)
+
+    when = math.ceil(when)
+    if self.dead then return end
+    local cevents = brix.CLIENT_EVENTS
+    if down == nil then down = true end
+	self.hook:run("preInput", when, down, inp)
+    
+    if inp < cevents.TARGET_KO then
+    
+        self:updateMain(when)
+        local event = down and "inputDown" or "inputUp"
+        self.inputs[inp] = down
+        self:callEvent(when, event, inp)
+    
+    else
+    
+        error("unhandled target mode")
+    
+    end
+	self.hook:run("postInput", when, down, inp)
+
+end

@@ -1,0 +1,243 @@
+--@shared
+--@include brix/brix_core_matrix.txt
+--@include brix/brix_core_move.txt
+--@include brix/brix_core_garbage.txt
+--@include brix/brix_core_piecegen.txt
+--@include brix/brix_core_br.txt
+--@include brix/brix_core_mainloop.txt
+--@include brix/brix_core_coroutine.txt
+--@include brix/brix_core_net.txt
+--@include brix/brix_core_enemy.txt
+
+brix = {}
+BRIX = {} -- metatable
+
+hooks = { -- These are legal hooks in the game
+    "lock",                 -- Called when the current piece locks down. This is for the SFX. Passes piece object, rotation, x, and y
+    "postlock",             -- Called after the current piece has been locked. Passes brix.tricks enum, combo, lines sent (count), and lines cleared (table)
+    "matrixFall",           -- Called when the matrix collapses from gravity. Is not called when 
+    "phaseComplete",        -- Called when the phase has ended (this does not include piece generation phase)
+    "garbageDump",          -- Called when a line of garbage has been dumped
+	"garbageDumpFull",		-- Called on the first frame of a garbage cluster being dumped. Passes table of gaps
+    "garbageCancelled",     -- Called when lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
+    "garbageNag",           -- Called when a cluster of garbage is nagging the player. Passes false if first, true if second
+    "garbageActivate",      -- Called when the timer of a cluster of garbage has been activated
+    "garbageQueue",         -- Called when garbage appears in the queue
+    "garbageReceive",       -- Called when the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
+    "pinch",                -- Called when the matrix enters/exits "the red". Passes true if in danger, false if it left.
+    "stage",                -- Called when the stage has changed (top 50, top 10)
+    
+    "pieceRotate",          -- sfx rotate
+    "pieceTranslate",       -- sfx move
+    "pieceFall",
+    "pieceSoftDrop",        -- sfx soft drop
+    "pieceHardDrop",        -- Passes the piece object to use for GFX
+    "pieceLand",            -- sfx piece land
+    "pieceHold",            -- sfx hold
+    "attackersChanged",     -- Passes list of attackers
+    "ko",                   -- Passes victim and killer
+    "die",                  -- Passes killer
+    "win",
+
+	"preInput",				-- when (frame), pressed (bool), event (enum)
+	"postInput"
+}
+
+
+
+
+
+--[[
+
+    NETWORKING STRUCTURE:
+    both SERVER and CLIENT run separate instances of the game on their own ends
+    Let Think function be called continuously on CLIENT (to provide visual feedback), or whenever needed on SERVER (to simulate what has happened so far)
+        
+    
+    key durations:
+    ==============
+    
+    frames  seconds
+    30      0.5         garbage sending     THIS IS THE MAXIMUM LATENCY POSSIBLE. IF IT TAKES LONGER FOR CLIENT TO HEAR OF THIS, THE CLIENT WILL RECEIVE GARBAGE IN THE PAST
+    
+    
+    
+
+]]
+
+
+
+
+
+brix.frequency = 60
+brix.autoRepeatBegin = 12
+brix.autoRepeatSpeed = 2
+brix.garbageLineDelay = 4 -- Duration between each line of garbage dumped
+brix.garbageDumpDelay = 28 -- Duration between lockdown and garbage dump
+brix.maxGarbageIn = 12
+brix.maxGarbageOut = 20
+brix.lockResets = 15 -- number of times a piece may be successfully moved to reset the 0.5-second lock timer
+brix.lockDelay = 30
+brix.clearDelay = 40 -- Duration between line clear and pieces falling from gravity
+brix.pieceAppearDelay = 7 -- Duration between pieces falling and new piece appearing
+
+brix.pieceQueueSize = 6
+brix.levelUpTime = 20 -- seconds
+
+brix.tricks = {
+    SINGLE = 0x1,
+    DOUBLE = 0x2,
+    TRIPLE = 0x4,
+    QUAD = 0x8,
+    TSPIN =  0x10,
+    MINI_TSPIN = 0x20,
+    ALL_CLEAR = 0x40,
+    BACK_TO_BACK = 0x80,
+    COMBO = 0x100,
+    SENT = 0x200
+}
+
+-- INIT callbacks
+brix.initializers = {}
+function brix.onInit(callback)
+
+	table.insert(brix.initializers, callback)
+
+end
+
+function enumGet(a, b)
+    return bit.band(a, b) > 0
+end
+enumSet = bit.bor
+
+
+function BRIX:rng()
+    self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 13) )
+    self.rseed = bit.bxor( self.rseed, bit.rshift(self.rseed, 17) )
+    self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 5)  )
+    return (self.rseed+2^31) / (2^32-1)
+end
+
+
+
+require("brix/brix_core_matrix.txt")
+require("brix/brix_core_net.txt")
+require("brix/brix_core_move.txt")
+require("brix/brix_core_garbage.txt")
+require("brix/brix_core_piecegen.txt")
+require("brix/brix_core_br.txt")
+require("brix/brix_core_mainloop.txt")
+require("brix/brix_core_coroutine.txt")
+require("brix/brix_core_enemy.txt")
+
+
+
+-- Internal hooks that must be implemented by client or server
+
+
+
+
+
+--------------------------------------
+-- GAME
+
+--[[
+	arena: Reference to ARENA object for main game
+	uniqueId: The uniqueId of this player
+	seed: The PRNG seed
+	server: (bool) Whether this is serverside
+]]
+function brix.createGame(arena, uniqueId, seed, server)
+
+    if not seed then error("Attempt to create game without RNG seed!") end
+    seed = math.max(1,seed)
+    local self = {}
+    local thisBrix = self
+    local hookMeta = {}
+    function hookMeta:run(type, ...)
+        if thisBrix.hooks[type] == nil then
+            error("attempt to call nonexistant hook " .. tostring(type))
+        end
+        for name, func in pairs(thisBrix.hooks[type]) do
+            local ret = {func(...)}
+            if #ret > 0 then
+                return unpack(ret)
+            end
+        end
+    end
+    function hookMeta:__call(type, func)
+        if thisBrix.hooks[type] == nil then
+            error("attempt to hook into nonexistant hook " .. tostring(type))
+        end
+        table.insert(thisBrix.hooks[type], func)
+    end
+
+
+    -- INIT CODE
+    self.hooks = {}
+    for _, name in pairs(hooks) do -- defined at top
+        self.hooks[name] = {}
+    end
+
+    hookMeta.__index = hookMeta
+    self.hook = setmetatable({}, hookMeta)
+	self.arena = arena
+	self.uniqueId = uniqueId
+    self.frame = 0 -- d
+    self.rseed = seed -- d
+
+	if server then
+		self.SERVER = true
+	else
+		self.CLIENT = true
+	end
+
+	for _, callback in pairs(brix.initializers) do
+		callback(self)
+	end
+
+	self.profiler = {}
+	local bad = {
+		pullEvent = 1,
+		sleep = 1,
+		userInput = 1,
+		callEvent = 1,
+		updateMain = 1,
+		co_main = 1,
+	}
+	
+	for fName, func in pairs(BRIX) do
+		local thisFName = fName
+		local thisFunc = func
+		if type(func) == "function" then
+			self.profiler[thisFName] = {
+				f = function(...)
+					if bad[thisFName] then
+						return thisFunc(...)
+					end
+					local begin = timer.systime()
+					local rets = {thisFunc(...)}
+					local duration = timer.systime() - begin
+					self.profiler[thisFName].total = self.profiler[thisFName].total + duration
+					self.profiler[thisFName].count = self.profiler[thisFName].count + 1
+					return unpack(rets)
+				end,
+				total = 0,
+				count = 0
+			}
+		end
+	end
+
+
+    BRIX.__index = function(self, key)
+		return self.profiler[key] and self.profiler[key].f
+	end
+    setmetatable(self, BRIX)
+    
+    self:rng() -- shuffle once
+    self:startMain()
+    
+    return self
+
+end
+

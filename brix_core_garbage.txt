@@ -1,0 +1,210 @@
+--@name BRIX: Garbage
+--@shared
+
+brix.onInit(function(self)
+
+    self.garbage = {} -- d { {lines = n, begin = frame, dump = frame, who = player} }
+
+end)
+
+function BRIX:getGarbageNagFrames()
+
+    if self.stage == stages.STAGE_BEGIN then
+        return brix.garbageNagSlow
+    elseif self.stage == stages.STAGE_MIDDLE then
+        return brix.garbageNagFast
+    else
+        return brix.garbageNagFastest
+    end
+
+end
+
+function BRIX:addGarbageLine(gap)
+
+    --if #self.matrix.data:sub(1,brix.w):gsub(" ", "") > 0 then
+    if not self:_isRowClear(brix.trueHeight-1) then
+        return false
+    end
+    
+    local data = self.matrix.data:sub(1, brix.w * (brix.trueHeight-1))
+    local newLine = string.rep("!", gap - 1) .. " " .. string.rep("!", brix.w - gap)
+    data = newLine .. data
+    self.matrix.data = data
+    self.hook:run("garbageDump")
+    
+    return true
+
+end
+
+function BRIX:garbageDumpPending()
+
+    local g = self.garbage[1]
+    if not g then return false end
+    if g.dump == -1 then return false end
+    if self.frame < g.dump then return false end
+    return g
+
+end
+
+function BRIX:generateGarbageGap()
+
+	if not self.garbageGapID then
+		self.garbageGapID = 0
+	end
+	self.garbageGapID = self.garbageGapID + 1
+	
+	local rndString = tostring(self.garbageGapID)
+	for _, v in pairs(self.pieceQueue) do
+		rndString = rndString .. tostring(v)
+	end
+	
+	local rnd = tonumber(crc(rndString))
+	return math.ceil( rnd / (2^32-1) * brix.w )
+
+end
+
+function BRIX:dumpCurrentGarbage()
+
+    local g = self.garbage[1]
+    if not g then return false end
+    if g.dump == -1 then error("dumping garbage but its timer was not set!") end
+    if self.frame < g.dump then return false end
+    
+    local lines = g.lines
+    local gaps = {}
+	for i = 0, lines - 1 do
+		if i % 8 == 0 then
+			gap = self:generateGarbageGap()
+		end
+		gaps[i+1] = gap
+	end
+
+	self.hook:run("garbageDumpFull", gaps)
+	
+    for i = 0, lines - 1 do
+		local gap = gaps[i+1]
+        self:addGarbageLine(gap)
+        g.lines = g.lines - 1
+        if i < lines - 1 then
+            self:sleep("garbageLine", brix.garbageLineDelay)
+        end
+        
+    end
+    
+    table.remove(self.garbage, 1)
+    self:checkGarbage()
+    return true
+
+end
+
+function BRIX:onGarbageNag(second)
+    self.hook:run("garbageNag", second)
+end
+
+-- activates timer for current garbage
+function BRIX:checkGarbage()
+
+    local g = self.garbage[1]
+    if not g then return false end
+    if g.begin ~= -1 then return false end
+    local frame = self.frame
+    local speed = g.speed
+    
+    g.begin = frame
+    g.dump = frame + speed*2
+    
+    self.hook:run("garbageActivate", g.lines, g.who, g.begin)
+    if self.CLIENT then
+        self:startTimer("garbageNag1", speed, self.onGarbageNag, false)
+        self:startTimer("garbageNag2", speed*2, self.onGarbageNag, true)
+    end
+    
+    return true
+
+end
+
+function BRIX:clearGarbage(lines)
+
+    if #self.garbage == 0 then return lines end
+    local leftover = lines
+    for i = 1, lines do
+    
+        local this = self.garbage[1]
+        this.lines = this.lines - 1
+        leftover = leftover - 1
+        if this.lines == 0 then
+            table.remove(self.garbage, 1)
+            if self.CLIENT then
+                self:cancelTimer("garbageNag1")
+                self:cancelTimer("garbageNag2")
+            end
+        end
+        
+        if #self.garbage == 0 then return leftover end
+    
+    end
+    
+    self:checkGarbage()
+    
+    return 0
+
+end
+
+function BRIX:getGarbageCount()
+
+    local c = 0
+    for k,v in pairs(self.garbage) do
+        c = c + v.lines
+    end
+    return c    
+
+end
+
+function BRIX:queueGarbage(lines, who)
+
+    local count = self:getGarbageCount()
+    if count >= brix.maxGarbageIn then return false end
+    
+    local speed = self:getGarbageNagFrames()
+    lines = math.min(brix.maxGarbageIn - count, lines)
+    table.insert(self.garbage, #self.garbage+1, {
+        lines = lines,                  -- How many lines
+        begin = -1,                     -- When the timer begins
+        dump = -1,                      -- When the timer expires
+        speed = speed,                  -- Number of frames before the garbage decays (2nd decay is activate)
+        who = who                       -- UniqueID of the sender
+    })
+    self.hook:run("garbageQueue", lines, who, brix.frame)
+	self.lastGarbageSender = who
+    self:checkGarbage()
+    self:updateDanger()
+    
+    return true
+
+end
+
+function BRIX:queueGarbageAt(lines, who, duration)
+
+    self:startTimer("queueGarbageAt", duration, self.queueGarbage, lines, who)
+
+end
+
+function BRIX:checkGarbageNag()
+
+    local g = self.garbage[1]
+    if not g then return end
+    local frame = self.frame
+    local gStart = g.begin
+    local gEnd = g.dump
+    
+    local halfNag = gStart + (gStart - gEnd) / 2
+    local endNag = gEnd
+    
+    g.nag = g.nag or 0
+    if frame > halfNag and g.nag == 0 or frame > endNag and g.nag == 1 then
+        g.nag = g.nag + 1
+        self.hook:run("garbageNag")
+    end
+        
+
+end
