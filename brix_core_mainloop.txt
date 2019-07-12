@@ -1,6 +1,11 @@
 --@name BRIX: Main Coroutine
 --@shared
 
+--[[
+	TODO: INPUT BUFFERING
+]]
+
+
 function BRIX:onUpdate(frame)
 
     self.frame = math.ceil(frame)
@@ -70,7 +75,7 @@ function BRIX:co_main()
         self.heldThisPhase = false
         self:newPiece()
         
-        ::beginTimer::
+    ::beginTimer::
         local p = self.currentPiece
         if not self:_fits(p.piece, p.rot, p.x, p.y) then
             print("BLOCK OUT")
@@ -80,13 +85,12 @@ function BRIX:co_main()
         
         --self:startTimer("drop", self:getFramesPerDrop())
         self:startTimer("drop", 0) -- drops immediately
-        if self.inputs[cevents.MOVELEFT] then
-            self:startTimer("moveleft", brix.autoRepeatSpeed)
-            self:cancelTimer("moveright")
-        elseif self.inputs[cevents.MOVERIGHT] then
-            self:startTimer("moveright", brix.autoRepeatSpeed)
-            self:cancelTimer("moveleft")
-        end
+
+
+		-- INPUT BUFFERING
+		self:stageBuffer()
+
+		
         
         attempts = 0
         lowest = brix.trueHeight
@@ -123,13 +127,13 @@ function BRIX:co_main()
                 if down then
                     if what == cevents.MOVELEFT then
                         self:moveLeft()
-                        self:startTimer("moveleft", brix.autoRepeatBegin)
+                        self:startTimer("moveleft", self.inputIsBuffered and brix.autoRepeatSpeed or brix.autoRepeatBegin)
                         self:cancelTimer("moveright")
                         --if not self:fitsDown() then break end
                         
                     elseif what == cevents.MOVERIGHT then
                         self:moveRight()
-                        self:startTimer("moveright", brix.autoRepeatBegin)
+                        self:startTimer("moveright", self.inputIsBuffered and brix.autoRepeatSpeed or brix.autoRepeatBegin)
                         self:cancelTimer("moveleft")
                         --if not self:fitsDown() then break end
                     
@@ -189,7 +193,7 @@ function BRIX:co_main()
         elseif instantLock then
             goto lock
         end
-        
+
         --lock
         while true do
         
@@ -292,7 +296,8 @@ function BRIX:co_main()
             break
         end
         
-        
+	self:clearBuffer()
+    self:enableBuffer()
         
     ::lineClears::
         
