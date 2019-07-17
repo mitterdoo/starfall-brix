@@ -1,8 +1,17 @@
---@name BRIX: NETWORKING
+--@name BRIX: ARENA
 --@shared
 
 
 --[[
+
+
+	TODO TODO TODO TODO
+	Make BRIX object completely independent of BR mechanics.
+	Input should be fed into ARENA object, and it must determine whether that input goes to the BRIX object, or whether the ARENA should handle it instead.
+	Levelling up should be methods of a BRIX object.
+	Add hooks for input buffers
+
+
 	When the CLIENT has died,
 		CLIENT sends server the frame at which they died
 		SERVER "simulates" the game up to that point and verifies that they died there
@@ -102,6 +111,11 @@ end
 local cl_e = brix.CLIENT_EVENTS
 local sv_e = brix.SERVER_EVENTS
 
+--[[
+	Multiple ack packets must be able to be stored on server.
+	Packets[id] = pkt
+	NextPa
+]]
 function ARENA:sv_ReceivePacket(who, ack, packet)
 
 	-- local ack = net.readUInt(30)

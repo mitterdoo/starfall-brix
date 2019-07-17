@@ -26,9 +26,11 @@ brix.targetModes = {
 	KO = 0,
 	BADGES = 1,
 	ATTACKERS = 2,
-	RANDOM = 3
+	RANDOM = 3,
+	MANUAL = 4
 }
 local w, h = brix.battlefieldWidth, brix.battlefieldHeight
+local modes = brix.targetModes
 
 brix.onInit(function(self)
 
@@ -60,4 +62,21 @@ function BRIX:changeTargetMode(mode)
 
 end
 
+function BRIX:updateTargets()
+
+	local mode = self.targetMode
+	if mode == modes.KO then
+		local inDanger = {}
+		for _, ply in pairs(self.arena.players) do
+			if ply.danger and ply.alive then table.insert(inDanger, ply.uniqueId) end
+		end
+		if #inDanger == 0 then
+			
+		local idx = math.ceil(self:rng(true) * #inDanger)
+		self.targets = {inDanger[idx]}
+
+	elseif mode == modes.BADGES then
+
+
+end
 

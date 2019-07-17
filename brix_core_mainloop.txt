@@ -322,7 +322,7 @@ function BRIX:co_main()
             
             local linesSent, tricks = self:calcLinesSent(#lines, tspin)
             linesSent = self:clearGarbage(linesSent)
-            self.hook:run("postlock", tricks, self.currentCombo, linesSent, lines)
+            self.hook:run("lock", tricks, self.currentCombo, linesSent, lines)
             
             self:checkBackToBack(#lines, tspin)
 
@@ -364,7 +364,7 @@ function BRIX:co_main()
             elseif tspin == 1 then
                 tricks = enumSet(tricks, brix.tricks.MINI_TSPIN)
             end
-            self.hook:run("postlock", tricks, 0, 0, {})
+            self.hook:run("lock", tricks, 0, 0, {})
         
             if self:garbageDumpPending() then
                 self:sleep("dumpDelay", brix.garbageDumpDelay)

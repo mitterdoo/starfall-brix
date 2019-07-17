@@ -1,3 +1,62 @@
+--[[
+	BRIX: Core
+	This is the base BRIX game object which includes:
+		Piece RNG
+		Piece Stacking
+		Piece Holding
+		Next 7 Pieces
+		T-Spin Recognition
+		Combos
+		Back to back
+		Line clearing + sending
+	
+	There are events that may be hooked into, to create an implementation of the game, such as a singleplayer mode, splitscreen multiplayer mode, or battle royale.
+	Those events are listed further below, under "hooks"
+
+	These are the public methods that should be used to change the game
+		(name)											(description)
+		BRIX:setDamageMultiplier(mult)					Sets the damage multiplier for all future line clears.
+		BRIX:setDamageHandicap(num)						Sets handicap for future line clears. This should be used as the number of attackers on the player
+		BRIX:queueGarbage(lines, sender)				Instantly adds a garbage cluster to the queue. Lines is number of lines, and sender is a unique number
+															of a player who sent it. The same number will be passed to the "die" hook, if the player died to that
+															player's garbage.
+		BRIX:queueGarbageDelayed(lines, sender, delay)	Adds garbage cluster as above, but waits the specified number of frames first.
+		BRIX:setCustomGravityFunction(func(softdrop))	Sets the custom gravity function of the game. This function should return the number of frames that
+															must pass, before the current piece falls 1 line.
+															ONLY VALUES OF x, OR 1/x, WHERE x IS A POSITIVE INTEGER, MAY BE USED.
+															The callback will be given one argument: a bool for if the request is for a piece that is soft dropping.
+		BRIX:setGarbageNagDelay(delay)					Sets how many frames it takes for a garbage cluster to move onto the next stage. There are 3 stages.
+															Stage 1 is the initial stage, when the garbage has been added.
+															Stage 2 is the stage when the garbage "nags" the player.
+															Stage 3 is the final stage, and "readies" the garbage cluster. When ready, it will be dumped when
+																the player locks down a piece without clearing any lines.
+		BRIX:userInput(frame, input, pressed)			Pipes user input into the game.
+															frame:		The frame at which this input was pressed. This will be rounded UP.
+															input:		The enum for this specific input. See brix.inputTypes in brix_core_coroutine
+															pressed:	Bool for whether this input is down, or up.
+														This function MUST be called in chronological order of inputs. If this is called with a frame number
+															less than the last frame calculated, a "CONTRADICTION" error will be thrown.
+		BRIX:updateMain(frame)							Simulates the game up until the specified frame. The same contradiction rule from above applies.
+														This function is called automatically when calling BRIX:userInput()
+														Returns true if the game is still alive. Returns false if the game has ended.
+
+	These are public members that are recommended for use in implementations, which are read-only:
+		(name)											(description)
+		BRIX.dead										Whether the game has ended.
+		BRIX.matrix										Constant reference to the underlying matrix object that describes what is on the playfield.
+		BRIX.pieceQueue									Constant reference to an ordered table that contains the next pieces.
+		BRIX.currentPiece								Dynamic reference to a piece table that describes the current piece in play.
+			type											Type enum for the piece. See brix.pieceIDs
+			rot												The rotation of the piece. 0 is default rotation, 1 is rotated clockwise, etc.
+			piece											Constant reference to piece object that describes this type of piece. See brix.pieces
+			x, y											Coordinates of this piece. This denotes the bottom-left corner of the piece's bounding box.
+
+
+
+
+
+]]
+
 --@shared
 --@include brix/brix_core_matrix.txt
 --@include brix/brix_core_move.txt
@@ -6,38 +65,35 @@
 --@include brix/brix_core_br.txt
 --@include brix/brix_core_mainloop.txt
 --@include brix/brix_core_coroutine.txt
---@include brix/brix_core_net.txt
---@include brix/brix_core_enemy.txt
+--@include brix/brix_core_arena.txt
 
 brix = {}
 BRIX = {} -- metatable
 
 hooks = { -- These are legal hooks in the game
-    "lock",                 -- Called when the current piece locks down. This is for the SFX. Passes piece object, rotation, x, and y
-    "postlock",             -- Called after the current piece has been locked. Passes brix.tricks enum, combo, lines sent (count), and lines cleared (table)
-    "matrixFall",           -- Called when the matrix collapses from gravity. Is not called when 
-    "phaseComplete",        -- Called when the phase has ended (this does not include piece generation phase)
-    "garbageDump",          -- Called when a line of garbage has been dumped
+    "prelock",              -- When the current piece locks down. This is for the SFX. Passes piece object, rotation, x, and y
+    "lock",            		-- After the current piece has been locked into the matrix. Passes brix.tricks enum, combo, lines sent (count), and lines cleared (table)
+    "matrixFall",           -- When the matrix collapses from gravity.
+    "phaseComplete",        -- When the phase has ended (this does not include piece generation phase)
+    "garbageDump",          -- When a line of garbage has been dumped
 	"garbageDumpFull",		-- Called on the first frame of a garbage cluster being dumped. Passes table of gaps
-    "garbageCancelled",     -- Called when lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
-    "garbageNag",           -- Called when a cluster of garbage is nagging the player. Passes false if first, true if second
-    "garbageActivate",      -- Called when the timer of a cluster of garbage has been activated
-    "garbageQueue",         -- Called when garbage appears in the queue
-    "garbageReceive",       -- Called when the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
-    "pinch",                -- Called when the matrix enters/exits "the red". Passes true if in danger, false if it left.
-    "stage",                -- Called when the stage has changed (top 50, top 10)
+    "garbageCancelled",     -- When lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
+    "garbageNag",           -- When a cluster of garbage is nagging the player. Passes false if first, true if second
+    "garbageActivate",      -- When the timer of a cluster of garbage has been activated (ready to be dumped at next lockdown w/o clears)
+    "garbageQueue",         -- When garbage appears in the queue
+    "garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
+    "pinch",                -- When the matrix enters/exits "the red". Passes true if in danger, false if it left.
     
-    "pieceRotate",          -- sfx rotate
-    "pieceTranslate",       -- sfx move
-    "pieceFall",
-    "pieceSoftDrop",        -- sfx soft drop
-    "pieceHardDrop",        -- Passes the piece object to use for GFX
-    "pieceLand",            -- sfx piece land
-    "pieceHold",            -- sfx hold
-    "attackersChanged",     -- Passes list of attackers
-    "ko",                   -- Passes victim and killer
-    "die",                  -- Passes killer
-    "win",
+	"pieceBufferRotate",	-- When the spawned piece has been pre-rotated
+	"pieceBufferHold",		-- When the spawned piece was pre-held
+    "pieceRotate",          -- When the piece has been rotated
+    "pieceHold",            -- When the piece has been held
+    "pieceTranslate",       -- When the piece has been translated laterally
+    "pieceFall",			-- When the piece has fallen one line
+    "pieceSoftDrop",        -- When the piece falls one line during soft drop
+    "pieceHardDrop",        -- When the piece has been hard dropped. Passes the piece object to use for GFX
+    "pieceLand",            -- When the piece touches down on the ground
+    "die",                  -- When local player dies. Passes the uniqueID of the owner of the garbage that killed the player, or -1 if the player suicided.
 
 	"preInput",				-- when (frame), pressed (bool), event (enum)
 	"postInput"
@@ -111,17 +167,18 @@ end
 enumSet = bit.bor
 
 
-function BRIX:rng()
-    self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 13) )
-    self.rseed = bit.bxor( self.rseed, bit.rshift(self.rseed, 17) )
-    self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 5)  )
-    return (self.rseed+2^31) / (2^32-1)
+function BRIX:rng(noupdate)
+	if not noupdate then
+		self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 13) )
+		self.rseed = bit.bxor( self.rseed, bit.rshift(self.rseed, 17) )
+		self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 5)  )
+	end
+	return (self.rseed+2^31) / (2^32-1)
+
 end
 
-
-
 require("brix/brix_core_matrix.txt")
-require("brix/brix_core_net.txt")
+require("brix/brix_arena.txt")
 require("brix/brix_core_move.txt")
 require("brix/brix_core_garbage.txt")
 require("brix/brix_core_piecegen.txt")
@@ -129,13 +186,6 @@ require("brix/brix_core_br.txt")
 require("brix/brix_core_mainloop.txt")
 require("brix/brix_core_coroutine.txt")
 require("brix/brix_core_enemy.txt")
-
-
-
--- Internal hooks that must be implemented by client or server
-
-
-
 
 
 --------------------------------------

@@ -188,6 +188,16 @@ function BRIX:cancelTimer(name)
     
 end
 
+brix.inputTypes = {
+    MOVELEFT = 0,
+    MOVERIGHT = 1,
+    SOFTDROP = 2,
+    HARDDROP = 3,
+    HOLD = 4,
+    ROT_CW = 5,
+    ROT_CCW = 6
+}
+
 function BRIX:userInput(when, inp, down)
 
     when = math.ceil(when)

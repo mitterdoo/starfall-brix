@@ -160,6 +160,8 @@ function BRIX:getGarbageCount()
 
 end
 
+--- Queues garbage instantaneously
+--- PUBLIC
 function BRIX:queueGarbage(lines, who)
 
     local count = self:getGarbageCount()
@@ -183,9 +185,11 @@ function BRIX:queueGarbage(lines, who)
 
 end
 
-function BRIX:queueGarbageAt(lines, who, duration)
+--- Queues garbage after the specified frame delay
+--- PUBLIC
+function BRIX:queueGarbageDelayed(lines, who, duration)
 
-    self:startTimer("queueGarbageAt", duration, self.queueGarbage, lines, who)
+    self:startTimer("queueGarbage", duration, self.queueGarbage, lines, who)
 
 end
 
