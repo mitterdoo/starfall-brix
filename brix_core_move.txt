@@ -3,167 +3,174 @@
 
 brix.onInit(function(self)
 
-    self.held = -1 -- d
-    self.heldThisPhase = false -- d
-    self.lockResetAttempts = 0 -- d
-    self.pieceBag = {} -- d
-    self.pieceQueue = {} -- d
-    self.currentPiece = {
-        type = -1,
-        rot = 0,
-        x = 0, y = 0
-    } -- d
+	self.held = -1 -- d
+	self.heldThisPhase = false -- d
+	self.lockResetAttempts = 0 -- d
+	self.pieceBag = {} -- d
+	self.pieceQueue = {} -- d
+	self.currentPiece = {
+		type = -1,
+		rot = 0,
+		x = 0, y = 0
+	} -- d
 
 end)
 
 function BRIX:fitsDown()
-    
-    local p = self.currentPiece
-    local fit = self:_fits(p.piece, p.rot, p.x, p.y - 1)
-    return fit
+	
+	local p = self.currentPiece
+	local fit = self:_fits(p.piece, p.rot, p.x, p.y - 1)
+	return fit
 
 end
 
 function BRIX:moveLeft()
 
-    local p = self.currentPiece
-    if self:_fits(p.piece, p.rot, p.x - 1, p.y) then
-        p.x = p.x - 1
+	local p = self.currentPiece
+	if self:_fits(p.piece, p.rot, p.x - 1, p.y) then
+		p.x = p.x - 1
 		self.hook:run("pieceTranslate")
-        return true
-    end
-    return false
-    
+		return true
+	end
+	return false
+	
 end
 
 function BRIX:moveRight()
 
-    local p = self.currentPiece
-    if self:_fits(p.piece, p.rot, p.x + 1, p.y) then
-        p.x = p.x + 1
+	local p = self.currentPiece
+	if self:_fits(p.piece, p.rot, p.x + 1, p.y) then
+		p.x = p.x + 1
 		self.hook:run("pieceTranslate")
-        return true
-    end
-    return false
+		return true
+	end
+	return false
 
 end
 -- Returns if it was successful
 function BRIX:moveDown()
 
-    local p = self.currentPiece
-    local fitsDown = self:fitsDown()
-    if fitsDown then
-        p.y = p.y - 1
+	local p = self.currentPiece
+	local fitsDown = self:fitsDown()
+	if fitsDown then
+		p.y = p.y - 1
 		self.hook:run("pieceFall")
-		if self.inputs[brix.CLIENT_EVENTS.SOFTDROP] then
+		if self.inputs[brix.inputTypes.SOFTDROP] then
 			self.hook:run("pieceSoftDrop")
 		end
-        return true
-    end
-    return false    
+		return true
+	end
+	return false    
 
 end
 
 -- Returns 2 if tspin, 1 if mini tspin, or false if no tspin at all
 function BRIX:checkTSpin(fifthRot)
 
-    local p = self.currentPiece
-    if p.type ~= pid.t then return false end
-    if fifthRot or p.foreverSpin then
-        p.foreverSpin = true -- Any further rotations are considered a tspin
-        p.spin = 2 -- flag that will actually be checked when piece locks down
-        return 2
-    end
-    if self:_checkTSpin(p.rot, p.x, p.y) then
-        p.spin = 2
-        return 1
-    end
-    if self:_checkMiniTSpin(p.rot, p.x, p.y) then
-        p.spin = 1
-        return 1
-    end
-    return false
+	local p = self.currentPiece
+	if p.type ~= pid.t then return false end
+	if fifthRot or p.foreverSpin then
+		p.foreverSpin = true -- Any further rotations are considered a tspin
+		p.spin = 2 -- flag that will actually be checked when piece locks down
+		return 2
+	end
+	if self:_checkTSpin(p.rot, p.x, p.y) then
+		p.spin = 2
+		return 1
+	end
+	if self:_checkMiniTSpin(p.rot, p.x, p.y) then
+		p.spin = 1
+		return 1
+	end
+	return false
 
 end
 
 function BRIX:rotateClockwise()
 
-    local p = self.currentPiece
-    local old = p.rot
-    local new = (p.rot + 1) % 4
-    local px, py, fifth = self:_fitsRotation(p.piece, old, new, p.x, p.y)
-    if px then
-        p.x = px
-        p.y = py
-        p.rot = new
-        self:checkTSpin(fifth)
-        self.hook:run("pieceRotate")
-        return true
-    end
-    
-    return false
+	local p = self.currentPiece
+	local old = p.rot
+	local new = (p.rot + 1) % 4
+	local px, py, fifth = self:_fitsRotation(p.piece, old, new, p.x, p.y)
+	if px then
+		p.x = px
+		p.y = py
+		p.rot = new
+		self:checkTSpin(fifth)
+		self.hook:run("pieceRotate")
+		return true
+	end
+	
+	return false
 
 end
 
 function BRIX:rotateAntiClockwise()
 
-    local p = self.currentPiece
-    local old = p.rot
-    local new = (p.rot - 1) % 4
-    local px, py, fifth = self:_fitsRotation(p.piece, old, new, p.x, p.y)
-    if px then
-        p.x = px
-        p.y = py
-        p.rot = new
-        self:checkTSpin(fifth)
-        self.hook:run("pieceRotate")
-        return true
-    end
-    
-    return false
+	local p = self.currentPiece
+	local old = p.rot
+	local new = (p.rot - 1) % 4
+	local px, py, fifth = self:_fitsRotation(p.piece, old, new, p.x, p.y)
+	if px then
+		p.x = px
+		p.y = py
+		p.rot = new
+		self:checkTSpin(fifth)
+		self.hook:run("pieceRotate")
+		return true
+	end
+	
+	return false
 
 end
 
 function BRIX:hardDrop()
 
-    local p = self.currentPiece
-    local px, py = self:_fitsTranslation(p.piece, p.rot, p.x, p.y, 0, -brix.trueHeight)
-    p.x = px or p.x
-    p.y = py or p.y
+	local p = self.currentPiece
+	local px, py = self:_fitsTranslation(p.piece, p.rot, p.x, p.y, 0, -brix.trueHeight)
+	p.x = px or p.x
+	p.y = py or p.y
 	self.hook:run("pieceHardDrop", p)
-    --self:lock()
+	--self:lock()
 
 end
 
 function BRIX:lock()
 
-    local p = self.currentPiece
+	local p = self.currentPiece
 	local p_obj, p_rot, p_x, p_y = p.piece, p.rot, p.x, p.y
-    local visible = self:_lock(p.piece, p.rot, p.x, p.y)
-    
-    local spin = p.spin
-    
-    p.piece = nil
-    p.type = -1
+	local visible = self:_lock(p.piece, p.rot, p.x, p.y)
+	
+	local spin = p.spin
+	
+	p.piece = nil
+	p.type = -1
 	self.hook:run("prelock", p_obj, p_rot, p_x, p_y)
-    return visible, spin or false
-    
+	return visible, spin or false
+	
 end
 
 function BRIX:hold()
 
-    if self.heldThisPhase then return false end
-    
-    local current = self.held
-    self.held = self.currentPiece.type
-    
-    self.currentPiece.type = -1
-    self.currentPiece.piece = nil
-    if current == -1 then current = nil end
-    self:newPiece(current)
-    
-    self.hook:run("pieceHold")
-    self.heldThisPhase = true
-    return true
+	if self.heldThisPhase then return false end
+	
+	local current = self.held
+	self.held = self.currentPiece.type
+	
+	self.currentPiece.type = -1
+	self.currentPiece.piece = nil
+	if current == -1 then current = nil end
+	self:newPiece(current)
+	
+	self.hook:run("pieceHold")
+	self.heldThisPhase = true
+	return true
+
+end
+
+function BRIX:getFramesPerDrop()
+
+	local soft = self.inputs[brix.inputTypes.SOFTDROP]
+	return self.params.gravityFunc(self, soft)
 
 end

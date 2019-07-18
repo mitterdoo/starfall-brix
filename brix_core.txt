@@ -4,32 +4,27 @@
 		Piece RNG
 		Piece Stacking
 		Piece Holding
-		Next 7 Pieces
+		Next 6 Pieces
 		T-Spin Recognition
 		Combos
 		Back to back
-		Line clearing + sending
+		Line clearing
 	
 	There are events that may be hooked into, to create an implementation of the game, such as a singleplayer mode, splitscreen multiplayer mode, or battle royale.
 	Those events are listed further below, under "hooks"
 
+	There are overrideable functions:
+		(name)											(description)
+		BRIX:calculateLinesSent(tricks)					Called when the game needs to calculate how many lines of garbage to send outside of the game.
+														tricks is a bitflag. See brix.tricks in brix_core_damage
+		BRIX:levelUpCheck()								The game calls this when it wants to know if it should level up. Return true if it should.
+
 	These are the public methods that should be used to change the game
 		(name)											(description)
-		BRIX:setDamageMultiplier(mult)					Sets the damage multiplier for all future line clears.
-		BRIX:setDamageHandicap(num)						Sets handicap for future line clears. This should be used as the number of attackers on the player
 		BRIX:queueGarbage(lines, sender)				Instantly adds a garbage cluster to the queue. Lines is number of lines, and sender is a unique number
 															of a player who sent it. The same number will be passed to the "die" hook, if the player died to that
 															player's garbage.
 		BRIX:queueGarbageDelayed(lines, sender, delay)	Adds garbage cluster as above, but waits the specified number of frames first.
-		BRIX:setCustomGravityFunction(func(softdrop))	Sets the custom gravity function of the game. This function should return the number of frames that
-															must pass, before the current piece falls 1 line.
-															ONLY VALUES OF x, OR 1/x, WHERE x IS A POSITIVE INTEGER, MAY BE USED.
-															The callback will be given one argument: a bool for if the request is for a piece that is soft dropping.
-		BRIX:setGarbageNagDelay(delay)					Sets how many frames it takes for a garbage cluster to move onto the next stage. There are 3 stages.
-															Stage 1 is the initial stage, when the garbage has been added.
-															Stage 2 is the stage when the garbage "nags" the player.
-															Stage 3 is the final stage, and "readies" the garbage cluster. When ready, it will be dumped when
-																the player locks down a piece without clearing any lines.
 		BRIX:userInput(frame, input, pressed)			Pipes user input into the game.
 															frame:		The frame at which this input was pressed. This will be rounded UP.
 															input:		The enum for this specific input. See brix.inputTypes in brix_core_coroutine
@@ -39,6 +34,7 @@
 		BRIX:updateMain(frame)							Simulates the game up until the specified frame. The same contradiction rule from above applies.
 														This function is called automatically when calling BRIX:userInput()
 														Returns true if the game is still alive. Returns false if the game has ended.
+														Ideally, this should be called every time the game is about to be rendered.
 
 	These are public members that are recommended for use in implementations, which are read-only:
 		(name)											(description)
@@ -50,6 +46,7 @@
 			rot												The rotation of the piece. 0 is default rotation, 1 is rotated clockwise, etc.
 			piece											Constant reference to piece object that describes this type of piece. See brix.pieces
 			x, y											Coordinates of this piece. This denotes the bottom-left corner of the piece's bounding box.
+		BRIX.currentCombo								The size of the current line clear combo
 
 
 
@@ -60,98 +57,70 @@
 --@shared
 --@include brix/brix_core_matrix.txt
 --@include brix/brix_core_move.txt
---@include brix/brix_core_garbage.txt
+--@include brix/brix_core_damage.txt
 --@include brix/brix_core_piecegen.txt
---@include brix/brix_core_br.txt
 --@include brix/brix_core_mainloop.txt
 --@include brix/brix_core_coroutine.txt
---@include brix/brix_core_arena.txt
 
 brix = {}
 BRIX = {} -- metatable
+BRIX.__index = BRIX
 
 hooks = { -- These are legal hooks in the game
-    "prelock",              -- When the current piece locks down. This is for the SFX. Passes piece object, rotation, x, and y
-    "lock",            		-- After the current piece has been locked into the matrix. Passes brix.tricks enum, combo, lines sent (count), and lines cleared (table)
-    "matrixFall",           -- When the matrix collapses from gravity.
-    "phaseComplete",        -- When the phase has ended (this does not include piece generation phase)
-    "garbageDump",          -- When a line of garbage has been dumped
+	"prelock",              -- When the current piece locks down. This is for the SFX. Passes piece object, rotation, x, and y
+	"lock",            		-- After the current piece has been locked into the matrix. Passes brix.tricks enum, combo, lines sent (count), and lines cleared (table)
+	"matrixFall",           -- When the matrix collapses from gravity.
+	"garbageDump",          -- When a line of garbage has been dumped
 	"garbageDumpFull",		-- Called on the first frame of a garbage cluster being dumped. Passes table of gaps
-    "garbageCancelled",     -- When lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
-    "garbageNag",           -- When a cluster of garbage is nagging the player. Passes false if first, true if second
-    "garbageActivate",      -- When the timer of a cluster of garbage has been activated (ready to be dumped at next lockdown w/o clears)
-    "garbageQueue",         -- When garbage appears in the queue
-    "garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
-    "pinch",                -- When the matrix enters/exits "the red". Passes true if in danger, false if it left.
-    
+	"garbageCancelled",     -- When lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
+	"garbageNag",           -- When a cluster of garbage is nagging the player. Passes false if first, true if second
+	"garbageActivate",      -- When the timer of a cluster of garbage has been activated (ready to be dumped at next lockdown w/o clears)
+	"garbageQueue",         -- When garbage appears in the queue
+	"garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
+	"pinch",                -- When the matrix enters/exits "the red". Passes true if in danger, false if it left.
+	
 	"pieceBufferRotate",	-- When the spawned piece has been pre-rotated
 	"pieceBufferHold",		-- When the spawned piece was pre-held
-    "pieceRotate",          -- When the piece has been rotated
-    "pieceHold",            -- When the piece has been held
-    "pieceTranslate",       -- When the piece has been translated laterally
-    "pieceFall",			-- When the piece has fallen one line
-    "pieceSoftDrop",        -- When the piece falls one line during soft drop
-    "pieceHardDrop",        -- When the piece has been hard dropped. Passes the piece object to use for GFX
-    "pieceLand",            -- When the piece touches down on the ground
-    "die",                  -- When local player dies. Passes the uniqueID of the owner of the garbage that killed the player, or -1 if the player suicided.
+	"pieceRotate",          -- When the piece has been rotated
+	"pieceHold",            -- When the piece has been held
+	"pieceTranslate",       -- When the piece has been translated laterally
+	"pieceFall",			-- When the piece has fallen one line
+	"pieceSoftDrop",        -- When the piece falls one line during soft drop
+	"pieceHardDrop",        -- When the piece has been hard dropped. Passes the piece object to use for GFX
+	"pieceLand",            -- When the piece touches down on the ground
+	"die",                  -- When local player dies. Passes the uniqueID of the owner of the garbage that killed the player, or -1 if the player suicided.
+
+	"levelUp",				-- When the game has leveled up
 
 	"preInput",				-- when (frame), pressed (bool), event (enum)
 	"postInput"
 }
 
+local function gravity(self, soft)
 
+	local mult = soft and 20 or 1
+	return mult * (0.8 * ((self.level - 1) * 0.007)) ^ (self.level - 1) * brix.frequency
 
+end
 
-
---[[
-
-    NETWORKING STRUCTURE:
-    both SERVER and CLIENT run separate instances of the game on their own ends
-    Let Think function be called continuously on CLIENT (to provide visual feedback), or whenever needed on SERVER (to simulate what has happened so far)
-        
-    
-    key durations:
-    ==============
-    
-    frames  seconds
-    30      0.5         garbage sending     THIS IS THE MAXIMUM LATENCY POSSIBLE. IF IT TAKES LONGER FOR CLIENT TO HEAR OF THIS, THE CLIENT WILL RECEIVE GARBAGE IN THE PAST
-    
-    
-    
-
-]]
-
+brix.params = {
+	autoRepeatBegin = 12,	-- Number of frames the left/right button must be held before auto-repeat begins
+	autoRepeatSpeed = 2,	-- Number of frames spent in auto-repeat movements
+	garbageLineDelay = 4,	-- Number of frames between each line of garbage being dumped
+	garbageDumpDelay = 28,	-- Number of frames between lockdown (w/o clears) and garbage dumping
+	maxGarbageIn = 12,		-- Ceiling for receiving garbage
+	maxGarbageOut = 20,		-- Ceiling for sending garbage
+	lockResets = 15,		-- Number of lock resets permitted before the active piece forcefully locks down
+	lockDelay = 30,			-- Number of frames on the lock timer. After it has elapsed, the piece will lock down
+	clearDelay = 40,		-- Number of frames between lines disappearing, and the matrix collapsing down on those lines
+	pieceAppearDelay = 7,	-- Number of frames between matrix collapse (or lockdown, if no lines cleared), and the next piece appearing.
+	gravityFunc = gravity	-- Reference to function that returns the number of frames it takes for a piece to fall by one line. The function is given the BRIX object, and whether it is soft dropping
+}
 
 
 
 
 brix.frequency = 60
-brix.autoRepeatBegin = 12
-brix.autoRepeatSpeed = 2
-brix.garbageLineDelay = 4 -- Duration between each line of garbage dumped
-brix.garbageDumpDelay = 28 -- Duration between lockdown and garbage dump
-brix.maxGarbageIn = 12
-brix.maxGarbageOut = 20
-brix.lockResets = 15 -- number of times a piece may be successfully moved to reset the 0.5-second lock timer
-brix.lockDelay = 30
-brix.clearDelay = 40 -- Duration between line clear and pieces falling from gravity
-brix.pieceAppearDelay = 7 -- Duration between pieces falling and new piece appearing
-
-brix.pieceQueueSize = 6
-brix.levelUpTime = 20 -- seconds
-
-brix.tricks = {
-    SINGLE = 0x1,
-    DOUBLE = 0x2,
-    TRIPLE = 0x4,
-    QUAD = 0x8,
-    TSPIN =  0x10,
-    MINI_TSPIN = 0x20,
-    ALL_CLEAR = 0x40,
-    BACK_TO_BACK = 0x80,
-    COMBO = 0x100,
-    SENT = 0x200
-}
 
 -- INIT callbacks
 brix.initializers = {}
@@ -161,10 +130,10 @@ function brix.onInit(callback)
 
 end
 
-function enumGet(a, b)
-    return bit.band(a, b) > 0
+function flagGet(a, b)
+	return bit.band(a, b) > 0
 end
-enumSet = bit.bor
+flagSet = bit.bor
 
 
 function BRIX:rng(noupdate)
@@ -173,79 +142,23 @@ function BRIX:rng(noupdate)
 		self.rseed = bit.bxor( self.rseed, bit.rshift(self.rseed, 17) )
 		self.rseed = bit.bxor( self.rseed, bit.lshift(self.rseed, 5)  )
 	end
-	return (self.rseed+2^31) / (2^32-1)
+	return (self.rseed + 2^31) / (2^32-1)
 
 end
 
 require("brix/brix_core_matrix.txt")
-require("brix/brix_arena.txt")
 require("brix/brix_core_move.txt")
-require("brix/brix_core_garbage.txt")
+require("brix/brix_core_damage.txt")
 require("brix/brix_core_piecegen.txt")
-require("brix/brix_core_br.txt")
 require("brix/brix_core_mainloop.txt")
 require("brix/brix_core_coroutine.txt")
-require("brix/brix_core_enemy.txt")
 
 
 --------------------------------------
 -- GAME
 
---[[
-	arena: Reference to ARENA object for main game
-	uniqueId: The uniqueId of this player
-	seed: The PRNG seed
-	server: (bool) Whether this is serverside
-]]
-function brix.createGame(arena, uniqueId, seed, server)
 
-    if not seed then error("Attempt to create game without RNG seed!") end
-    seed = math.max(1,seed)
-    local self = {}
-    local thisBrix = self
-    local hookMeta = {}
-    function hookMeta:run(type, ...)
-        if thisBrix.hooks[type] == nil then
-            error("attempt to call nonexistant hook " .. tostring(type))
-        end
-        for name, func in pairs(thisBrix.hooks[type]) do
-            local ret = {func(...)}
-            if #ret > 0 then
-                return unpack(ret)
-            end
-        end
-    end
-    function hookMeta:__call(type, func)
-        if thisBrix.hooks[type] == nil then
-            error("attempt to hook into nonexistant hook " .. tostring(type))
-        end
-        table.insert(thisBrix.hooks[type], func)
-    end
-
-
-    -- INIT CODE
-    self.hooks = {}
-    for _, name in pairs(hooks) do -- defined at top
-        self.hooks[name] = {}
-    end
-
-    hookMeta.__index = hookMeta
-    self.hook = setmetatable({}, hookMeta)
-	self.arena = arena
-	self.uniqueId = uniqueId
-    self.frame = 0 -- d
-    self.rseed = seed -- d
-
-	if server then
-		self.SERVER = true
-	else
-		self.CLIENT = true
-	end
-
-	for _, callback in pairs(brix.initializers) do
-		callback(self)
-	end
-
+local function initProfiler(self)
 	self.profiler = {}
 	local bad = {
 		pullEvent = 1,
@@ -279,15 +192,80 @@ function brix.createGame(arena, uniqueId, seed, server)
 	end
 
 
-    BRIX.__index = function(self, key)
-		return self.profiler[key] and self.profiler[key].f
+	BRIX.__index = function(this, key)
+		return this.profiler[key] and this.profiler[key].f
 	end
-    setmetatable(self, BRIX)
-    
-    self:rng() -- shuffle once
-    self:startMain()
-    
-    return self
+end
+
+--[[
+	seed: The PRNG seed
+	params: Optional table of parameters to overwrite the brix.params
+]]
+function brix.createGame(seed, params)
+
+	if not seed then error("Attempt to create game without RNG seed!") end
+	seed = math.max(1,seed)
+	local game = {}
+	local thisBrix = game
+	local hookMeta = {}
+	function hookMeta:run(hookName, ...)
+		if thisBrix.hooks[hookName] == nil then
+			error("attempt to call nonexistant hook " .. tostring(hookName))
+		end
+		for name, func in pairs(thisBrix.hooks[hookName]) do
+			local ret = {func(...)}
+			if #ret > 0 then
+				return unpack(ret)
+			end
+		end
+	end
+	function hookMeta:__call(hookName, func)
+		if thisBrix.hooks[hookName] == nil then
+			error("attempt to hook into nonexistant hook " .. tostring(hookName))
+		end
+		table.insert(thisBrix.hooks[hookName], func)
+	end
+
+
+	-- INIT CODE
+	game.hooks = {}
+	for _, name in pairs(hooks) do -- defined at top
+		game.hooks[name] = {}
+	end
+
+	hookMeta.__index = hookMeta
+	game.hook = setmetatable({}, hookMeta)
+	game.frame = 0 -- d
+	game.rseed = seed -- d
+
+	game.params = {}
+	-- load defaults
+	for name, value in pairs(brix.params) do
+		game.params[name] = value
+	end
+
+	-- now load any changes
+	if params then
+		for name, value in pairs(params) do
+			if game.params[name] == nil then
+				error("Attempt to pass unknown parameter name: " .. tostring(name))
+			end
+			game.params[name] = value
+		end
+	end
+
+	-- call init functions
+	for _, callback in pairs(brix.initializers) do
+		callback(game)
+	end
+
+	--initProfiler(game)
+	setmetatable(game, BRIX)
+	
+	game:rng() -- shuffle once
+	game:startMain()
+	
+	return game
 
 end
 

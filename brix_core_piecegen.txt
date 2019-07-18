@@ -1,51 +1,52 @@
 --@name BRIX: Piece Generation
 --@shared
 
+brix.pieceQueueSize = 6
 function BRIX:takePieceFromBag()
 
-    if #self.pieceBag == 0 then
-        local bag = {}
-        for i = 0, 6 do
-            table.insert(bag, i)
-        end
-        for i = 0, 6 do
-            local idx = math.ceil(self:rng() * #bag)
-            table.insert(self.pieceBag, table.remove(bag, idx))
-        end
-    end
-    return table.remove(self.pieceBag, 1)
+	if #self.pieceBag == 0 then
+		local bag = {}
+		for i = 0, 6 do
+			table.insert(bag, i)
+		end
+		for i = 0, 6 do
+			local idx = math.ceil(self:rng() * #bag)
+			table.insert(self.pieceBag, table.remove(bag, idx))
+		end
+	end
+	return table.remove(self.pieceBag, 1)
 
 end
 
 function BRIX:takePieceFromQueue()
 
-    while #self.pieceQueue < brix.pieceQueueSize do
-        table.insert(self.pieceQueue, self:takePieceFromBag())
-    end
-    return table.remove(self.pieceQueue, 1)        
+	while #self.pieceQueue < brix.pieceQueueSize do
+		table.insert(self.pieceQueue, self:takePieceFromBag())
+	end
+	return table.remove(self.pieceQueue, 1)
 
 end
 
 function BRIX:newPiece(type)
 
-    if self.currentPiece.type >= 0 then
-        error("Attempt to generate new piece when last one has not been cleared!")
-    end
-    self.currentPiece = {}
-    local p = self.currentPiece
-    
-    p.type = type or self:takePieceFromQueue()
-    p.rot = 0
-    p.piece = brix.pieces[p.type]
-    p.x = brix.w/2 - math.ceil(p.piece.size/2)
-    --p.lowest = self:_lowestPoint(p.piece, p.rot, p.x, p.y)
-    --p.dead = false
-    
-    if p.type == pid.i then
-        p.y = brix.h - 3
-    else
-        p.y = brix.h - p.piece.size
-    end
-    p.y = p.y + 1
+	if self.currentPiece.type >= 0 then
+		error("Attempt to generate new piece when last one has not been cleared!")
+	end
+	self.currentPiece = {}
+	local p = self.currentPiece
+	
+	p.type = type or self:takePieceFromQueue()
+	p.rot = 0
+	p.piece = brix.pieces[p.type]
+	p.x = brix.w / 2 - math.ceil(p.piece.size / 2)
+	--p.lowest = self:_lowestPoint(p.piece, p.rot, p.x, p.y)
+	--p.dead = false
+	
+	if p.type == pid.i then
+		p.y = brix.h - 3
+	else
+		p.y = brix.h - p.piece.size
+	end
+	p.y = p.y + 1
 
 end
