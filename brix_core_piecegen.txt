@@ -37,10 +37,26 @@ function BRIX:newPiece(type)
 	
 	p.type = type or self:takePieceFromQueue()
 	p.rot = 0
+
+	if self.inputs[brix.inputEvents.ROT_CW] then
+		p.rot = 1
+		self.hook:run("pieceBufferRotate")
+	elseif self.inputs[brix.inputEvents.ROT_CCW] then
+		p.rot = 3
+		self.hook:run("pieceBufferRotate")
+	end
+
+
 	p.piece = brix.pieces[p.type]
 	p.x = brix.w / 2 - math.ceil(p.piece.size / 2)
-	--p.lowest = self:_lowestPoint(p.piece, p.rot, p.x, p.y)
-	--p.dead = false
+	if self.inputs[brix.inputEvents.MOVELEFT] then
+		--p.x = p.x - 1			this only charges DAS. does not affect spawn
+		self:startTimer("moveleft", self.params.autoRepeatSpeed)
+	elseif self.inputs[brix.inputEvents.MOVERIGHT] then
+		--p.x = p.x + 1			this only charges DAS. does not affect spawn
+		self:startTimer("moveright", self.params.autoRepeatSpeed)
+	end
+	
 	
 	if p.type == pid.i then
 		p.y = brix.h - 3
@@ -48,5 +64,7 @@ function BRIX:newPiece(type)
 		p.y = brix.h - p.piece.size
 	end
 	p.y = p.y + 1
+
+	self.hook:run("pieceSpawn", p.piece, p.rot, p.x, p.y)
 
 end

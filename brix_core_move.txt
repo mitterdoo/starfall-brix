@@ -55,13 +55,24 @@ function BRIX:moveDown()
 	if fitsDown then
 		p.y = p.y - 1
 		self.hook:run("pieceFall")
-		if self.inputs[brix.inputTypes.SOFTDROP] then
+		if self.inputs[brix.inputEvents.SOFTDROP] then
 			self.hook:run("pieceSoftDrop")
 		end
 		return true
 	end
 	return false    
 
+end
+
+-- Returns x, y of the ghost piece
+function BRIX:getGhostPiece()
+	local p = self.currentPiece
+	if not p then return 0, 0 end
+
+	local x, y = self:_fitsTranslation(p.piece, p.rot, p.x, p.y, 0, -brix.trueHeight)
+	if not x then return 0, 0 end
+
+	return x, y
 end
 
 -- Returns 2 if tspin, 1 if mini tspin, or false if no tspin at all
@@ -150,19 +161,29 @@ function BRIX:lock()
 	
 end
 
-function BRIX:hold()
+function BRIX:hold(buffered)
 
 	if self.heldThisPhase then return false end
-	
+
 	local current = self.held
-	self.held = self.currentPiece.type
+
+	local pieceToHold = self.currentPiece.type
+	if buffered then
+		pieceToHold = self:takePieceFromQueue()
+	end
+
+	self.held = pieceToHold
 	
 	self.currentPiece.type = -1
 	self.currentPiece.piece = nil
 	if current == -1 then current = nil end
 	self:newPiece(current)
 	
-	self.hook:run("pieceHold")
+	if not buffered then
+		self.hook:run("pieceHold")
+	else
+		self.hook:run("pieceBufferHold")
+	end
 	self.heldThisPhase = true
 	return true
 
@@ -170,7 +191,7 @@ end
 
 function BRIX:getFramesPerDrop()
 
-	local soft = self.inputs[brix.inputTypes.SOFTDROP]
+	local soft = self.inputs[brix.inputEvents.SOFTDROP]
 	return self.params.gravityFunc(self, soft)
 
 end

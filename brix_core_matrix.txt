@@ -170,7 +170,7 @@ brix.h = 20
 brix.bufferHeight = 20
 brix.trueHeight = brix.h + brix.bufferHeight
 
-
+brix.dangerHeight = brix.h - 3
 
 
 ---------------------------------------
@@ -291,11 +291,11 @@ end
 function BRIX:_fitsTranslation( piece, rot, x, y, ox, oy )
 
 	if oy == 0 then -- X must be 1
-		if x ~= 1 and x ~= -1 then error("Can only do horizontal translation of 1 column") end
+		if x ~= 1 and x ~= -1 then error("Can only do horizontal translation of 1 column", 2) end
 		return self:_fits(piece, rot, x + ox, y)
 	elseif ox == 0 then
 
-		assert(oy <= 0, "Vertical translation can only go down")
+		assert(oy <= 0, "Vertical translation can only go down", 2)
 		local shortest = -math.huge
 		for px = 0, piece.size-1 do 
 			--for py = piece.size-1, 0, -1 do
@@ -341,7 +341,7 @@ function BRIX:_fitsTranslation( piece, rot, x, y, ox, oy )
 		end
 		]]
 	end
-	error("fitsTranslation can only be given horizontal, (exclusive) or vertical values")
+	error("fitsTranslation can only be given horizontal, (exclusive) or vertical values", 2)
 
 end
 
@@ -389,4 +389,15 @@ function BRIX:_highestPoint()
 
 end
 
+function BRIX:updateDanger()
+	
+	local g = self:getGarbageCount()
+	local inDanger = self:_highestPoint() + g >= brix.dangerHeight
+	if inDanger ~= self.danger then
+		self.hook:run("pinch", inDanger)
+	end
+	self.danger = inDanger
+	return self.danger
+
+end
 

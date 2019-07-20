@@ -6,6 +6,9 @@ brix.onInit(function(self)
 	self.inputs = {}
 	self.timers = {}
 	self.timerCallbacks = {}
+
+	self.buffer = {}
+	self.buffering = false
 	
 end)
 
@@ -15,29 +18,9 @@ function BRIX:enableBuffer()
 	self.buffer = {}
 end
 
-local function bufferSort(a, b)
-	return a[1] < b[1]
-end
-
--- Stores the buffered inputs into an ordered list of userInput calls
-function BRIX:stageBuffer()
-	self.buffering = false
-	self.stagedBuffer = {}
-	local sorted = {}
-	for inp, when in pairs(self.buffer) do
-		table.insert(sorted, {when, inp})
-	end
-	table.sort(sorted, bufferSort)
-	for _, data in pairs(sorted) do
-		table.insert(self.stagedBuffer, data[2])
-	end
-	
-end
-
 function BRIX:clearBuffer()
 	self.buffering = false
-	self.buffer = nil
-	self.stagedBuffer = nil
+	self.buffer = {}
 end
 
 function BRIX:sleep(uniqueTimer, delay)
@@ -54,7 +37,7 @@ function BRIX:sleep(uniqueTimer, delay)
 
 end
 
-function BRIX:startMain()
+function BRIX:start()
 
 	local func = self.co_main
 	
@@ -118,8 +101,6 @@ end
 function BRIX:onUpdate(frame)
 
 	self.frame = frame
-	self.level = self:getLevelFromFrame(frame)
-	self:updateGameStage()
 
 end
 
@@ -140,15 +121,6 @@ end
 
 function BRIX:pullEvent()
 
-	if self.stagedBuffer and #self.stagedBuffer > 0 then
-		self.inputIsBuffered = true
-		local inp = table.remove(self.stagedBuffer, 1)
-		if #self.stagedBuffer == 0 then self:clearBuffer() end
-		return "inputDown", inp
-
-	else
-		self.inputIsBuffered = nil
-	end
 	while true do
 		local ret = {coroutine.yield()}
 		if ret[1] == "timer" and self.timerCallbacks[ret[2]] then
@@ -182,7 +154,7 @@ function BRIX:cancelTimer(name)
 	
 end
 
-brix.inputTypes = {
+brix.inputEvents = {
 	MOVELEFT = 0,
 	MOVERIGHT = 1,
 	SOFTDROP = 2,
@@ -200,14 +172,6 @@ function BRIX:userInput(when, inp, down)
 	if down == nil then down = true end
 
 	self.hook:run("preInput", when, inp, down)
-	
-	if self.buffering then
-		if down then
-			self.buffer[inp] = when
-		else
-			self.buffer[inp] = nil
-		end
-	end
 	
 	
 	self:updateMain(when)

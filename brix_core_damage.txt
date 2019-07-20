@@ -8,29 +8,18 @@ brix.onInit(function(self)
 end)
 
 brix.tricks = {
-	SINGLE = 0x1,
-	DOUBLE = 0x2,
-	TRIPLE = 0x4,
-	QUAD = 0x8,
-	TSPIN =  0x10,
-	MINI_TSPIN = 0x20,
-	ALL_CLEAR = 0x40,
-	BACK_TO_BACK = 0x80,
-	COMBO = 0x100,
-	SENT = 0x200
+	SINGLE = 0x1,			-- 1 line cleared
+	DOUBLE = 0x2,			-- 2 lines cleared
+	TRIPLE = 0x4,			-- 3 lines cleared
+	QUAD = 0x8,				-- 4 lines cleared
+	TSPIN =  0x10,			-- Was t-spin
+	MINI_TSPIN = 0x20,		-- Was mini t-spin
+	ALL_CLEAR = 0x40,		-- Was an all clear
+	BACK_TO_BACK = 0x80,	-- Is b2b
+	COMBO = 0x100,			-- Has combo (see BRIX.currentCombo)
+	SENT = 0x200,			-- Sent any damage
+	CLEARED = 0x300			-- Cleared any lines
 }
-
-function BRIX:getGarbageNagFrames()
-
-	if self.stage == stages.STAGE_BEGIN then
-		return brix.garbageNagSlow
-	elseif self.stage == stages.STAGE_MIDDLE then
-		return brix.garbageNagFast
-	else
-		return brix.garbageNagFastest
-	end
-
-end
 
 function BRIX:addGarbageLine(gap)
 
@@ -111,8 +100,10 @@ function BRIX:dumpCurrentGarbage()
 
 end
 
-function BRIX:onGarbageNag(second)
+function BRIX:onGarbageNag(second, garb)
+	garb.stage = second and 2 or 1
 	self.hook:run("garbageNag", second)
+
 end
 
 -- activates timer for current garbage
@@ -128,10 +119,9 @@ function BRIX:checkGarbage()
 	g.dump = frame + speed * 2
 	
 	self.hook:run("garbageActivate", g.lines, g.who, g.begin)
-	if self.CLIENT then
-		self:startTimer("garbageNag1", speed, self.onGarbageNag, false)
-		self:startTimer("garbageNag2", speed * 2, self.onGarbageNag, true)
-	end
+
+	self:startTimer("garbageNag1", speed, self.onGarbageNag, false, g)
+	self:startTimer("garbageNag2", speed * 2, self.onGarbageNag, true, g)
 	
 	return true
 
@@ -140,6 +130,8 @@ end
 function BRIX:clearGarbage(lines)
 
 	if #self.garbage == 0 then return lines end
+	if lines == 0 then return 0 end
+
 	local leftover = lines
 	for i = 1, lines do
 	
@@ -148,16 +140,18 @@ function BRIX:clearGarbage(lines)
 		leftover = leftover - 1
 		if this.lines == 0 then
 			table.remove(self.garbage, 1)
-			if self.CLIENT then
-				self:cancelTimer("garbageNag1")
-				self:cancelTimer("garbageNag2")
-			end
+			self:cancelTimer("garbageNag1")
+			self:cancelTimer("garbageNag2")
 		end
 		
-		if #self.garbage == 0 then return leftover end
+		if #self.garbage == 0 then
+			self.hook:run("garbageCancelled", lines - leftover)
+			return leftover
+		end
 	
 	end
 	
+	self.hook:run("garbageCancelled", lines)
 	self:checkGarbage()
 	
 	return 0
@@ -181,14 +175,15 @@ function BRIX:queueGarbage(lines, who)
 	local count = self:getGarbageCount()
 	if count >= self.params.maxGarbageIn then return false end
 	
-	local speed = self:getGarbageNagFrames()
+	local speed = self.params.garbageNagDelay
 	lines = math.min(self.params.maxGarbageIn - count, lines)
 	table.insert(self.garbage, #self.garbage + 1, {
 		lines = lines,                  -- How many lines
 		begin = -1,                     -- When the timer begins
 		dump = -1,                      -- When the timer expires
 		speed = speed,                  -- Number of frames before the garbage decays (2nd decay is activate)
-		who = who                       -- UniqueID of the sender
+		who = who,                      -- UniqueID of the sender
+		stage = 0,						-- Nag stage. 0 = yellow, 1 = red, 2 = flashing red
 	})
 	self.hook:run("garbageQueue", lines, who, brix.frame)
 	self.lastGarbageSender = who
@@ -251,6 +246,10 @@ function BRIX:calculateTricks(lines, tspin)
 	elseif lines == 4 then
 		tricks = flagSet(tricks, brix.tricks.QUAD)
 	end
+	if lines > 0 then
+		tricks = flagSet(tricks, brix.tricks.CLEARED)
+	end
+
 	if tspin == 2 then
 		tricks = flagSet(tricks, brix.tricks.TSPIN)
 	elseif tspin == 1 then

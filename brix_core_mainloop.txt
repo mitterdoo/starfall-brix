@@ -1,10 +1,9 @@
 --@name BRIX: Main Coroutine
 --@shared
 
---[[
-	TODO: INPUT BUFFERING
-]]
-
+brix.onInit(function(self)
+	self.level = 1
+end)
 
 
 function BRIX:checkBackToBack(lines, tspin, noupdate)
@@ -52,9 +51,13 @@ function BRIX:checkAttempts(attempts, lowest, rotating)
 
 end
 
+function BRIX:levelUpCheck()
+	return false
+end
+
 function BRIX:co_main()
 
-	local cevents = brix.inputTypes
+	local cevents = brix.inputEvents
 	while true do
 	
 		local attempts = 0
@@ -65,8 +68,13 @@ function BRIX:co_main()
 		--generation
 			--random bag
 			--spawn piece in position
+
 		self.heldThisPhase = false
-		self:newPiece()
+		if self.inputs[cevents.HOLD] then
+			self:hold(true)
+		else
+			self:newPiece()
+		end
 		
 	::beginTimer::
 		local p = self.currentPiece
@@ -78,12 +86,6 @@ function BRIX:co_main()
 		
 		--self:startTimer("drop", self:getFramesPerDrop())
 		self:startTimer("drop", 0) -- drops immediately
-
-
-		-- INPUT BUFFERING
-		self:stageBuffer()
-
-		
 		
 		attempts = 0				-- Number of lock resets that have been made
 		lowest = brix.trueHeight	-- The lowest point the current piece has reached.
@@ -180,6 +182,7 @@ function BRIX:co_main()
 				
 		end
 		
+	self.hook:run("pieceLockNag")
 	::locking::
 		-- We have made contact with a surface
 		
@@ -236,6 +239,8 @@ function BRIX:co_main()
 						if self:fitsDown() then
 							self:startTimer("drop", self:getFramesPerDrop())
 							goto falling
+						else
+							self.hook:run("pieceLockNag")
 						end
 					end
 				
@@ -247,10 +252,13 @@ function BRIX:co_main()
 						if self:fitsDown() then
 							self:startTimer("drop", self:getFramesPerDrop())
 							goto falling
+						else
+							self.hook:run("pieceLockNag")
 						end
 					end
 				
 				elseif what == cevents.HARDDROP then
+					self.hook:run("pieceHardDrop", self.currentPiece)
 					break
 					
 				elseif what == cevents.HOLD and self:hold() then
@@ -261,6 +269,8 @@ function BRIX:co_main()
 					if self:fitsDown() then
 						self:startTimer("drop", self:getFramesPerDrop())
 						goto falling
+					else
+						self.hook:run("pieceLockNag")
 					end
 					
 				elseif what == cevents.ROT_CCW and self:rotateAntiClockwise() then
@@ -268,6 +278,8 @@ function BRIX:co_main()
 					if self:fitsDown() then
 						self:startTimer("drop", self:getFramesPerDrop())
 						goto falling
+					else
+						self.hook:run("pieceLockNag")
 					end
 					
 				end
@@ -291,8 +303,6 @@ function BRIX:co_main()
 			break
 		end
 		
-	self:clearBuffer()
-	self:enableBuffer()
 		
 	::lineClears::
 		
@@ -381,6 +391,6 @@ function BRIX:co_main()
 	end
 
 	self.diedAt = self.frame
-	self.hook:run("die")
+	self.hook:run("die", self.lastGarbageSender or -1)
 
 end
