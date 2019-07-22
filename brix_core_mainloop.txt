@@ -70,7 +70,7 @@ function BRIX:co_main()
 			--spawn piece in position
 
 		self.heldThisPhase = false
-		if self.inputs[cevents.HOLD] then
+		if self.params.holdBuffering and self.inputs[cevents.HOLD] then
 			self:hold(true)
 		else
 			self:newPiece()

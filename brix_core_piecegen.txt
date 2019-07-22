@@ -47,12 +47,14 @@ function BRIX:newPiece(type)
 	p.type = type or self:takePieceFromQueue()
 	p.rot = 0
 
-	if self.inputs[brix.inputEvents.ROT_CW] then
-		p.rot = 1
-		self.hook:run("pieceBufferRotate")
-	elseif self.inputs[brix.inputEvents.ROT_CCW] then
-		p.rot = 3
-		self.hook:run("pieceBufferRotate")
+	if self.params.rotateBuffering then
+		if self.inputs[brix.inputEvents.ROT_CW] then
+			p.rot = 1
+			self.hook:run("pieceBufferRotate")
+		elseif self.inputs[brix.inputEvents.ROT_CCW] then
+			p.rot = 3
+			self.hook:run("pieceBufferRotate")
+		end
 	end
 
 
