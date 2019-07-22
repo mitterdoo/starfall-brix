@@ -308,8 +308,8 @@ function BRIX:co_main()
 		
 		local lines = {}
 		for i = 0, brix.trueHeight - 1 do
-		
-			if #self.matrix:getrow(i):gsub(" ","") == brix.w then
+
+			if i >= self.solidHeight and #self.matrix:getrow(i):gsub(" ","") == brix.w then
 				table.insert(lines, i)
 			end
 		
@@ -367,9 +367,19 @@ function BRIX:co_main()
 		
 			if self:garbageDumpPending() then
 				self:sleep("dumpDelay", self.params.garbageDumpDelay)
-				self:dumpCurrentGarbage()
+				if not self:dumpCurrentGarbage() then
+					print("TOP OUT")
+					break
+				end
 			end
 		
+		end
+
+		self.hook:run("completion")
+
+		if self.solidGarbage > 0 and not self:dumpSolidGarbage() then
+			print("TOP OUT")
+			break
 		end
 		
 		self:updateDanger()

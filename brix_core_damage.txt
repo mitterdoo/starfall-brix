@@ -4,6 +4,8 @@
 brix.onInit(function(self)
 
 	self.garbage = {} -- d { {lines = n, begin = frame, dump = frame, who = player} }
+	self.solidGarbage = 0 -- number of lines of solid garbage waiting to be dumped
+	self.solidHeight = 0
 
 end)
 
@@ -21,7 +23,7 @@ brix.tricks = {
 	CLEARED = 0x300			-- Cleared any lines
 }
 
-function BRIX:addGarbageLine(gap)
+function BRIX:addGarbageLine(gap) -- nil gap implies solid line
 
 	--if #self.matrix.data:sub(1,brix.w):gsub(" ", "") > 0 then
 	if not self:_isRowClear(brix.trueHeight-1) then
@@ -29,10 +31,16 @@ function BRIX:addGarbageLine(gap)
 	end
 	
 	local data = self.matrix.data:sub(1, brix.w * (brix.trueHeight-1))
-	local newLine = string.rep("!", gap - 1) .. " " .. string.rep("!", brix.w - gap)
+	local newLine
+	if gap then
+		newLine = string.rep("!", gap - 1) .. " " .. string.rep("!", brix.w - gap)
+	else
+		newLine = string.rep("=", brix.w)
+		self.solidHeight = self.solidHeight + 1
+	end
 	data = newLine .. data
 	self.matrix.data = data
-	self.hook:run("garbageDump")
+	self.hook:run("garbageDump", gap ~= nil)
 	
 	return true
 
@@ -65,12 +73,13 @@ function BRIX:generateGarbageGap()
 
 end
 
+-- returns whether we're alive afterward
 function BRIX:dumpCurrentGarbage()
 
 	local g = self.garbage[1]
-	if not g then return false end
+	if not g then return true end
 	if g.dump == -1 then error("dumping garbage but its timer was not set!") end
-	if self.frame < g.dump then return false end
+	if self.frame < g.dump then return true end
 	
 	local lines = g.lines
 	local gaps = {}
@@ -86,7 +95,10 @@ function BRIX:dumpCurrentGarbage()
 	
 	for i = 0, lines - 1 do
 		local gap = gaps[i + 1]
-		self:addGarbageLine(gap)
+		if not self:addGarbageLine(gap) then
+			return false
+		end
+
 		g.lines = g.lines - 1
 		if i < lines - 1 then
 			self:sleep("garbageLine", self.params.garbageLineDelay)
@@ -96,6 +108,23 @@ function BRIX:dumpCurrentGarbage()
 	
 	table.remove(self.garbage, 1)
 	self:checkGarbage()
+	return true
+
+end
+
+function BRIX:dumpSolidGarbage()
+
+	if self.solidGarbage == 0 then return true end
+	while self.solidGarbage > 0 do
+		self.solidGarbage = self.solidGarbage - 1
+		if not self:addGarbageLine() then
+			return false
+		end
+		if self.solidGarbage > 0 then
+			self:sleep("garbageLine", self.params.garbageLineDelay)
+		end
+	end
+
 	return true
 
 end
@@ -172,6 +201,8 @@ end
 --- PUBLIC
 function BRIX:queueGarbage(lines, who)
 
+	if lines == 0 then return false end
+
 	local count = self:getGarbageCount()
 	if count >= self.params.maxGarbageIn then return false end
 	
@@ -200,6 +231,11 @@ function BRIX:queueGarbageDelayed(lines, who, duration)
 
 	self:startTimer("queueGarbage", duration, self.queueGarbage, lines, who)
 
+end
+
+--- Queues solid garbage lines. Will forcefully be dumped at end of phase. Occurs after regular garbage
+function BRIX:queueSolidGarbage(lines)
+	self.solidGarbage = self.solidGarbage + math.max(0, lines)
 end
 
 function BRIX:checkGarbageNag()

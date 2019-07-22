@@ -243,8 +243,8 @@ end
 function BRIX:_checkMiniTSpin(rot, x, y)
 
 	local a, b, c, d = self:_getTRefPoints(rot, x, y)
-	--return c and d and (a and (not b) or (not a) and b)
-	return c and d and a ~= b -- (a ~= b <=> !xor)
+	return c and d and (a and (not b) or (not a) and b)
+	-- return c and d and a ~= b -- (a ~= b <=> !xor)
 
 end
 
@@ -346,8 +346,11 @@ function BRIX:_fitsTranslation( piece, rot, x, y, ox, oy )
 end
 
 -- Locks a piece into the matrix
-function BRIX:_lock( piece, rot, x, y )
+function BRIX:_lock( piece, rot, x, y, mono )
 	
+	local idx = piece.type
+	local char = mono and "[" or idx
+
 	local lockedVisibly = false
 	for px = 0, piece.size-1 do
 		for py = 0, piece.size-1 do
@@ -356,7 +359,7 @@ function BRIX:_lock( piece, rot, x, y )
 			if piece.shape[i] == "x" then
 				if 0 <= gx and gx < brix.w and 0 <= gy and gy < brix.trueHeight then
 					if gy < brix.h then lockedVisibly = true end
-					self.matrix:set(gx, gy, piece.type)
+					self.matrix:set(gx, gy, char)
 				else
 					return false
 				end

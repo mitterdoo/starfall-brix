@@ -14,7 +14,12 @@ function BRIX:takePieceFromBag()
 			table.insert(self.pieceBag, table.remove(bag, idx))
 		end
 	end
-	return table.remove(self.pieceBag, 1)
+	local removed = table.remove(self.pieceBag, 1)
+	if self.params.monochrome then
+		removed = bit.bor(removed, 0x8)
+	end
+
+	return removed
 
 end
 
@@ -25,6 +30,10 @@ function BRIX:takePieceFromQueue()
 	end
 	return table.remove(self.pieceQueue, 1)
 
+end
+
+function brix.normalPiece(piece)
+	return bit.band(0x7, piece)
 end
 
 function BRIX:newPiece(type)
@@ -47,7 +56,7 @@ function BRIX:newPiece(type)
 	end
 
 
-	p.piece = brix.pieces[p.type]
+	p.piece = brix.pieces[ brix.normalPiece(p.type) ]
 	p.x = brix.w / 2 - math.ceil(p.piece.size / 2)
 	if self.inputs[brix.inputEvents.MOVELEFT] then
 		--p.x = p.x - 1			this only charges DAS. does not affect spawn
@@ -58,7 +67,7 @@ function BRIX:newPiece(type)
 	end
 	
 	
-	if p.type == pid.i then
+	if brix.normalPiece(p.type) == pid.i then
 		p.y = brix.h - 3
 	else
 		p.y = brix.h - p.piece.size

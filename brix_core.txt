@@ -73,32 +73,55 @@ BRIX = {} -- metatable
 BRIX.__index = BRIX
 
 hooks = { -- These are legal hooks in the game
-	"prelock",              -- When the current piece locks down. This is for the SFX. Passes piece object, rotation, x, and y
-	"lock",            		-- After the current piece has been locked into the matrix. Passes brix.tricks enum, combo, lines sent (count), and lines cleared (table)
+	"prelock",              -- When the current piece locks down. This is for the SFX.
+		-- pieceObj
+		-- number rot
+		-- number x
+		-- number y
+	"lock",            		-- After the current piece has been locked into the matrix.
+		-- brix.tricks
+		-- number combo
+		-- number linesSent
+		-- table linesCleared
 	"matrixFall",           -- When the matrix collapses from gravity.
 	"garbageDump",          -- When a line of garbage has been dumped
-	"garbageDumpFull",		-- Called on the first frame of a garbage cluster being dumped. Passes table of gaps
+		-- bool solid
+	"garbageDumpFull",		-- Called on the first frame of a garbage cluster being dumped
+		-- table gaps
 	"garbageCancelled",     -- When lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
-	"garbageNag",           -- When a cluster of garbage is nagging the player. Passes false if first, true if second
+	"garbageNag",           -- When a cluster of garbage is nagging the player.
+		-- bool second		whether it's the second nag state
 	"garbageActivate",      -- When the timer of a cluster of garbage has been activated (ready to be dumped at next lockdown w/o clears)
-	"garbageQueue",         -- When garbage appears in the queue. Passes lines, uniqueid of sender, and the frame it was activated in.
+	"garbageQueue",         -- When garbage appears in the queue.
+		-- number lines
+		-- number senderUniqueID
+		-- number frame
 	"garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
-	"pinch",                -- When the matrix enters/exits "the red". Passes true if in danger, false if it left.
+	"pinch",                -- When the matrix enters/exits "the red".
+		-- bool inPinch
 	
 	"pieceBufferRotate",	-- When the spawned piece has been pre-rotated
 	"pieceBufferHold",		-- When the spawned piece was pre-held
 	"pieceSpawn",			-- When a piece has spawned. Passes piece object, rotation, x, and y
+		-- pieceObj
+		-- number rot
+		-- number x
+		-- number y
 	"pieceRotate",          -- When the piece has been rotated
 	"pieceHold",            -- When the piece has been held
 	"pieceTranslate",       -- When the piece has been translated laterally
 	"pieceFall",			-- When the piece has fallen one line
 	"pieceSoftDrop",        -- When the piece falls one line during soft drop
-	"pieceHardDrop",        -- When the piece has been hard dropped. Passes the piece object to use for GFX
+	"pieceHardDrop",        -- When the piece has been hard dropped.
+		-- pieceState (game.currentPiece)
 	"pieceLand",            -- When the piece touches down on the ground
 	"pieceLockNag",			-- When the piece has begun lockdown timer, and has touched the ground, or rotated
-	"die",                  -- When local player dies. Passes the uniqueID of the owner of the garbage that killed the player, or -1 if the player suicided.
+	"die",                  -- When local player dies.
+		-- number killerUniqueID (-1 when suicide)
 
+	"completion",			-- Completion phase entered. Called before level up. Add instant solid garbage here
 	"levelUp",				-- When the game has leveled up
+		-- number newLevel
 
 	"preInput",				-- when (frame), pressed (bool), event (enum)
 	"postInput"
@@ -123,7 +146,8 @@ brix.params = {
 	lockDelay = 30,			-- Number of frames on the lock timer. After it has elapsed, the piece will lock down
 	clearDelay = 40,		-- Number of frames between lines disappearing, and the matrix collapsing down on those lines
 	pieceAppearDelay = 7,	-- Number of frames between matrix collapse (or lockdown, if no lines cleared), and the next piece appearing.
-	gravityFunc = gravity	-- Reference to function that returns the number of frames it takes for a piece to fall by one line. The function is given the BRIX object, and whether it is soft dropping
+	gravityFunc = gravity,	-- Reference to function that returns the number of frames it takes for a piece to fall by one line. The function is given the BRIX object, and whether it is soft dropping
+	monochrome = false		-- Whether future pieces should be monochromatic
 }
 
 
@@ -220,7 +244,7 @@ function brix.createGame(seed, params)
 	local hookMeta = {}
 	function hookMeta:run(hookName, ...)
 		if thisBrix.hooks[hookName] == nil then
-			error("attempt to call nonexistant hook " .. tostring(hookName))
+			error("attempt to call nonexistant hook " .. tostring(hookName), 2)
 		end
 		for name, func in pairs(thisBrix.hooks[hookName]) do
 			local ret = {func(...)}
@@ -231,7 +255,7 @@ function brix.createGame(seed, params)
 	end
 	function hookMeta:__call(hookName, func)
 		if thisBrix.hooks[hookName] == nil then
-			error("attempt to hook into nonexistant hook " .. tostring(hookName))
+			error("attempt to hook into nonexistant hook " .. tostring(hookName), 2)
 		end
 		table.insert(thisBrix.hooks[hookName], func)
 	end
@@ -254,15 +278,15 @@ function brix.createGame(seed, params)
 		game.params[name] = value
 	end
 	setmetatable(game.params, {
-		__index = function(self, name) error("Attempt to index unknown parameter \"" .. tostring(name) .. "\"") end,
-		__newindex = function(self, name, value) error("Attempt to assign \"" .. tostring(value) .. "\" to unknown parameter \"" .. tostring(name) .. "\"") end
+		__index = function(self, name) error("Attempt to index unknown parameter \"" .. tostring(name) .. "\"", 2) end,
+		__newindex = function(self, name, value) error("Attempt to assign \"" .. tostring(value) .. "\" to unknown parameter \"" .. tostring(name) .. "\"", 2) end
 	})
 
 	-- now load any changes
 	if params then
 		for name, value in pairs(params) do
 			if game.params[name] == nil then
-				error("Attempt to pass unknown parameter name: " .. tostring(name))
+				error("Attempt to pass unknown parameter name: " .. tostring(name), 2)
 			end
 			game.params[name] = value
 		end

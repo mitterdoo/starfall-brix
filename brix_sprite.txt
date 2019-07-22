@@ -30,32 +30,46 @@ local function createSheet(idx, url, coords)
 
 		body = http.base64Encode(body):gsub("\n", "")
 		body = "data:image/png;base64," .. body
+		local tryApply
 
-		local ok, err = pcall(function()
-			m:setTextureURL("$basetexture", body, function(mat, _, w, h, performLayout)
-
-				if not mat then
-					errFunc("Downloaded asset, but could not load!\nURL: " .. tostring(url))
-				else
-
-					sheets[idx] = {mat = mat, coords = coords}
-					allCoords[idx] = coords
-
-				end
-
-			end, function()
-				loadedSheets = loadedSheets + 1
-				if loadedSheets == neededSheets then
-					hook.run("spritesLoaded")
-				end
-			end)
-		end)
-		if not ok then
-			if type(err) == "table" then
-				err = err.message
+		local attempts = 0
+		tryApply = function()
+			attempts = attempts + 1
+			if attempts > 10 then
+				errFunc("Downloaded asset, but could not load!\nURL: " .. tostring(url))
+				return
 			end
-			errFunc(tostring(err))
+			local ok, err = pcall(function()
+				m:setTextureURL("$basetexture", body, function(mat, _, w, h, performLayout)
+
+					if not mat then
+						print("trying again")
+						tryApply()
+					else
+
+						sheets[idx] = {mat = mat, coords = coords}
+						allCoords[idx] = coords
+
+					end
+
+				end, function()
+					loadedSheets = loadedSheets + 1
+					if loadedSheets == neededSheets then
+						hook.run("spritesLoaded")
+					end
+				end)
+			end)
+
+			if not ok then
+				if type(err) == "table" then
+					err = err.message
+				end
+				errFunc(tostring(err))
+			end
 		end
+		tryApply()
+
+
 
 	end
 	local function fail(reason)
@@ -103,8 +117,13 @@ createSheet(1, "http://mitterdoo.net/u/brix/skin1.png", {
 	[13] = {48, 48 * 3, 48, 48},
 	[14] = {48 * 2, 48 * 3, 48, 48},
 
-	solidGarbage = 15,
+	garbageSolid = 15,
 	[15] = {48 * 3, 48 * 3, 48, 48},
+
+	classicPiece = 16,
+	classicPieceGhost = 17,
+	[16] = {320, 384, 48, 48},
+	[17] = {368, 384, 48, 48}
 })
 createSheet(2, "http://mitterdoo.net/u/brix/skin2.png", {
 
