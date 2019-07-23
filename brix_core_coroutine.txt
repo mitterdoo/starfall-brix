@@ -76,7 +76,7 @@ function BRIX:updateMain(frame)
 			table.insert(timers, {name = timerName, finish = timerFinish})
 		end
 		if #timers == 0 then
-			print("no timers")
+			--print("no timers")
 			self.dead = true
 			return false
 		end
@@ -87,7 +87,7 @@ function BRIX:updateMain(frame)
 		self.timers[thisTimer.name] = nil
 		
 		if not self:callEvent(thisTimer.finish, "timer", thisTimer.name) then
-			print("coroutine finished")
+			--print("coroutine finished")
 			return false
 		end
 		

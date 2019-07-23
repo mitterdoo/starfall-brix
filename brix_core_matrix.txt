@@ -236,15 +236,15 @@ end
 function BRIX:_checkTSpin(rot, x, y)
 
 	local a, b, c, d = self:_getTRefPoints(rot, x, y)
-	return a and b and (c or d)
+	return a and b and (c ~= d)
 
 end
 
 function BRIX:_checkMiniTSpin(rot, x, y)
 
 	local a, b, c, d = self:_getTRefPoints(rot, x, y)
-	return c and d and (a and (not b) or (not a) and b)
-	-- return c and d and a ~= b -- (a ~= b <=> !xor)
+	--return c and d and (a and (not b) or (not a) and b)
+	return c and d and (a ~= b) -- (a ~= b <=> !xor)
 
 end
 
