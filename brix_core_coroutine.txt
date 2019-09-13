@@ -6,22 +6,8 @@ brix.onInit(function(self)
 	self.inputs = {}
 	self.timers = {}
 	self.timerCallbacks = {}
-
-	self.buffer = {}
-	self.buffering = false
 	
 end)
-
--- Starts taking in inputs and placing them into the buffer
-function BRIX:enableBuffer()
-	self.buffering = true
-	self.buffer = {}
-end
-
-function BRIX:clearBuffer()
-	self.buffering = false
-	self.buffer = {}
-end
 
 function BRIX:sleep(uniqueTimer, delay)
 
@@ -55,7 +41,7 @@ function BRIX:start()
 
 	self.mainCoroutine = coroutine.create(wrapper)
 	self.timers["begin"] = 0
-	self:updateMain(0)
+	self:update(0)
 
 end
 
@@ -66,7 +52,7 @@ end
 
 
 -- returns whether game is alive
-function BRIX:updateMain(frame)
+function BRIX:update(frame)
 
 	frame = math.ceil(frame)
 	while true do
@@ -174,7 +160,7 @@ function BRIX:userInput(when, inp, down)
 	self.hook:run("preInput", when, inp, down)
 	
 	
-	self:updateMain(when)
+	self:update(when)
 	local event = down and "inputDown" or "inputUp"
 	self.inputs[inp] = down
 	self:callEvent(when, event, inp)

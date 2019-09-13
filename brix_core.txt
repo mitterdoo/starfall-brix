@@ -37,7 +37,7 @@
 															pressed:	Bool for whether this input is down, or up.
 														This function MUST be called in chronological order of inputs. If this is called with a frame number
 															less than the last frame calculated, a "CONTRADICTION" error will be thrown.
-		BRIX:updateMain(frame)							Simulates the game up until the specified frame. The same contradiction rule from above applies.
+		BRIX:update(frame)							Simulates the game up until the specified frame. The same contradiction rule from above applies.
 														This function is called automatically when calling BRIX:userInput()
 														Returns true if the game is still alive. Returns false if the game has ended.
 														Ideally, this should be called every time the game is about to be rendered.
@@ -46,13 +46,20 @@
 		(name)											(description)
 		BRIX.dead										Whether the game has ended.
 		BRIX.matrix										Constant reference to the underlying matrix object that describes what is on the playfield.
-		BRIX.pieceQueue									Constant reference to an ordered table that contains the next pieces.
+			matrix:getrow(row)							Gets the contents of the given row as a string. Row 0 is the very bottom.
+			matrix.data									The entire contents of the matrix as a string. Begins with row 0 contents, then row 1, etc.
+								A cell in the matrix can be as follows:
+									" "		Empty space
+									"!"		Garbage
+									"0-6"	Locked piece (see brix.pieceIDs)
+									"="		Solid garbage (cannot be cleared)
+		BRIX.pieceQueue									Constant reference to an ordered table that contains the next pieces (see brix.pieceIDs)
 		BRIX.currentPiece								Dynamic reference to a piece table that describes the current piece in play.
 			type											Type enum for the piece. See brix.pieceIDs
 			rot												The rotation of the piece. 0 is default rotation, 1 is rotated clockwise, etc.
 			piece											Constant reference to piece object that describes this type of piece. See brix.pieces
 			x, y											Coordinates of this piece. This denotes the bottom-left corner of the piece's bounding box.
-		BRIX.currentCombo								The size of the current line clear combo
+		BRIX.currentCombo								The length of the current line clear combo
 
 
 
@@ -73,7 +80,7 @@ BRIX = {} -- metatable
 BRIX.__index = BRIX
 
 hooks = { -- These are legal hooks in the game
-	"prelock",              -- When the current piece locks down. This is for the SFX.
+	"prelock",              -- When the current piece locks down. This is for the SFX, and for any update-only rendering
 		-- pieceObj
 		-- number rot
 		-- number x
@@ -91,7 +98,7 @@ hooks = { -- These are legal hooks in the game
 	"garbageCancelled",     -- When lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
 	"garbageNag",           -- When a cluster of garbage is nagging the player.
 		-- bool second		whether it's the second nag state
-	"garbageActivate",      -- When the timer of a cluster of garbage has been activated (ready to be dumped at next lockdown w/o clears)
+	"garbageActivate",      -- When the timer of a cluster of garbage has been activated
 	"garbageQueue",         -- When garbage appears in the queue.
 		-- number lines
 		-- number senderUniqueID
@@ -129,7 +136,7 @@ hooks = { -- These are legal hooks in the game
 
 local function gravity(self, soft)
 
-	local mult = soft and 1/20 or 1
+	local mult = soft and 1 / 20 or 1
 	return mult * (0.8 - ((self.level - 1) * 0.007)) ^ (self.level - 1) * brix.frequency
 
 end
@@ -201,7 +208,7 @@ local function initProfiler(self)
 		sleep = 1,
 		userInput = 1,
 		callEvent = 1,
-		updateMain = 1,
+		update = 1,
 		co_main = 1,
 	}
 	
