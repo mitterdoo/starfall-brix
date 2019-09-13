@@ -68,12 +68,18 @@
 ]]
 
 --@shared
---@include brix/brix_core_matrix.txt
---@include brix/brix_core_move.txt
---@include brix/brix_core_damage.txt
---@include brix/brix_core_piecegen.txt
---@include brix/brix_core_mainloop.txt
---@include brix/brix_core_coroutine.txt
+--@include brix/core/matrix.lua
+--@include brix/core/move.lua
+--@include brix/core/damage.lua
+--@include brix/core/piecegen.lua
+--@include brix/core/mainloop.lua
+--@include brix/core/coroutine.lua
+
+inStarfall = ents ~= nil
+
+if not bit and bit32 then -- outside gmod
+	bit = bit32
+end
 
 brix = {}
 BRIX = {} -- metatable
@@ -189,13 +195,16 @@ function BRIX:rng(noupdate)
 
 end
 
-require("brix/brix_core_matrix.txt")
-require("brix/brix_core_move.txt")
-require("brix/brix_core_damage.txt")
-require("brix/brix_core_piecegen.txt")
-require("brix/brix_core_mainloop.txt")
-require("brix/brix_core_coroutine.txt")
-
+local pathPrefix = ""
+if isStarfall then
+	pathPrefix = "brix/core/"
+end
+require(pathPrefix .. "matrix.lua")
+require(pathPrefix .. "move.lua")
+require(pathPrefix .. "damage.lua")
+require(pathPrefix .. "piecegen.lua")
+require(pathPrefix .. "mainloop.lua")
+require(pathPrefix .. "coroutine.lua")
 
 --------------------------------------
 -- GAME
@@ -239,6 +248,7 @@ local function initProfiler(self)
 		return this.profiler[key] and this.profiler[key].f
 	end
 end
+
 
 --[[
 	seed: The PRNG seed
