@@ -85,11 +85,20 @@ function BRIX:co_main()
 		if not self:fitsDown() then goto locking end
 		
 		--self:startTimer("drop", self:getFramesPerDrop())
-		self:startTimer("drop", 0) -- drops immediately
+		local dropFrames = self:getFramesPerDrop()
 		
 		attempts = 0				-- Number of lock resets that have been made
 		lowest = brix.trueHeight	-- The lowest point the current piece has reached.
 		instantLock = false			-- Whether the current piece should instantly lock when touching down
+		
+		if dropFrames <= 1 / 20 then -- 20G, drop to bottom immediately
+			local px, py = self:getFallLocation()
+			p.x = px
+			p.y = py
+			goto locking
+		else
+			self:startTimer("drop", 0) -- drops immediately
+		end
 		
 	::falling::
 		while self:fitsDown() do

@@ -64,8 +64,8 @@ function BRIX:moveDown()
 
 end
 
--- Returns x, y of the ghost piece
-function BRIX:getGhostPiece()
+-- Returns x, y of where the current piece will fall
+function BRIX:getFallLocation()
 	local p = self.currentPiece
 	if not p then return 0, 0 end
 
