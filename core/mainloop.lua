@@ -63,6 +63,7 @@ function BRIX:co_main()
 		local attempts = 0
 		local lowest = brix.trueHeight
 		local instantLock = false
+		local dropFrames, p, px, py, event, what, down, newLow, lockedVisibly, tspin
 	::startOver::
 		
 		--generation
@@ -77,7 +78,7 @@ function BRIX:co_main()
 		end
 		
 	::beginTimer::
-		local p = self.currentPiece
+		p = self.currentPiece
 		if not self:_fits(p.piece, p.rot, p.x, p.y) then
 			print("BLOCK OUT")
 			break
@@ -85,14 +86,14 @@ function BRIX:co_main()
 		if not self:fitsDown() then goto locking end
 		
 		--self:startTimer("drop", self:getFramesPerDrop())
-		local dropFrames = self:getFramesPerDrop()
+		dropFrames = self:getFramesPerDrop()
 		
 		attempts = 0				-- Number of lock resets that have been made
 		lowest = brix.trueHeight	-- The lowest point the current piece has reached.
 		instantLock = false			-- Whether the current piece should instantly lock when touching down
 		
 		if dropFrames <= 1 / 20 then -- 20G, drop to bottom immediately
-			local px, py = self:getFallLocation()
+			px, py = self:getFallLocation()
 			p.x = px
 			p.y = py
 			goto locking
@@ -103,7 +104,7 @@ function BRIX:co_main()
 	::falling::
 		while self:fitsDown() do
 			
-			local event, what = self:pullEvent()
+			event, what = self:pullEvent()
 
 			if event == "timer" and what == "drop" then
 				self:moveDown()
@@ -128,7 +129,7 @@ function BRIX:co_main()
 				
 			elseif event == "inputDown" or event == "inputUp" then
 			
-				local down = event == "inputDown"
+				down = event == "inputDown"
 				if down then
 					if what == cevents.MOVELEFT then
 						self:moveLeft()
@@ -182,7 +183,7 @@ function BRIX:co_main()
 			end
 			
 			--local p = self.currentPiece defined earlier near top of loop
-			local newLow = self:_lowestPoint(p.piece, p.rot, p.x, p.y)
+			newLow = self:_lowestPoint(p.piece, p.rot, p.x, p.y)
 			if newLow < lowest then
 				lowest = newLow
 				attempts = 0
@@ -204,7 +205,7 @@ function BRIX:co_main()
 		--lock
 		while true do
 		
-			local event, what = self:pullEvent()
+			event, what = self:pullEvent()
 			if event == "timer" then
 			
 				if what == "lock" then 
@@ -306,7 +307,7 @@ function BRIX:co_main()
 		end
 		
 	::lock::
-		local lockedVisibly, tspin = self:lock()
+		lockedVisibly, tspin = self:lock()
 		if not lockedVisibly then
 			print("LOCK OUT")
 			break
