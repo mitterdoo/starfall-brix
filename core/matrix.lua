@@ -296,6 +296,11 @@ function BRIX:_fitsTranslation( piece, rot, x, y, ox, oy )
 	elseif ox == 0 then
 
 		assert(oy <= 0, "Vertical translation can only go down", 2)
+		--[[
+			What this code basically does, is find the lowest collision box for each column,
+			and see how far it can move down in the matrix. The one with the shortest possible
+			distance, defines how far this entire, rigid piece, can fall.
+		]]
 		local shortest = -math.huge
 		for px = 0, piece.size-1 do 
 			--for py = piece.size-1, 0, -1 do
@@ -328,6 +333,9 @@ function BRIX:_fitsTranslation( piece, rot, x, y, ox, oy )
 
 
 		--[[
+
+			Far, uglier code that GREATLY slows down the game
+
 		local thisY = y
 		while thisY >= oy do
 			local fitsHere = self:_fits(piece, rot, x, thisY)
