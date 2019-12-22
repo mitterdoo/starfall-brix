@@ -341,7 +341,7 @@ function BRIX:_fitsTranslation( piece, rot, x, y, ox, oy )
 		end
 		]]
 	end
-	error("fitsTranslation can only be given horizontal, (exclusive) or vertical values", 2)
+	error("fitsTranslation can only be given either horizontal, or vertical values", 2)
 
 end
 
