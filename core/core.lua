@@ -52,6 +52,7 @@
 									" "		Empty space
 									"!"		Garbage
 									"0-6"	Locked piece (see brix.pieceIDs)
+									"["		Monochromatic piece
 									"="		Solid garbage (cannot be cleared)
 		BRIX.pieceQueue									Constant reference to an ordered table that contains the next pieces (see brix.pieceIDs)
 		BRIX.currentPiece								Dynamic reference to a piece table that describes the current piece in play.
