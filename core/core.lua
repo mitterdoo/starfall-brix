@@ -27,10 +27,11 @@
 
 	These are the public methods that should be used to change the game
 		(name)											(description)
-		BRIX:queueGarbage(lines, sender)				Instantly adds a garbage cluster to the queue. Lines is number of lines, and sender is a unique number
+		BRIX:queueGarbage(lines, sender)				Adds a garbage cluster to the queue. Lines is number of lines, and sender is a unique number
 															of a player who sent it. The same number will be passed to the "die" hook, if the player died to that
 															player's garbage.
 		BRIX:queueGarbageDelayed(lines, sender, delay)	Adds garbage cluster as above, but waits the specified number of frames first.
+		BRIX:queueSolidGarbage(lines)					Adds a SOLID garbage cluster to a hidden queue. It cannot be countered. After the lock phase, it will be dumped.
 		BRIX:userInput(frame, input, pressed)			Pipes user input into the game.
 															frame:		The frame at which this input was pressed. This will be rounded UP.
 															input:		The enum for this specific input. See brix.inputEvents in brix_core_coroutine
