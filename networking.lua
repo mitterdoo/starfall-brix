@@ -23,12 +23,12 @@
 			<combat>
 		Alice sends Bob X garbage lines
 		Alice targets {list} players
-		Alice is K.O.'d by Bob
-		Alice receives X badge bits from Bob
+		Alice is K.O.'d by Bob (Alice's place, and frame of death, as well as badge bits)
 
 			<playfield>
 		Alice places piece X
 		Alice receives X garbage lines
+		Alice receives X solid garbage lines
 		Alice clears X lines
 	
 
