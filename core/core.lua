@@ -101,8 +101,11 @@ hooks = { -- These are legal hooks in the game
 	"matrixFall",           -- When the matrix collapses from gravity.
 	"garbageDump",          -- When a line of garbage has been dumped
 		-- bool solid
+		-- int gap			(only when non-solid)
 	"garbageDumpFull",		-- Called on the first frame of a garbage cluster being dumped
-		-- table gaps
+		-- bool solid
+		-- table gaps		(only when non-solid)
+		-- [int count]		(only when solid)
 	"garbageCancelled",     -- When lines of garbage have been cancelled. It is up to the listener to decide which line is in which cluster
 	"garbageNag",           -- When a cluster of garbage is nagging the player.
 		-- bool second		whether it's the second nag state

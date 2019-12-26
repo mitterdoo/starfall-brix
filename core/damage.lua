@@ -40,7 +40,7 @@ function BRIX:addGarbageLine(gap) -- nil gap implies solid line
 	end
 	data = newLine .. data
 	self.matrix.data = data
-	self.hook:run("garbageDump", gap ~= nil)
+	self.hook:run("garbageDump", gap ~= nil, gap)
 	
 	return true
 
@@ -91,7 +91,7 @@ function BRIX:dumpCurrentGarbage()
 		gaps[i + 1] = curGap
 	end
 
-	self.hook:run("garbageDumpFull", gaps)
+	self.hook:run("garbageDumpFull", false, gaps)
 	
 	for i = 0, lines - 1 do
 		local gap = gaps[i + 1]
@@ -115,6 +115,9 @@ end
 function BRIX:dumpSolidGarbage()
 
 	if self.solidGarbage == 0 then return true end
+
+	self.hook:run("garbageDumpFull", true, self.solidGarbage)
+
 	while self.solidGarbage > 0 do
 		self.solidGarbage = self.solidGarbage - 1
 		if not self:addGarbageLine() then
