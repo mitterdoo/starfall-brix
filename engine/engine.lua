@@ -1,5 +1,5 @@
 --[[
-	BRIX: Core
+	BRIX: Engine
 	This is the base BRIX game object which includes:
 		Piece RNG
 		Piece Stacking
@@ -22,7 +22,7 @@
 	There are overrideable functions:
 		(name)											(description)
 		BRIX:calculateLinesSent(tricks)					Called when the game needs to calculate how many lines of garbage to send outside of the game.
-														tricks is a bitflag. See brix.tricks in brix_core_damage
+														tricks is a bitflag. See brix.tricks in brix/engine/damage.lua
 		BRIX:levelUpCheck()								The game calls this when it wants to know if it should level up. Return true if it should.
 
 	These are the public methods that should be used to change the game
@@ -34,7 +34,7 @@
 		BRIX:queueSolidGarbage(lines)					Adds a SOLID garbage cluster to a hidden queue. It cannot be countered. After the lock phase, it will be dumped.
 		BRIX:userInput(frame, input, pressed)			Pipes user input into the game.
 															frame:		The frame at which this input was pressed. This will be rounded UP.
-															input:		The enum for this specific input. See brix.inputEvents in brix_core_coroutine
+															input:		The enum for this specific input. See brix.inputEvents in brix/engine/coroutine.lua
 															pressed:	Bool for whether this input is down, or up.
 														This function MUST be called in chronological order of inputs. If this is called with a frame number
 															less than the last frame calculated, a "CONTRADICTION" error will be thrown.
@@ -70,12 +70,12 @@
 ]]
 
 --@shared
---@include brix/core/matrix.lua
---@include brix/core/move.lua
---@include brix/core/damage.lua
---@include brix/core/piecegen.lua
---@include brix/core/mainloop.lua
---@include brix/core/coroutine.lua
+--@include brix/engine/matrix.lua
+--@include brix/engine/move.lua
+--@include brix/engine/damage.lua
+--@include brix/engine/piecegen.lua
+--@include brix/engine/mainloop.lua
+--@include brix/engine/coroutine.lua
 
 inStarfall = ents ~= nil
 
@@ -202,7 +202,7 @@ end
 
 local pathPrefix = ""
 if isStarfall then
-	pathPrefix = "brix/core/"
+	pathPrefix = "brix/engine/"
 end
 require(pathPrefix .. "matrix.lua")
 require(pathPrefix .. "move.lua")
@@ -255,6 +255,37 @@ local function initProfiler(self)
 end
 
 
+function brix.hookObject(obj, hooks)
+
+	local hookMeta = {}
+	function hookMeta:run(hookName, ...)
+		if obj.hooks[hookName] == nil then
+			error("attempt to call nonexistant hook " .. tostring(hookName), 2)
+		end
+		for name, func in pairs(obj.hooks[hookName]) do
+			local ret = {func(...)}
+			if #ret > 0 then
+				return unpack(ret)
+			end
+		end
+	end
+	function hookMeta:__call(hookName, func)
+		if obj.hooks[hookName] == nil then
+			error("attempt to hook into nonexistant hook " .. tostring(hookName), 2)
+		end
+		table.insert(obj.hooks[hookName], func)
+	end
+
+	for _, name in pairs(hooks) do
+		obj.hooks[name] = {}
+	end
+
+	hookMeta.__index = hookMeta
+	obj.hook = setmetatable({}, hookMeta)
+
+
+end
+
 --[[
 	seed: The PRNG seed
 	params: Optional table of parameters to overwrite the brix.params
@@ -264,7 +295,9 @@ function brix.createGame(seed, params)
 	if not seed then error("Attempt to create game without RNG seed!") end
 	seed = math.max(1,seed)
 	local game = {}
+	--[[
 	local thisBrix = game
+
 	local hookMeta = {}
 	function hookMeta:run(hookName, ...)
 		if thisBrix.hooks[hookName] == nil then
@@ -293,6 +326,11 @@ function brix.createGame(seed, params)
 
 	hookMeta.__index = hookMeta
 	game.hook = setmetatable({}, hookMeta)
+	]]
+
+	brix.hookObject(game, hooks)
+
+
 	game.frame = 0 -- d
 	game.rseed = seed -- d
 

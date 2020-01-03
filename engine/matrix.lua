@@ -1,6 +1,10 @@
 --@name BRIX: Matrix Operations
 --@shared
 
+--[[
+	This contains the code that defines behaviour for piece movement.
+]]
+
 function brix.makeMatrix(w, h)
 
 	-- First row is bottom row

@@ -157,6 +157,8 @@ function BRIX:lock()
 	
 	p.piece = nil
 	p.type = -1
+
+	self.lastPieceLocked = {piece = p_obj, rot = p_rot, x = p_x, y = p_y}
 	self.hook:run("prelock", p_obj, p_rot, p_x, p_y)
 	return visible, spin or false
 	

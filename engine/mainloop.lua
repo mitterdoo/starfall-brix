@@ -336,6 +336,10 @@ function BRIX:co_main()
 			
 			local tricks = self:calculateTricks(#lines, tspin)
 			local linesSent = self:calculateLinesSent(tricks)
+			if linesSent > 0 then
+				tricks = flagSet(tricks, brix.tricks.SENT)
+			end
+			
 			linesSent = self:clearGarbage(linesSent)
 			self.hook:run("lock", tricks, self.currentCombo, linesSent, lines)
 			
