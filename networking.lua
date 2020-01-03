@@ -61,3 +61,177 @@
 ]]
 
 
+
+
+function BR:sv_handleMatrixGarbage(isSolid, lines)
+
+	if isSolid then
+		self.arena:enqueue(br.serverEvents.MATRIX_SOLID, self.uniqueId, lines)
+	else
+		self.arena:enqueue(br.serverEvents.MATRIX_GARBAGE, self.uniqueId, #lines, unpack(lines))
+	end
+
+end
+
+
+function BR:sv_handleMatrixPlace(pieceID, rot, x, y, mono)
+
+	self.hook:run("matrixPlace", self.uniqueId, p, rot, x, y, mono)
+	self.arena:enqueue(br.serverEvents.MATRIX_PLACE, self.uniqueId, p, rot, x, y, mono and 1 or 0)
+
+end
+
+--[[
+	Called when this player is sending garbage lines.
+	This will handle recipients of garbage.
+]]
+function BR:sv_handleDamage(lines)
+
+	if self.target ~= 0 then
+
+		if self.target == self.uniqueId then
+			error("Attempt to attack self!")
+		end
+
+		self.arena:enqueue(br.serverEvents.DAMAGE, self.uniqueId, 1, lines, self.target)
+
+
+	else
+
+		local targets = self.attackers
+		lines = math.ceil(lines / #targets)
+		self.arena:enqueue(br.serverEvents.DAMAGE, self.uniqueId, #targets, lines, unpack(targets))
+
+	end
+
+end
+
+-- {id, ...}
+function BR:enqueue(...)
+
+	table.insert(self.clientQueue, {...})
+
+end
+
+
+
+
+--[[
+	If using this outside of Starfall, rewrite this function to send data accordingly.
+]]
+local Tag = "brixnet"
+
+function br.sendQueue(isClient, queue, snapshotID)
+
+	local events = isClient and br.clientEvents or br.serverEvents
+	net.start(Tag)
+	
+	if not isClient then
+		net.writeUInt(snapshotID, 32)
+	end
+
+	net.writeUInt(#queue, 32)
+	for _, event in pairs(queue) do
+
+		local kind = event[1]
+		net.writeUInt(kind, 3)
+
+		if isClient then
+			net.writeUInt(event[2], 32) -- Frame
+
+			if kind == events.INPUT then
+				net.writeUInt(event[3], 3) -- inputButton
+				net.writeBit(event[4]) -- inputDown
+
+				-- 3 + 32 + 3 + 1
+				-- 39 bits
+			elseif kind == events.TARGET then
+				net.writeUInt(event[3], 6) -- uniqueId
+
+				-- 3 + 32 + 6
+				-- 41 bits
+			elseif kind == events.DIE then
+				net.writeUInt(event[4], 6) -- killer ID
+
+				-- 3 + 32 + 6
+				-- 41 bits
+			elseif kind == events.ACKNOWLEDGE then
+				net.writeUInt(event[3], 32) -- snapshot ID
+
+				-- 3 + 32 + 32
+				-- 67 bits
+			else
+				error("Unknown net event type: " .. tostring(kind))
+			end
+		
+		else
+
+			if kind == events.DAMAGE then
+				net.writeUInt(event[2], 6) -- Attacker
+				local count = event[3]
+				net.writeUInt(count, 6) -- Victim Count
+				net.writeUInt(event[4], 5) -- Garbage count
+				for i = 1, count do
+					net.writeUInt(event[4 + i], 6) -- Victim X
+				end
+
+				-- 3 + 6 + 6 + 5 + 6x
+				-- 20 + 6x bits
+			elseif kind == events.TARGET then
+				net.writeUInt(event[2], 6) -- Attacker
+				local targetCount = event[3]
+				net.writeUInt(targetCount, 6) -- targetCount
+				for i = 1, targetCount do
+					net.writeUInt(event[3 + i], 6) -- targetX
+				end
+
+				-- 3 + 6 + 6 + 6x
+				-- 15 + 6x bits		(x = targets)
+			elseif kind == events.DIE then
+				net.writeUInt(event[2], 6) -- victim
+				net.writeUInt(event[3], 6) -- killer
+				net.writeUInt(event[4], 6) -- placement
+				net.writeUInt(event[5], 32) -- deathFrame
+				net.writeUInt(event[6], 6) -- badgeBits
+
+				-- 3 + 6 + 6 + 6 + 32 + 6
+				-- 59 bits
+			elseif kind == events.MATRIX_PLACE then
+				net.writeUInt(event[2], 6) -- player
+				net.writeUInt(event[3], 3) -- pieceID
+				net.writeUInt(event[4], 2) -- rotation
+				net.writeUInt(event[5], 4) -- x
+				net.writeUInt(event[6], 5) -- y
+				net.writeBit(event[7]) -- monochrome
+
+				-- 3 + 6 + 3 + 2 + 4 + 5 + 1
+				-- 24 bits
+			elseif kind == events.MATRIX_GARBAGE then
+				net.writeUInt(event[2], 6) -- player
+				local lineCount = event[3]
+				net.writeUInt(lineCount, 5) -- lineCount
+				for i = 1, lineCount do
+					net.writeUInt(event[3 + i], 4) -- gapX
+				end
+
+				-- 3 + 6 + 5 + 4x
+				-- 14 + 4x
+			elseif kind == events.MATRIX_SOLID then
+				net.writeUInt(event[2], 6) -- player
+				net.writeUInt(event[3], 5)
+
+				-- 3 + 6 + 5
+				-- 14
+			else
+				error("Unknown net event type: " .. tostring(kind))
+			end
+		end
+
+	end
+
+	net.send()
+
+
+end
+
+
