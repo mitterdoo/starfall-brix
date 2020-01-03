@@ -87,7 +87,7 @@ brix = {}
 BRIX = {} -- metatable
 BRIX.__index = BRIX
 
-hooks = { -- These are legal hooks in the game
+BRIX.hookNames = { -- These are legal hooks in the game
 	"prelock",              -- When the current piece locks down. This is for the SFX, and for any update-only rendering
 		-- pieceObj
 		-- number rot
@@ -287,10 +287,13 @@ function brix.hookObject(obj, hooks)
 end
 
 --[[
+	GameClass: the class to use for game creation. Must use BRIX or other classes that inherit it.
 	seed: The PRNG seed
 	params: Optional table of parameters to overwrite the brix.params
 ]]
-function brix.createGame(seed, params)
+
+function brix.createGame(GameClass, seed, params)
+
 
 	if not seed then error("Attempt to create game without RNG seed!") end
 	seed = math.max(1,seed)
@@ -328,7 +331,7 @@ function brix.createGame(seed, params)
 	game.hook = setmetatable({}, hookMeta)
 	]]
 
-	brix.hookObject(game, hooks)
+	brix.hookObject(game, self.hookNames)
 
 
 	game.frame = 0 -- d
@@ -360,7 +363,7 @@ function brix.createGame(seed, params)
 	end
 
 	--initProfiler(game)
-	setmetatable(game, BRIX)
+	setmetatable(game, GameClass)
 	
 	game:rng() -- shuffle once
 	
