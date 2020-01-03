@@ -34,7 +34,7 @@ br.hooks = {
 		-- rotation
 		-- x
 		-- y
-		-- isMonochromeb
+		-- isMonochrome
 	"matrixGarbage",	-- When a player's fbield receives garbage
 		-- playerID
 		-- {gaps}
