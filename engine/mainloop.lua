@@ -148,6 +148,8 @@ function BRIX:co_main()
 						self:startTimer("drop", self:getFramesPerDrop())
 						
 					elseif what == cevents.HARDDROP then
+						self:cancelTimer("moveleft")
+						self:cancelTimer("moveright")
 						self:hardDrop()
 						self:cancelTimer("drop")
 						goto lock
