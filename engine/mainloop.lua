@@ -133,13 +133,13 @@ function BRIX:co_main()
 				if down then
 					if what == cevents.MOVELEFT then
 						self:moveLeft()
-						self:startTimer("moveleft", self.inputIsBuffered and self.params.autoRepeatSpeed or self.params.autoRepeatBegin)
+						self:startTimer("moveleft", self.params.autoRepeatBegin)
 						self:cancelTimer("moveright")
 						--if not self:fitsDown() then break end
 						
 					elseif what == cevents.MOVERIGHT then
 						self:moveRight()
-						self:startTimer("moveright", self.inputIsBuffered and self.params.autoRepeatSpeed or self.params.autoRepeatBegin)
+						self:startTimer("moveright", self.params.autoRepeatBegin)
 						self:cancelTimer("moveleft")
 						--if not self:fitsDown() then break end
 					
