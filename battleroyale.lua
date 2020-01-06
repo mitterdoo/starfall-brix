@@ -101,9 +101,11 @@ local gravLookup = {
 }
 local maxLevel = #gravLookup[1] -- 18
 
+local levelFrames = 1200
+
 function BR:calcLevel(nolimit)
 
-	if self.levelTimer == 0 then return 1 end
+	if self.levelTimer < 0 then return 1 end
 	local frame = self.frame
 	local timeSpent = frame - self.levelTimer
 	local max = maxLevel
@@ -204,12 +206,27 @@ function BR:calculateLinesSent(tricks)
 end
 
 -- override
+--[[
+	Add special level-up features, such as
+	Monochrome mode, which forces all new pieces to appear as "[ ]"
+	"Hurryup" solid garbage is added every 20 seconds when the game takes too long
+]]
 function BR:levelUpCheck()
 
 	-- Level can change mid-phase
 	local level = self:calcLevel(true) -- Limitless levelling
 	if level > self.lastLevel then
 		self.lastLevel = self.lastLevel + 1
+
+		level = self.lastLevel
+		if level >= maxLevel + 4 then
+			self.params.monochrome = true
+		end
+
+		if level >= maxLevel + 6 then
+			self:queueSolidGarbage(1)
+		end
+
 		return true
 	end
 
@@ -221,79 +238,35 @@ end
 
 	Initializes the BR game object. Takes:
 		seed:		Global PRNG seed for the match
-		uniqueId:	The uniqueId associated with this player's game.
+		uniqueID:	The uniqueID associated with this player's game.
 
 ]]
-function br.createGame(seed, uniqueId)
+function br.createGame(seed, uniqueID)
 
 	local self -- forward reference
 	local BRParams = {
 		gravityFunc = function(obj, soft)
 			return self:gravityFunc(soft)
-		end
+		end,
+		rotateBuffering = false,
+		holdBuffering = false
 	}
 	self = brix.createGame(BR, seed, BRParams)
-	self.uniqueId = uniqueId
+	self.uniqueID = uniqueID
 
 
-	self.levelTimer = 0 -- Gets set to the frame when level begins increasing
+	self.levelTimer = -1 -- Gets set to the frame when level begins increasing
 
 
-	self.attackers = {}		-- List of attackers' uniqueIds
+	self.attackers = {}		-- List of attackers' uniqueIDs
 	self.badgeBits = 0		-- Number of badge bits
-	self.target = 0			-- 0 = attackers, otherwise individual uniqueId
+	self.target = 0			-- 0 = attackers, otherwise individual uniqueID
 
 	self.lastLevel = 1		-- Used for endless level calculation
 
 	
 
-	
-
-	--[[ Add special level-up features, such as
-		Monochrome mode, which forces all new pieces to appear as "[ ]"
-		"Hurryup" solid garbage is added every 20 seconds when the game takes too long
-
-	]]
-	self.hook("levelUp", function(level)
-	
-		if level >= maxLevel + 4 then
-			self.params.monochrome = true
-		end
-
-		if level >= maxLevel + 6 then
-			self:queueSolidGarbage(1)
-		end
-
-	end)
-
-end
-
-function BR:sv_handleDie(serverFrame, killer)
-
-	-- Arena will set our received death frame automatically.
-	local clientFrame = self.deathFrame
-	if not clientFrame then
-		error("Possible Desync! Server game died, but client didn't!")
-	end
-
-	if serverFrame ~= clientFrame then
-		print("Note: client's death frame did not match server frame")
-	end
-
-	local killerObject = self.arena.players[killer]
-	if killerObject then
-		killerObject.badgeBits = killerObject.badgeBits + self.badgeBits
-	end
-
-
-	local placement = self.arena:eliminate(self.uniqueId)
-	self.arena:enqueue(br.serverEvents.DIE,
-		self.uniqueId,
-		killer,
-		placement,
-		serverFrame,
-		self.badgeBits)
-	
+	return self
 
 
 end
@@ -309,7 +282,17 @@ function BR:userInput(frame, input, down)
 	if input == br.inputEvents.CHANGE_TARGET then
 
 		-- down is no longer down; it now denotes the uniqueID we are attacking
-		-- TODO: Handle target change
+		local target = down
+		if target == self.uniqueID then
+			error("Attempt to attack self!")
+		end
+
+		if type(target) ~= "number" then
+			error("Attempt to set target to invalid type '" .. type(target) .. "'")
+		end
+		self.target = target
+		self.hook:run("changeTarget", self.target)
+
 
 	else
 		error("Unknown input type: " .. tostring(input))
