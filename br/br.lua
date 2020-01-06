@@ -1,7 +1,7 @@
 --@name BRIX Battle Royale
 --@author mitterdoo
 --@shared
---@require brix/engine/engine.lua
+--@include brix/engine/engine.lua
 --[[
 	Game object for client/server
 
