@@ -344,6 +344,9 @@ function BRIX:co_main()
 			
 			linesSent = self:clearGarbage(linesSent)
 			self.hook:run("lock", tricks, self.currentCombo, linesSent, lines)
+			if linesSent > 0 then
+				self.hook:run("garbageSend", linesSent)
+			end
 			
 			self:checkBackToBack(#lines, tspin)
 
