@@ -247,9 +247,6 @@ end
 ]]
 function br.createGame(GameClass, seed, uniqueID)
 
-	if not GameClass then
-		GameClass = BR
-	end
 	local self -- forward reference
 	local BRParams = {
 		gravityFunc = function(obj, soft)
