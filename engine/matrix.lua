@@ -133,8 +133,7 @@ brix.w = 10
 brix.h = 20
 brix.bufferHeight = 20
 brix.trueHeight = brix.h + brix.bufferHeight
-
-brix.dangerHeight = brix.h - 3
+brix.dangerCapacity = brix.w * brix.trueHeight * 0.35 -- 35+% of the entire matrix filled = danger
 
 
 ---------------------------------------
@@ -240,6 +239,8 @@ function brix.makeMatrix(w, h)
 			end
 		end
 		if not lockedVisibly then return false end
+
+		self:updateCount()
 		return true
 
 	end
@@ -271,6 +272,7 @@ function brix.makeMatrix(w, h)
 		end
 		data = newLine .. data
 		self.data = data
+		self:updateCount()
 		
 		return true
 
@@ -300,6 +302,7 @@ function brix.makeMatrix(w, h)
 			self:collapse(lines)
 		end
 
+		self:updateCount()
 
 	end
 
@@ -321,6 +324,14 @@ function brix.makeMatrix(w, h)
 			cleared = cleared + 1
 		
 		end
+
+	end
+
+	-- Updates the number of occupied cells on the matrix. Used for "danger zone" calculation
+	function mat:updateCount()
+
+		local filled = #self.data:gsub(" ", "") -- Find out how many cells are occupied
+		self.cellCount = filled
 
 	end
 
@@ -526,9 +537,9 @@ end
 function BRIX:updateDanger()
 	
 	local g = self:getGarbageCount()
-	local inDanger = self:_highestPoint() + g >= brix.dangerHeight
+	local inDanger = self.matrix.cellCount + g * 9 >= brix.dangerCapacity
 	if inDanger ~= self.danger then
-		self.hook:run("pinch", inDanger)
+		self.hook:run("danger", inDanger)
 	end
 	self.danger = inDanger
 	return self.danger

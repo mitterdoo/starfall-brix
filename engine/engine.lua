@@ -117,8 +117,8 @@ BRIX.hookNames = { -- These are legal hooks in the game
 	"garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
 	"garbageSend",			-- When the game has lines (leftover from clearing garbage queue) to send out
 		-- number lines
-	"pinch",                -- When the matrix enters/exits "the red".
-		-- bool inPinch
+	"danger",                -- When the matrix enters/exits "the red".
+		-- bool inDanger
 	
 	"pieceBufferRotate",	-- When the spawned piece has been pre-rotated
 	"pieceBufferHold",		-- When the spawned piece was pre-held
