@@ -45,7 +45,7 @@
 
 	These are public members that are recommended for use in implementations, which are read-only:
 		(name)											(description)
-		BRIX.dead										Whether the game has ended.
+		BRIX.diedAt										Frame at which the game ended. nil if game isn't over
 		BRIX.matrix										Constant reference to the underlying matrix object that describes what is on the playfield.
 			matrix:getrow(row)							Gets the contents of the given row as a string. Row 0 is the very bottom.
 			matrix.data									The entire contents of the matrix as a string. Begins with row 0 contents, then row 1, etc.
@@ -115,6 +115,8 @@ BRIX.hookNames = { -- These are legal hooks in the game
 		-- number senderUniqueID
 		-- number frame
 	"garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
+	"garbageSend",			-- When the game has lines (leftover from clearing garbage queue) to send out
+		-- number lines
 	"pinch",                -- When the matrix enters/exits "the red".
 		-- bool inPinch
 	
