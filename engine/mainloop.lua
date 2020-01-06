@@ -270,6 +270,8 @@ function BRIX:co_main()
 					end
 				
 				elseif what == cevents.HARDDROP then
+					self:cancelTimer("moveleft")
+					self:cancelTimer("moveright")
 					self.hook:run("pieceHardDrop", self.currentPiece)
 					break
 					
