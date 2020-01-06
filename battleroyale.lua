@@ -128,8 +128,19 @@ function BR:gravityFunc(soft)
 
 end
 
+function BR:giveBadgeBits(count, who)
+	self.badgeBits = self.badgeBits + count
+	self.hook:run("badgeBits", count, who)
+end
 
+function BR:setAttackers(attackers)
+	self.attackers = attackers
+	self.hook:run("attackersChanged", attackers)
+end
 
+function BR:startLevelTimer(frame)
+	self.levelTimer = frame
+end
 
 
 -- override
