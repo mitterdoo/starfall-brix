@@ -151,7 +151,6 @@ end
 -- override
 function BR:calculateLinesSent(tricks)
 
-	print(string.format("%x", tricks))
 	local base = 0 -- Base damage
 
 	local lines
