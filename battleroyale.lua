@@ -178,25 +178,25 @@ function BR:calculateLinesSent(tricks)
 		local combo = self.currentCombo
 		if combo <= 2 then
 			base = base + 1
-		elseif com <= 4 then
+		elseif combo <= 4 then
 			base = base + 2
-		elseif com <= 6 then
+		elseif combo <= 6 then
 			base = base + 3
-		elseif com <= 9 then
+		elseif combo <= 9 then
 			base = base + 4
 		else
 			base = base + 5
 		end
 	end
 
-	local attackers = #br_obj.attackers
+	local attackers = #self.attackers
 	if attackers >= 2 then
 		local add = 1 + (attackers - 2) * 2
 		add = math.min(9, add)
 		base = base + add
 	end
 
-	local mult = br.getBadgeMultiplier(br_obj.badgeBits)
+	local mult = br.getBadgeMultiplier(self.badgeBits)
 	local sent = math.floor(base * mult)
 
 	return math.min(20, sent)
