@@ -259,6 +259,7 @@ end
 
 function brix.hookObject(obj, hooks)
 
+	obj.hooks = {}
 	local hookMeta = {}
 	function hookMeta:run(hookName, ...)
 		if obj.hooks[hookName] == nil then
@@ -333,7 +334,7 @@ function brix.createGame(GameClass, seed, params)
 	game.hook = setmetatable({}, hookMeta)
 	]]
 
-	brix.hookObject(game, self.hookNames)
+	brix.hookObject(game, GameClass.hookNames)
 
 
 	game.frame = 0 -- d
