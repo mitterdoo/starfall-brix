@@ -1,6 +1,7 @@
 --@name BRIX Battle Royale
 --@author mitterdoo
 --@shared
+--@require brix/engine/engine.lua
 --[[
 	Game object for client/server
 
@@ -11,6 +12,8 @@
 	Networking traffic should be handled by the parent Arena object, which should utilize these hooks.
 
 ]]
+
+require("brix/engine/engine.lua")
 
 br = {} -- library
 
