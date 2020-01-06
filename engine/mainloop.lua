@@ -318,23 +318,12 @@ function BRIX:co_main()
 		
 	::lineClears::
 		
-		local lines = {}
-		for i = 0, brix.trueHeight - 1 do
-
-			if i >= self.solidHeight and #self.matrix:getrow(i):gsub(" ","") == brix.w then
-				table.insert(lines, i)
-			end
-		
-		end
+		local lines = self.matrix:check()
 		
 		self:checkCombo(#lines > 0)
 		
 		if #lines > 0 then
-			for _, line in pairs(lines) do
-				
-				self.matrix:setrow(line, string.rep(" ", brix.w))
-				
-			end
+			self.matrix:clear(lines, true) -- true to skip collapsing
 			
 			local tricks = self:calculateTricks(#lines, tspin)
 			local linesSent = self:calculateLinesSent(tricks)
@@ -352,27 +341,8 @@ function BRIX:co_main()
 
 			self:sleep("lineClear", self.params.clearDelay)
 			
-		
-			local cleared = 0
-			for _, line in pairs(lines) do
-			
-				for i = line, brix.trueHeight - 1 do
-				
-					i = i - cleared
-					local fill = (" "):rep(brix.w)
-					if i + 1 < brix.trueHeight then
-						fill = self.matrix:getrow(i + 1)
-					end
-					self.matrix:setrow(i, fill)
-				
-				end
-				cleared = cleared + 1
-			
-			end
-			
-			if cleared > 0 then
-				self.hook:run("matrixFall")
-			end
+			self.matrix:collapse(lines)
+			self.hook:run("matrixFall")
 		
 		else
 		

@@ -151,7 +151,7 @@ function BRIX:lock()
 	local p = self.currentPiece
 	local mono = bit.band(0x8, p.type) > 0
 	local p_obj, p_rot, p_x, p_y = p.piece, p.rot, p.x, p.y
-	local visible = self:_lock(p.piece, p.rot, p.x, p.y, mono)
+	local visible = self.matrix:lock(p.piece, p.rot, p.x, p.y, mono)
 	
 	local spin = p.spin
 	

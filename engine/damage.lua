@@ -5,7 +5,6 @@ brix.onInit(function(self)
 
 	self.garbage = {} -- d { {lines = n, begin = frame, dump = frame, who = player} }
 	self.solidGarbage = 0 -- number of lines of solid garbage waiting to be dumped
-	self.solidHeight = 0
 
 end)
 
@@ -25,23 +24,11 @@ brix.tricks = {
 
 function BRIX:addGarbageLine(gap) -- nil gap implies solid line
 
-	--if #self.matrix.data:sub(1,brix.w):gsub(" ", "") > 0 then
-	if not self:_isRowClear(brix.trueHeight-1) then
+	if not self.matrix:garbage(gap) then
 		return false
 	end
-	
-	local data = self.matrix.data:sub(1, brix.w * (brix.trueHeight-1))
-	local newLine
-	if gap then
-		newLine = string.rep("!", gap - 1) .. " " .. string.rep("!", brix.w - gap)
-	else
-		newLine = string.rep("=", brix.w)
-		self.solidHeight = self.solidHeight + 1
-	end
-	data = newLine .. data
-	self.matrix.data = data
+
 	self.hook:run("garbageDump", gap ~= nil, gap)
-	
 	return true
 
 end
