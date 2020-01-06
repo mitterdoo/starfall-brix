@@ -112,7 +112,7 @@ function BR:calcLevel(nolimit)
 	end
 
 
-	return math.min(max, math.floor((timeSpent + 600) / 1200) + 1)
+	return math.min(max, math.floor((timeSpent + levelFrames/2) / levelFrames) + 1)
 
 end
 
