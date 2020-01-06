@@ -175,6 +175,9 @@ brix.params = {
 
 
 brix.frequency = 60
+function brix.getFrame(seconds)
+	return seconds * brix.frequency
+end
 
 -- INIT callbacks
 brix.initializers = {}
