@@ -143,6 +143,27 @@ function BR:setAttackers(attackers)
 	self.hook:run("attackersChanged", attackers)
 end
 
+function BR:addAttacker(attacker)
+	local attackers = self.attackers
+	for _, id in pairs(attackers) do
+		if id == attacker then return end
+	end
+
+	table.insert(attackers, attacker)
+	self:setAttackers(attackers)
+end
+
+function BR:removeAttacker(attacker)
+	local attackers = self.attackers
+	for key, id in pairs(attackers) do
+		if id == attacker then
+			table.remove(attackers, key)
+			self:setAttackers(attackers)
+			return
+		end
+	end
+end
+
 function BR:startLevelTimer(frame)
 	self.levelTimer = frame
 end
