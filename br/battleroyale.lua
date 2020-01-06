@@ -85,11 +85,11 @@ br.clientEvents = {
 	INPUT = 0,		-- {UInt32 frame, UInt3 inputButton, Bit inputDown}
 					-- Signals a standard game input.
 
-	TARGET = 1,		-- {UInt32 frame, UInt6 uniqueId}
+	TARGET = 1,		-- {UInt32 frame, UInt6 uniqueID}
 					-- Signals a change of target. 0 for attackers
 
 	DIE = 2,		-- {UInt32 frame, UInt6 killerUniqueId}
-					-- Signals death. uniqueId = 0 for self
+					-- Signals death. uniqueID = 0 for self
 
 	ACKNOWLEDGE = 3	-- {UInt32 frame, UInt32 snapshotID}
 }
@@ -148,6 +148,7 @@ end
 -- override
 function BR:calculateLinesSent(tricks)
 
+	print(string.format("%x", tricks))
 	local base = 0 -- Base damage
 
 	local lines
