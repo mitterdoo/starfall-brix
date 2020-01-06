@@ -245,8 +245,11 @@ end
 		uniqueID:	The uniqueID associated with this player's game.
 
 ]]
-function br.createGame(seed, uniqueID)
+function br.createGame(GameClass, seed, uniqueID)
 
+	if not GameClass then
+		GameClass = BR
+	end
 	local self -- forward reference
 	local BRParams = {
 		gravityFunc = function(obj, soft)
@@ -255,7 +258,7 @@ function br.createGame(seed, uniqueID)
 		rotateBuffering = false,
 		holdBuffering = false
 	}
-	self = brix.createGame(BR, seed, BRParams)
+	self = brix.createGame(GameClass, seed, BRParams)
 	self.uniqueID = uniqueID
 
 
