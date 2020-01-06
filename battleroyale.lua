@@ -20,8 +20,15 @@ BR.__index = BR
 
 -- Clone hook table
 BR.hookNames = {
-	"garbageSend",
-	"changeTarget"
+	"changeTarget",		-- When the target has been changed
+		-- number uniqueID (or 0, if targeting attackers)
+
+	"attackersChanged",	-- When the list of players attacking us has been changed
+		-- table {attackerUniqueID, ...}
+
+	"badgeBits"			-- When we receive badge bits
+		-- number count
+		-- number uniqueID of giver
 }
 for _, name in pairs(BRIX.hookNames) do
 	table.insert(BR.hookNames, name)
