@@ -17,7 +17,7 @@ require("brix/engine/engine.lua")
 
 br = {} -- library
 
-local BR = setmetatable({}, {__index = BRIX}) -- Inherit from engine
+BR = setmetatable({}, {__index = BRIX}) -- Inherit from engine
 BR.__index = BR
 
 
