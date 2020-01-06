@@ -20,7 +20,7 @@ brix.tricks = {
 	BACK_TO_BACK = 0x80,	-- Is b2b
 	COMBO = 0x100,			-- Has combo (see BRIX.currentCombo)
 	SENT = 0x200,			-- Sent any damage
-	CLEARED = 0x300			-- Cleared any lines
+	CLEARED = 0x400			-- Cleared any lines
 }
 
 function BRIX:addGarbageLine(gap) -- nil gap implies solid line
