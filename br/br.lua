@@ -64,39 +64,6 @@ function br.getBadgeMultiplier(badgeBits)
 end
 
 
-br.serverEvents = {
-	DAMAGE = 0,		-- {UInt6 attacker, UInt6 victimCount, UInt5 garbageLines, UInt6 victim1, UInt6 victim2, ...}
-					-- Signals damage being sent to another player.
-
-	TARGET = 1,		-- {UInt6 attacker, UInt6 targetCount, UInt6 target1, UInt6 target2, ...}
-					-- Signals a player changing their targets.
-
-	DIE = 2,		-- {UInt6 victim, UInt6 killer, UInt6 placement, UInt32 deathFrame, UInt6 badgeBits}
-					-- Signals a player's death, containing their placement in the match, the frame at which they died, and the badge bits transferred to the killer.
-
-	MATRIX_PLACE = 3,	-- {UInt6 player, UInt3 piece, UInt2 rotation, UInt4 x, Uint5 y, Bit monochrome}
-						-- Signals placing a piece on the field.
-
-
-	MATRIX_GARBAGE = 4, -- {UInt6 player, UInt5 lineCount, UInt4 gap1, UInt4 gap2, ...}
-	MATRIX_SOLID = 5,	-- {UInt6 player, UInt5 lineCount}
-	--MATRIX_CLEAR = 6,	-- {UInt6 player, UInt5 lineCount, UInt5 line1, UInt5 line2, ..., UInt5 line4}
-	-- Redundant, since the client can just check for line clears automatically
-
-}
-br.clientEvents = {
-	INPUT = 0,		-- {UInt32 frame, UInt3 inputButton, Bit inputDown}
-					-- Signals a standard game input.
-
-	TARGET = 1,		-- {UInt32 frame, UInt6 uniqueID}
-					-- Signals a change of target. 0 for attackers
-
-	DIE = 2,		-- {UInt32 frame, UInt6 killerUniqueId}
-					-- Signals death. uniqueID = 0 for self
-
-	ACKNOWLEDGE = 3	-- {UInt32 frame, UInt32 snapshotID}
-}
-
 
 local gravLookup = {
 	{60, 50, 40, 30, 20, 10, 8, 6, 4, 2, 1,		1 / 2,	1 / 3,	1 / 4, 1 / 6,	1 / 10,	1 / 15, 1 / 20},
