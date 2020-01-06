@@ -262,10 +262,12 @@ function brix.hookObject(obj, hooks)
 	obj.hooks = {}
 	local hookMeta = {}
 	function hookMeta:run(hookName, ...)
-		if obj.hooks[hookName] == nil then
+		local list = obj.hooks[hookName]
+		if list == nil then
 			error("attempt to call nonexistant hook " .. tostring(hookName), 2)
 		end
-		for name, func in pairs(obj.hooks[hookName]) do
+		if #list == 0 then return end
+		for name, func in pairs(list) do
 			local ret = {func(...)}
 			if #ret > 0 then
 				return unpack(ret)
@@ -273,10 +275,11 @@ function brix.hookObject(obj, hooks)
 		end
 	end
 	function hookMeta:__call(hookName, func)
-		if obj.hooks[hookName] == nil then
+		local list = obj.hooks[hookName]
+		if list == nil then
 			error("attempt to hook into nonexistant hook " .. tostring(hookName), 2)
 		end
-		table.insert(obj.hooks[hookName], func)
+		table.insert(list, func)
 	end
 
 	for _, name in pairs(hooks) do
