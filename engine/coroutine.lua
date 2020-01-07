@@ -6,6 +6,7 @@ brix.onInit(function(self)
 	self.inputs = {}
 	self.timers = {}
 	self.timerCallbacks = {}
+	self.started = false
 	
 end)
 
@@ -41,6 +42,7 @@ function BRIX:start()
 
 	self.mainCoroutine = coroutine.create(wrapper)
 	self.timers["begin"] = 0
+	self.started = true
 	self:update(0)
 
 end
