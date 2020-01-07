@@ -5,7 +5,11 @@
 
 require("brix/br/br.lua")
 
-ARENA = setmetatable({}, {__index = BR}) -- inherit from BR object
+if CLIENT then
+	ARENA = setmetatable({}, {__index = BR}) -- inherit from BR object
+else
+	ARENA = {}
+end
 
 ARENA.netTag = "brix"
 ARENA.netConnectTag = "brixConnect"
