@@ -63,7 +63,9 @@ end
 function BRIX:co_main()
 
 	self:populatePieceQueue()
+	self.hook:run("init")
 	self:onGameStart()
+	self.hook:run("start")
 
 	local cevents = brix.inputEvents
 	while true do

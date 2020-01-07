@@ -88,6 +88,8 @@ BRIX = {} -- metatable
 BRIX.__index = BRIX
 
 BRIX.hookNames = { -- These are legal hooks in the game
+	"init",					-- When the main coroutine has started.
+	"start",				-- When BRIX:onGameStart has finished running
 	"prelock",              -- When the current piece locks down. This is for the SFX, and for any update-only rendering
 		-- pieceObj
 		-- number rot
