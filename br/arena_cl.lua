@@ -57,8 +57,9 @@ function br.createArena(seed, uniqueID)
 	local self = br.createGame(ARENA, seed, uniqueID)
 
 	self.queue = {}
+	self.arena = {}
 
-	self.hook("preInput", function(when, pressed, input)
+	self.hook("preInput", function(when, input, pressed)
 
 		self:enqueue(self.clientEvents.INPUT, when, input, pressed)
 
@@ -72,7 +73,8 @@ function br.createArena(seed, uniqueID)
 
 	self.hook("die", function()
 	
-		self:enqueue(self.clientEvents.DIE, self.frame)
+		print("Enqueuing death", self.diedAt)
+		self:enqueue(self.clientEvents.DIE, self.diedAt)
 
 	end)
 
@@ -109,6 +111,8 @@ function br.connectToServer(callback)
 					end
 				end
 				arena.tempArena = players
+				arena.playerCount = playerCount
+				arena.arenaSize = playerCount
 
 				-- TODO: hook when new players joined
 
@@ -137,7 +141,6 @@ function ARENA:onReady()
 	self.hook("die", function()
 
 		hook.remove("net", self.hookName)
-		hook.remove("think", self.hookName)
 
 	end)
 
@@ -152,6 +155,7 @@ function ARENA:onReady()
 		local time = timer.curtime()
 		if not self.started then
 			if time >= self.startTime then
+				self.realStartTime = timer.realtime()
 				self:start()
 				self.nextSnapshot = self.startTime + self.refreshRate
 			end
@@ -167,8 +171,45 @@ function ARENA:onReady()
 
 end
 
+function ARENA:sendSnapshot()
+
+	local e = ARENA.clientEvents
+	net.start(ARENA.netTag)
+	net.writeUInt(#self.queue, 10)
+	for _, data in pairs(self.queue) do
+
+		local event = data[1]
+		local frame = data[2]
+		net.writeUInt(event, 2)
+		net.writeUInt(frame, 32)
+
+		if event == e.INPUT then
+			local input, down = data[3], data[4]
+			net.writeUInt(input, 3)
+			net.writeBit(down and 1 or 0)
+
+		elseif event == e.TARGET then
+			local target = data[3]
+			net.writeUInt(target, 6)
+
+		elseif event == e.ACKNOWLEDGE then
+			local snapshotID = data[3]
+			net.writeUInt(snapshotID, 32)
+
+		elseif event == e.DIE then
+			hook.remove("think", self.hookName)
+		else
+			error("Unknown event type " .. tostring(event) .. " when encoding")
+		end
+
+	end
+	net.send()
+	self.queue = {}
+
+end
+
 function ARENA:handleServerSnapshot()
-	local frame = brix.getFrame(timer.realtime() - self.startTime)
+	local frame = brix.getFrame(timer.realtime() - self.realStartTime)
 
 	local snapshot = {}
 

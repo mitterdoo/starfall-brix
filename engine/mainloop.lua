@@ -90,7 +90,7 @@ function BRIX:co_main()
 	::beginTimer::
 		p = self.currentPiece
 		if not self:_fits(p.piece, p.rot, p.x, p.y) then
-			print("BLOCK OUT")
+			print(SERVER, "BLOCK OUT")
 			break
 		end -- block out
 		if not self:fitsDown() then goto locking end
@@ -323,7 +323,7 @@ function BRIX:co_main()
 	::lock::
 		lockedVisibly, tspin = self:lock()
 		if not lockedVisibly then
-			print("LOCK OUT")
+			print(SERVER, "LOCK OUT")
 			break
 		end
 		
@@ -369,7 +369,7 @@ function BRIX:co_main()
 			if self:garbageDumpPending() then
 				self:sleep("dumpDelay", self.params.garbageDumpDelay)
 				if not self:dumpCurrentGarbage() then
-					print("TOP OUT")
+					print(SERVER, "TOP OUT")
 					break
 				end
 			end
@@ -379,7 +379,7 @@ function BRIX:co_main()
 		self.hook:run("completion")
 
 		if self.solidGarbage > 0 and not self:dumpSolidGarbage() then
-			print("TOP OUT")
+			print(SERVER, "TOP OUT")
 			break
 		end
 		

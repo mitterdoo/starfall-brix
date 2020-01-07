@@ -10,13 +10,14 @@ if CLIENT then
 else
 	ARENA = {}
 end
+ARENA.__index = ARENA
 
 ARENA.netTag = "brix"
 ARENA.netConnectTag = "brixConnect"
 ARENA.garbageSendDelay = 30	-- Number of frames to wait between garbage sending and receiving.
 ARENA.maxPlayers = 33
 ARENA.refreshRate = 0.2 -- Snapshots will get sent at this rate (in seconds)
-ARENA.readyUpTime = 10 -- Seconds to wait between server being ready, and game starting.
+ARENA.readyUpTime = 2 -- Seconds to wait between server being ready, and game starting.
 ARENA.maxUnacknowledgedSnapshots = 40
 
 ARENA.connectEvents = {
@@ -116,6 +117,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 
 		local event = data[1]
 		if event == e.DAMAGE then
+			print(SERVER, "DAMAGE")
 			local attacker, lines, victims = data[2], data[3], data[4]
 
 			for _, id in pairs(victims) do
@@ -124,10 +126,12 @@ function br.handleServerSnapshot(game, frame, snapshot)
 					break
 				end
 			end
-			game.hook:run("playerGarbage", attacker, lines, victims)
+			if CLIENT then
+				game.hook:run("playerGarbage", attacker, lines, victims)
+			end
 
 		elseif event == e.TARGET then
-
+			print(SERVER, "TARGET")
 			local attacker, victims = data[2], data[3]
 
 			for _, id in pairs(victims) do
@@ -141,22 +145,31 @@ function br.handleServerSnapshot(game, frame, snapshot)
 			game:removeAttacker(attacker)
 
 		::found::
-			
-			game.hook:run("playerTarget", attacker, victims)
+			if CLIENT then
+				game.hook:run("playerTarget", attacker, victims)
+			end
 		
 		elseif event == e.LEVELUP then
-
+			print(SERVER, "LEVELUO")
 			game:startLevelTimer(data[2])
 
 		elseif CLIENT then
 
 			if event == e.DIE then -- useless on server
-
+				print(SERVER, "DIE")
 				local victim, killer, placement, deathFrame, badgeBits = data[2], data[3], data[4], data[5], data[6]
 
 				if victim == game.uniqueID then
 					error("Kicked by server.")
 				end
+
+				local enemy = game.arena[victim]
+				if enemy then
+					enemy.dead = true
+					enemy.placement = placement
+					game.playerCount = game.playerCount - 1
+				end
+
 				if killer == game.uniqueID then
 					game:giveBadgeBits(badgeBits, victim)
 				else
@@ -166,7 +179,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)
 
 			elseif event == e.MATRIX_PLACE and data[2] ~= game.uniqueID then
-
+				print(SERVER, "PLACEMENT")
 				local player, pieceID, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6]
 
 				local piece = brix.pieces[pieceID]
@@ -174,16 +187,16 @@ function br.handleServerSnapshot(game, frame, snapshot)
 
 				game.hook:run("playerMatrixPlace", player, pieceID, rot, x, y, mono)
 
-			elseif event == e.MATRIX_GARBAGE then
-
+			elseif event == e.MATRIX_GARBAGE and data[2] ~= game.uniqueID then
+				print(SERVER, "GARBAGE")
 				local player, gaps = data[2], data[3]
 
 				game.arena[player]:garbage(gaps)
 
 				game.hook:run("playerMatrixGarbage", player, gaps)
 			
-			elseif event == e.MATRIX_SOLID then
-
+			elseif event == e.MATRIX_SOLID and data[2] ~= game.uniqueID then
+				print(SERVER, "SOLID")
 				local player, lines = data[2], data[3]
 
 				local obj = game.arena[player]

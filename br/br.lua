@@ -270,7 +270,9 @@ function br.createGame(GameClass, seed, uniqueID)
 
 end
 
-
+br.inputEvents = {
+	CHANGE_TARGET = 7
+}
 
 function BR:userInput(frame, input, down)
 
@@ -283,7 +285,7 @@ function BR:userInput(frame, input, down)
 		-- down is no longer down; it now denotes the uniqueID we are attacking
 		local target = down
 		if target == self.uniqueID then
-			error("Attempt to attack self!")
+			--error("Attempt to attack self!")
 		end
 
 		if type(target) ~= "number" then

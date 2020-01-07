@@ -11,6 +11,13 @@ local openServers = {}
 function ARENA:open()
 
 	openServers[self] = true
+	local hookName = tostring(math.random(2^31-1))
+	hook.add("PlayerSay", hookName, function(ply, text)
+		if ply == owner() and text == "$start" then
+			hook.remove("PlayerSay", hookName)
+			self:readyUp()
+		end
+	end)
 
 end
 
@@ -30,6 +37,7 @@ function ARENA:connectPlayer(ply)
 
 	local index = math.random(1, #self.uniqueIDs)
 	local id = table.remove(self.uniqueIDs, index)
+	print("giving", ply, id)
 
 
 	local game = br.createGame(BR, self.seed, id)
@@ -51,7 +59,7 @@ function ARENA:connectPlayer(ply)
 	self.remainingPlayers = self.remainingPlayers + 1
 
 	net.start(ARENA.netConnectTag)
-	net.writeUInt(ARENA.connectEvents.UPDATE)
+	net.writeUInt(ARENA.connectEvents.UPDATE, 2)
 	net.writeUInt(self.playerCount, 6)
 
 	for plyID, _ in pairs(self.arena) do
@@ -136,8 +144,9 @@ function ARENA:start()
 				targets = {target}
 			end
 			lines = math.ceil(lines / #targets)
+			print("__server garbage send", game.uniqueID, lines)
 
-			self:enqueue(e.DAMAGE, game.uniqueID, targets)
+			self:enqueue(e.DAMAGE, game.uniqueID, lines, targets)
 
 		end)
 
@@ -156,8 +165,9 @@ function ARENA:start()
 
 		game.hook("die", function(killer)
 
-			local placement, deathFrame, badgeBits = self.remainingPlayers, game.diedAt, game.badgeBits
+			local placement, deathFrame, badgeBits = self.remainingPlayers, game.diedAt, game.badgeBits + 1
 
+			print("__server die", game.uniqueID, killer, placement, deathFrame, badgeBits)
 			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits)
 
 			self.remainingPlayers = self.remainingPlayers - 1
@@ -186,7 +196,7 @@ function ARENA:start()
 	hook.add("think", self.hookName, function()
 	
 		local time = timer.curtime()
-		if time >= self.nextSnapshot and #self.queue > 0 then
+		if time >= self.nextSnapshot then
 			while self.nextSnapshot <= time do
 				self.nextSnapshot = self.nextSnapshot + self.refreshRate
 			end
@@ -218,19 +228,12 @@ function ARENA:handleClientSnapshot(game, ply)
 			local down = net.readBit() == 1
 			
 			game:userInput(frame, input, down)
-			if game.dead then
-				-- We died from this input. This should be impossible, because the client should send the DIE event last.
-				print("Desync resulted in death!", ply)
-			end
 
 
 		elseif event == ARENA.clientEvents.TARGET then
 			local target = net.readUInt(6)
 			
 			game:userInput(frame, br.inputEvents.CHANGE_TARGET, target)
-			if game.dead then
-				print("Desync resulted in death!", ply)
-			end
 
 		elseif event == ARENA.clientEvents.ACKNOWLEDGE then
 			local snapshotID = net.readUInt(32)
@@ -271,6 +274,7 @@ function ARENA:sendSnapshot()
 		if not game.dead then
 			game.pendingSnapshots[snapshotID] = self.queue
 			game.pendingCount = game.pendingCount + 1
+			wire.ports.A = game.pendingCount
 
 			if game.pendingCount >= ARENA.maxUnacknowledgedSnapshots then
 				print("Kicking player " .. tostring(game.uniqueID) .. " for too many pending snapshots")
@@ -357,7 +361,7 @@ function ARENA:sendSnapshot()
 	net.send()
 
 	table.insert(self.snapshots, self.queue)
-
+	self.queue = {}
 
 
 end
@@ -365,12 +369,11 @@ end
 function br.createArena()
 
 	local self = {}
-	math.randomseed(os.time())
 	self.seed = math.random(2^31-1)
 	self.arena = {} -- dict of players' BR objects
 	self.players = {} -- lookup table of a player's ID
 	self.connectedPlayers = {} -- list of players
-	
+
 	self.snapshots = {}		-- Lookup table of past snapshots sent to clients.
 	self.snapshotCount = 0
 	self.queue = {}			-- Ordered list of events in current snapshot
@@ -378,7 +381,7 @@ function br.createArena()
 	self.playerCount = 0
 	self.remainingPlayers = 0
 	self.uniqueIDs = {}
-	for i = 1, self.maxPlayers do
+	for i = 1, ARENA.maxPlayers do
 		self.uniqueIDs[i] = i
 	end
 
