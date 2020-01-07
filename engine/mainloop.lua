@@ -403,6 +403,6 @@ function BRIX:co_main()
 
 	self.diedAt = self.frame
 	self.dead = true
-	self.hook:run("die", self.lastGarbageSender or -1)
+	self.hook:run("die", self.lastGarbageSender)
 
 end
