@@ -95,6 +95,7 @@ BRIX.hookNames = { -- These are legal hooks in the game
 		-- number rot
 		-- number x
 		-- number y
+		-- bool monochrome
 	"lock",            		-- After the current piece has been locked into the matrix.
 		-- brix.tricks
 		-- number combo
