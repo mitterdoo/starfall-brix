@@ -23,11 +23,15 @@ function BRIX:takePieceFromBag()
 
 end
 
-function BRIX:takePieceFromQueue()
-
+function BRIX:populatePieceQueue()
 	while #self.pieceQueue < brix.pieceQueueSize do
 		table.insert(self.pieceQueue, self:takePieceFromBag())
 	end
+end
+
+function BRIX:takePieceFromQueue()
+
+	self:populatePieceQueue()
 	return table.remove(self.pieceQueue, 1)
 
 end

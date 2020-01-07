@@ -62,7 +62,7 @@ end
 
 function BRIX:co_main()
 
-
+	self:populatePieceQueue()
 	self:onGameStart()
 
 	local cevents = brix.inputEvents
