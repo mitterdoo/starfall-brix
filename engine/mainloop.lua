@@ -401,6 +401,12 @@ function BRIX:co_main()
 		
 	end
 
+	self:killGame()
+
+end
+
+function BRIX:killGame()
+
 	self.diedAt = self.frame
 	self.dead = true
 	self.hook:run("die", self.lastGarbageSender)
