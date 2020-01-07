@@ -56,6 +56,10 @@ end
 -- returns whether game is alive
 function BRIX:update(frame)
 
+	if not self.started then
+		error("Must call BRIX:start() before updating!")
+	end
+	
 	frame = math.ceil(frame)
 	while true do
 	
@@ -154,8 +158,8 @@ brix.inputEvents = {
 
 function BRIX:userInput(when, inp, down)
 
+	if not self.started or self.dead then return end
 	when = math.ceil(when)
-	if self.dead then return end
 	
 	if down == nil then down = true end
 
