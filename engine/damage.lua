@@ -5,7 +5,7 @@ brix.onInit(function(self)
 
 	self.garbage = {} -- d { {lines = n, begin = frame, dump = frame, who = player} }
 	self.solidGarbage = 0 -- number of lines of solid garbage waiting to be dumped
-	self.lastGarbageSender = -1
+	self.lastGarbageSender = 0
 
 end)
 

@@ -140,7 +140,7 @@ BRIX.hookNames = { -- These are legal hooks in the game
 	"pieceLand",            -- When the piece touches down on the ground
 	"pieceLockNag",			-- When the piece has begun lockdown timer, and has touched the ground, or rotated
 	"die",                  -- When local player dies.
-		-- number killerUniqueID (-1 when suicide)
+		-- number killerUniqueID (0 when suicide)
 
 	"completion",			-- Completion phase entered. Called before level up. Add instant solid garbage here
 	"levelUp",				-- When the game has leveled up
