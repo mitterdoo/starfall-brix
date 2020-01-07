@@ -34,6 +34,8 @@ function ARENA:connectPlayer(ply)
 
 	local game = br.createGame(BR, self.seed, id)
 	game.player = ply
+	game.pendingSnapshots = {}
+	game.pendingCount = 0
 
 	self.arena[id] = game
 	table.insert(self.connectedPlayers, ply)
@@ -46,6 +48,7 @@ function ARENA:connectPlayer(ply)
 	net.send(ply)
 
 	self.playerCount = self.playerCount + 1
+	self.remainingPlayers = self.remainingPlayers + 1
 
 	net.start(ARENA.netConnectTag)
 	net.writeUInt(ARENA.connectEvents.UPDATE)
@@ -75,12 +78,12 @@ function ARENA:readyUp()
 	net.writeFloat(self.startTime)
 	net.send(self.connectedPlayers)
 
-	self.netHook = "brixNet" .. self.seed
-	hook.add("net", self.netHook, function(name, len, ply)
+	self.hookName = "brixNet" .. self.seed
+	hook.add("net", self.hookName, function(name, len, ply)
 
 		local id = self.players[ply]
 		if name == ARENA.netTag and id and timer.curtime() >= self.startTime then
-			self:playerNet(self.arena[id], ply)
+			self:handleClientSnapshot(self.arena[id], ply)
 		end
 
 	end)
@@ -91,26 +94,117 @@ function ARENA:readyUp()
 
 end
 
+function ARENA:pickRandomTarget(attacker)
+
+	local ids = {}
+	for id, game in pairs(self.arena) do
+		if not game.dead and id ~= attacker then
+			table.insert(ids, id)
+		end
+	end
+
+	return ids[math.random(1, #ids)]
+
+end
+
+function ARENA:targetSanityCheck(target, game)
+	if target == 0 and #game.attackers == 0 or
+		not self.arena[target] or
+		self.arena[target].dead
+		-- or target == game.uniqueID
+	then
+		target = self:pickRandomTarget(game.uniqueID)
+	end
+	return target
+end
+
 function ARENA:start()
 
+	local e = ARENA.serverEvents
 	-- Setup each game object
 	for id, game in pairs(self.arena) do
+
+		game.hook("garbageSend", function(lines)
+		
+			local target = game.target
+			target = self:targetSanityCheck(target, game)
+
+			local targets = {}
+			if target == 0 then
+				targets = game.attackers
+			else
+				targets = {target}
+			end
+			lines = math.ceil(lines / #targets)
+
+			self:enqueue(e.DAMAGE, game.uniqueID, targets)
+
+		end)
+
+		game.hook("changeTarget", function(target)
+		
+			local targets
+			if target == 0 then
+				targets = game.attackers
+			else
+				targets = {target}
+			end
+
+			self:enqueue(e.TARGET, game.uniqueID, targets)
+
+		end)
+
+		game.hook("die", function(killer)
+
+			local placement, deathFrame, badgeBits = self.remainingPlayers, game.diedAt, game.badgeBits
+
+			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits)
+
+			self.remainingPlayers = self.remainingPlayers - 1
+
+
+		end)
+
+		game.hook("prelock", function(piece, rot, x, y, mono)
+		
+			self:enqueue(e.MATRIX_PLACE, game.uniqueID, piece.type, rot, x, y, mono)
+
+		end)
+
+		game.hook("garbageDumpFull", function(solid, lines)
+		
+			local eventType = solid and e.MATRIX_SOLID or e.MATRIX_GARBAGE
+			self:enqueue(eventType, game.uniqueID, lines)
+
+
+		end)
 
 		game:start()
 	end
 
+	self.nextSnapshot = self.startTime + self.refreshRate
+	hook.add("think", self.hookName, function()
+	
+		local time = timer.curtime()
+		if time >= self.nextSnapshot and #self.queue > 0 then
+			while self.nextSnapshot <= time do
+				self.nextSnapshot = self.nextSnapshot + self.refreshRate
+			end
+			self:sendSnapshot()
+		end
+
+	end)
+
 end
 
 
--- Handles incoming network traffic from a player. Decodes and turns the info into a table.
-function ARENA:playerNet(game, ply)
+-- Handles incoming network traffic from a player. This will decode the snapshot via net
+function ARENA:handleClientSnapshot(game, ply)
 
-	if game.diedAt then
+	if game.dead then
 		print("Player", ply, "is dead. disregarding their net message")
 		return
 	end
-
-	local clientSnapshot = {}
 
 	local eventCount = net.readUInt(10) -- max 1024
 
@@ -119,34 +213,153 @@ function ARENA:playerNet(game, ply)
 		local event = net.readUInt(2)
 		local frame = net.readUInt(32)
 
-		local clientEvent = {event, frame}
-
 		if event == ARENA.clientEvents.INPUT then
 			local input = net.readUInt(3)
 			local down = net.readBit() == 1
-			table.insert(clientEvent, input)
-			table.insert(clientEvent, down)
+			
+			game:userInput(frame, input, down)
+			if game.dead then
+				-- We died from this input. This should be impossible, because the client should send the DIE event last.
+				print("Desync resulted in death!", ply)
+			end
+
 
 		elseif event == ARENA.clientEvents.TARGET then
 			local target = net.readUInt(6)
-			table.insert(clientEvent, target)
+			
+			game:userInput(frame, br.inputEvents.CHANGE_TARGET, target)
+			if game.dead then
+				print("Desync resulted in death!", ply)
+			end
 
 		elseif event == ARENA.clientEvents.ACKNOWLEDGE then
 			local snapshotID = net.readUInt(32)
-			table.insert(clientEvent, snapshotID)
+
+			local snapshot = self.snapshots[snapshotID]
+			if not snapshot then
+				print(ply, "tried to acknowledge unknown snapshotID " .. tostring(snapshotID) .. "!")
+			else
+				br.handleServerSnapshot(game, frame, snapshot)
+				game.pendingSnapshots[snapshotID] = nil
+				game.pendingCount = game.pendingCount - 1
+			end
+
+		elseif event == ARENA.clientEvents.DIE then
+
+			game:update(frame)
+			if game.died and game.diedAt == frame then
+				print("SUCCESSFUL death!", ply)
+			end
 
 		end
-
-		table.insert(clientSnapshot, clientEvent)
 	
 	end
-
-	self:handleClientSnapshot(game, ply, clientSnapshot)
 
 end
 
 function ARENA:enqueue(...)
 	table.insert(self.queue, {...})
+end
+
+function ARENA:sendSnapshot()
+
+	self.snapshotCount = self.snapshotCount + 1
+	
+	local snapshotID = self.snapshotCount
+
+	for id, game in pairs(self.arena) do
+		if not game.dead then
+			game.pendingSnapshots[snapshotID] = self.queue
+			game.pendingCount = game.pendingCount + 1
+
+			if game.pendingCount >= ARENA.maxUnacknowledgedSnapshots then
+				print("Kicking player " .. tostring(game.uniqueID) .. " for too many pending snapshots")
+				game:killGame()
+			end
+		end
+
+	end
+
+	local e = ARENA.serverEvents
+
+	net.start(ARENA.netTag)
+	net.writeUInt(snapshotID, 32) -- snapshotID
+	net.writeUInt(#self.queue, 32) -- size of queue
+	for _, data in pairs(self.queue) do
+	
+		local event = data[1]
+		net.writeUInt(event, 3)
+		if event == e.DAMAGE then
+			local attacker, lines, victims = data[2], data[3], data[4]
+
+			local victimCount = #victims
+			net.writeUInt(attacker, 6)
+			net.writeUInt(victimCount, 6)
+			net.writeUInt(lines, 5)
+			for _, victim in pairs(victims) do
+				net.writeUInt(victim, 6)
+			end
+
+		elseif event == e.TARGET then
+			local attacker, victims = data[2], data[3]
+			local victimCount = #victims
+			
+			net.writeUInt(attacker, 6)
+			net.writeUInt(victimCount, 6)
+			for _, victim in pairs(victims) do
+				net.writeUInt(victim, 6)
+			end
+
+		elseif event == e.DIE then
+			local victim, killer, placement, deathFrame, badgeBits = data[2], data[3], data[4], data[5], data[6]
+
+			net.writeUInt(victim, 6)
+			net.writeUInt(killer, 6)
+			net.writeUInt(placement, 6)
+			net.writeUInt(deathFrame, 32)
+			net.writeUInt(badgeBits, 6)
+
+		elseif event == e.MATRIX_PLACE then
+			local player, piece, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6], data[7]
+
+			net.writeUInt(player, 6)
+			net.writeUInt(piece, 3)
+			net.writeUInt(rot, 2)
+			net.writeUInt(x, 4)
+			net.writeUInt(y, 5)
+			net.writeBit(mono and 1 or 0)
+
+		elseif event == e.MATRIX_GARBAGE then
+			local player, gaps = data[2], data[3]
+			local gapCount = #gaps
+
+			net.writeUInt(player, 6)
+			net.writeUInt(gapCount, 5)
+			for _, gap in pairs(gaps) do
+				net.writeUInt(gap, 4)
+			end
+
+		elseif event == e.MATRIX_SOLID then
+			local player, lines = data[2], data[3]
+
+			net.writeUInt(player, 6)
+			net.writeUInt(lines, 5)
+
+		elseif event == e.LEVELUP then
+			net.writeUInt(data[2], 32)
+		
+		else
+			error("Unknown event type " .. tostring(event) )
+		end
+
+	end
+
+	net.send()
+
+	table.insert(self.snapshots, self.queue)
+
+
+
 end
 
 function br.createArena()
@@ -157,11 +370,13 @@ function br.createArena()
 	self.arena = {} -- dict of players' BR objects
 	self.players = {} -- lookup table of a player's ID
 	self.connectedPlayers = {} -- list of players
-
+	
 	self.snapshots = {}		-- Lookup table of past snapshots sent to clients.
+	self.snapshotCount = 0
 	self.queue = {}			-- Ordered list of events in current snapshot
 
 	self.playerCount = 0
+	self.remainingPlayers = 0
 	self.uniqueIDs = {}
 	for i = 1, self.maxPlayers do
 		self.uniqueIDs[i] = i

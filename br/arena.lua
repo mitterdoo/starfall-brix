@@ -16,6 +16,7 @@ ARENA.netConnectTag = "brixConnect"
 ARENA.garbageSendDelay = 30	-- Number of frames to wait between garbage sending and receiving.
 ARENA.maxPlayers = 33
 ARENA.refreshRate = 0.2 -- Snapshots will get sent at this rate (in seconds)
+ARENA.readyUpTime = 10 -- Seconds to wait between server being ready, and game starting.
 ARENA.maxUnacknowledgedSnapshots = 40
 
 ARENA.connectEvents = {
@@ -48,9 +49,8 @@ ARENA.serverEvents = {
 	MATRIX_GARBAGE = 4, -- {UInt6 player, UInt5 lineCount, UInt4 gap1, UInt4 gap2, ...}
 	MATRIX_SOLID = 5,	-- {UInt6 player, UInt5 lineCount}
 
-	LEVELUP = 6,		-- {UInt32 frame}
+	LEVELUP = 6		-- {UInt32 frame}
 						-- Frame at which the level up timer should be started at
-	START = 7
 
 }
 
