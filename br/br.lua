@@ -225,6 +225,14 @@ function BR:levelUpCheck()
 
 end
 
+-- Override
+function BR:onGameStart()
+
+	self.gameStartFrame = 60 * 6 -- Start 6 seconds after
+	self:sleep("readyUp", self.gameStartFrame) -- Frame will be same duration as wait.
+
+end
+
 --[[
 
 	Initializes the BR game object. Takes:

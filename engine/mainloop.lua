@@ -55,7 +55,15 @@ function BRIX:levelUpCheck()
 	return false
 end
 
+-- Overridable function that runs within coroutine. Allows for pregame setup (ready, 3, 2, 1, go)
+function BRIX:onGameStart()
+
+end
+
 function BRIX:co_main()
+
+
+	self:onGameStart()
 
 	local cevents = brix.inputEvents
 	while true do
