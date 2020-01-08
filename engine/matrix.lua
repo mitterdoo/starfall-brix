@@ -339,7 +339,7 @@ function brix.makeMatrix(w, h)
 	end
 
 	mat.solidHeight = 0
-	mat.invalid = false -- Can be used to detect changes
+	mat.invalid = true -- Can be used to detect changes
 
 	return mat
 
