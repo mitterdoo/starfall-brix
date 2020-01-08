@@ -193,6 +193,7 @@ function brix.makeMatrix(w, h)
 		local rowBegin = row * w + 1
 		local rowEnd = (row + 1) * w
 		self.data = self.data:sub(1, rowBegin - 1) .. data .. self.data:sub(rowEnd + 1)
+		self.invalid = true
 	end
 	function mat:getrow(row)
 		if row < 0 or row >= h then error("matrix:getrow(): row " .. row .. " out of range") end
@@ -212,6 +213,7 @@ function brix.makeMatrix(w, h)
 		if #char > 1 then char = char[1]
 		elseif #char == 0 then error("matrix:set(): char is empty") end
 		local idx = y * w + x + 1
+		self.invalid = true
 		self.data = self.data:sub(1, idx - 1) .. char .. self.data:sub(idx + 1)
 	end
 	function mat:isRowClear(row)
@@ -272,6 +274,7 @@ function brix.makeMatrix(w, h)
 		end
 		data = newLine .. data
 		self.data = data
+		self.invalid = true
 		self:updateCount()
 		
 		return true
@@ -336,7 +339,7 @@ function brix.makeMatrix(w, h)
 	end
 
 	mat.solidHeight = 0
-
+	mat.invalid = false -- Can be used to detect changes
 
 	return mat
 
