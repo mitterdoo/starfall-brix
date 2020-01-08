@@ -173,7 +173,9 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				if killer == game.uniqueID then
 					game:giveBadgeBits(badgeBits, victim)
 				else
-					game.arena[killer]:giveBadgeBits(badgeBits)
+					if game.arena[killer] then 
+						game.arena[killer]:giveBadgeBits(badgeBits)
+					end
 				end
 
 				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)

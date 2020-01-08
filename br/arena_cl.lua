@@ -21,6 +21,7 @@ function ENEMY:place(piece, rot, x, y, mono)
 		self.matrix:clear(lines)
 	end
 	
+	print("CLIENT ENEMY PLACE", self.uniqueID, piece.type, rot, 'x', x, 'y', y, mono)
 	if self.matrix.cellCount >= brix.dangerCapacity then
 		self.danger = self.matrix.cellCount - brix.dangerCapacity
 	else
@@ -52,6 +53,13 @@ function ARENA:enqueue(...)
 
 end
 
+function ARENA:userInput(input, down)
+
+	local frame = brix.getFrame(timer.realtime() - self.startTime)
+	return BR.userInput(self, frame, input, down)
+
+end
+
 function br.createArena(seed, uniqueID)
 
 	local self = br.createGame(ARENA, seed, uniqueID)
@@ -73,7 +81,6 @@ function br.createArena(seed, uniqueID)
 
 	self.hook("die", function()
 	
-		print("Enqueuing death", self.diedAt)
 		self:enqueue(self.clientEvents.DIE, self.diedAt)
 
 	end)
@@ -102,6 +109,7 @@ function br.connectToServer(callback)
 				callback(arena)
 
 			elseif event == e.UPDATE then
+				if not arena then return end
 				local playerCount = net.readUInt(6)
 				local players = {}
 				for i = 1, playerCount do
@@ -117,7 +125,13 @@ function br.connectToServer(callback)
 				-- TODO: hook when new players joined
 
 			elseif event == e.READY then
-				arena.startTime = net.readFloat()
+				if not arena then return end
+				local time = net.readFloat()
+
+				local delta = timer.realtime() - timer.curtime() -- Find how much time it takes to move from curtime to realtime
+				time = time + delta
+
+				arena.startTime = time
 
 				arena:onReady()
 
@@ -145,17 +159,16 @@ function ARENA:onReady()
 	end)
 
 	hook.add("net", self.hookName, function(name)
-		if name == ARENA.netTag and timer.curtime() >= self.startTime then
+		if name == ARENA.netTag and timer.realtime() >= self.startTime then
 			self:handleServerSnapshot()
 		end
 	end)
 
 	hook.add("think", self.hookName, function()
 	
-		local time = timer.curtime()
+		local time = timer.realtime()
 		if not self.started then
 			if time >= self.startTime then
-				self.realStartTime = timer.realtime()
 				self:start()
 				self.nextSnapshot = self.startTime + self.refreshRate
 			end
@@ -209,7 +222,7 @@ function ARENA:sendSnapshot()
 end
 
 function ARENA:handleServerSnapshot()
-	local frame = brix.getFrame(timer.realtime() - self.realStartTime)
+	local frame = brix.getFrame(timer.realtime() - self.startTime)
 
 	local snapshot = {}
 
@@ -244,7 +257,7 @@ function ARENA:handleServerSnapshot()
 			data = {event, victim, killer, placement, deathFrame, badgeBits}
 		
 		elseif event == e.MATRIX_PLACE then
-			local player, piece, rot, x, y, mono = net.readUInt(6), net.readUInt(3), net.readUInt(2), net.readUInt(4), net.readUInt(5), net.readBit() == 1
+			local player, piece, rot, x, y, mono = net.readUInt(6), net.readUInt(3), net.readUInt(2), net.readInt(5), net.readInt(6), net.readBit() == 1
 
 			data = {event, player, piece, rot, x, y, mono}
 		

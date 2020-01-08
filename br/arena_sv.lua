@@ -11,13 +11,10 @@ local openServers = {}
 function ARENA:open()
 
 	openServers[self] = true
-	local hookName = tostring(math.random(2^31-1))
-	hook.add("PlayerSay", hookName, function(ply, text)
-		if ply == owner() and text == "$start" then
-			hook.remove("PlayerSay", hookName)
-			self:readyUp()
-		end
-	end)
+
+end
+
+function ARENA:onConnect(ply)
 
 end
 
@@ -67,6 +64,8 @@ function ARENA:connectPlayer(ply)
 	end
 
 	net.send()
+
+	self:onConnect(ply)
 
 end
 
@@ -119,7 +118,7 @@ function ARENA:targetSanityCheck(target, game)
 	if target == 0 and #game.attackers == 0 or
 		not self.arena[target] or
 		self.arena[target].dead
-		-- or target == game.uniqueID
+		or target == game.uniqueID
 	then
 		target = self:pickRandomTarget(game.uniqueID)
 	end
@@ -144,7 +143,7 @@ function ARENA:start()
 				targets = {target}
 			end
 			lines = math.ceil(lines / #targets)
-			print("__server garbage send", game.uniqueID, lines)
+			--print("__server garbage send", game.uniqueID, lines)
 
 			self:enqueue(e.DAMAGE, game.uniqueID, lines, targets)
 
@@ -167,7 +166,7 @@ function ARENA:start()
 
 			local placement, deathFrame, badgeBits = self.remainingPlayers, game.diedAt, game.badgeBits + 1
 
-			print("__server die", game.uniqueID, killer, placement, deathFrame, badgeBits)
+			--print("__server die", game.uniqueID, killer, placement, deathFrame, badgeBits)
 			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits)
 
 			self.remainingPlayers = self.remainingPlayers - 1
@@ -274,7 +273,6 @@ function ARENA:sendSnapshot()
 		if not game.dead then
 			game.pendingSnapshots[snapshotID] = self.queue
 			game.pendingCount = game.pendingCount + 1
-			wire.ports.A = game.pendingCount
 
 			if game.pendingCount >= ARENA.maxUnacknowledgedSnapshots then
 				print("Kicking player " .. tostring(game.uniqueID) .. " for too many pending snapshots")
@@ -329,8 +327,8 @@ function ARENA:sendSnapshot()
 			net.writeUInt(player, 6)
 			net.writeUInt(piece, 3)
 			net.writeUInt(rot, 2)
-			net.writeUInt(x, 4)
-			net.writeUInt(y, 5)
+			net.writeInt(x, 5)
+			net.writeInt(y, 6)
 			net.writeBit(mono and 1 or 0)
 
 		elseif event == e.MATRIX_GARBAGE then
