@@ -390,7 +390,7 @@ function BRIX:co_main()
 			self.level = self.level + 1
 			self.hook:run("levelUp", self.level)
 		end
-		self:sleep("spawnDelay", self.params.pieceAppearDelay)
+		self:sleep("spawnDelay", self.params.are)
 		
 		
 		--detect line clears
