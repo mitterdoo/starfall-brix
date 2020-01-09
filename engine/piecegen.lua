@@ -65,14 +65,24 @@ function BRIX:newPiece(type)
 	p.piece = brix.pieces[ brix.normalPiece(p.type) ]
 	p.x = brix.w / 2 - math.ceil(p.piece.size / 2)
 
-	local dasDelay = self.params.are_charge and self.params.autoRepeatSpeed or self.params.autoRepeatBegin
-
+	local delay, are = self.params.autoRepeatSpeed, self.params.are_charge
 	if self.inputs[brix.inputEvents.MOVELEFT] then
 		--p.x = p.x - 1			this only charges DAS. does not affect spawn
-		self:startTimer("moveleft", dasDelay)
+		if not are then
+			delay = self.areCancel_Left and self.params.autoRepeatBegin or delay
+		end
+		self:startTimer("moveleft", delay)
 	elseif self.inputs[brix.inputEvents.MOVERIGHT] then
 		--p.x = p.x + 1			this only charges DAS. does not affect spawn
-		self:startTimer("moveright", dasDelay)
+		if not are then
+			delay = self.areCancel_Right and self.params.autoRepeatBegin or delay
+		end
+		self:startTimer("moveright", delay)
+	end
+
+	if not are then
+		self.areCancel_Left = nil
+		self.areCancel_Right = nil
 	end
 	
 	

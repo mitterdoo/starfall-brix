@@ -390,7 +390,29 @@ function BRIX:co_main()
 			self.level = self.level + 1
 			self.hook:run("levelUp", self.level)
 		end
-		self:sleep("spawnDelay", self.params.are)
+
+		if self.params.are_charge then
+			self:sleep("spawnDelay", self.params.are)
+		else
+			-- Without ARE charging, it's a bit more complicated to tell whether to DAS the next piece
+
+			self:startTimer("spawnDelay", self.params.are)
+			while true do
+
+				event, what = self:pullEvent()
+				if event == "timer" and what == "spawnDelay" then
+					break
+				elseif event == "inputDown" then
+					if what == cevents.MOVELEFT then
+						self.areCancel_Left = true
+					elseif what == cevents.MOVERIGHT then
+						self.areCancel_Right = true
+					end
+				end
+
+			end
+		
+		end
 		
 		
 		--detect line clears
