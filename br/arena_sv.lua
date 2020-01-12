@@ -14,11 +14,17 @@ function ARENA:open()
 
 end
 
+function ARENA:preConnect(ply)
+	return true
+end
+
 function ARENA:onConnect(ply)
 
 end
 
 function ARENA:connectPlayer(ply)
+
+	if not self:preConnect(ply) then return end
 
 	if self.playerCount == self.maxPlayers then
 		print("Max players reached!")
@@ -248,9 +254,12 @@ function ARENA:handleClientSnapshot(game, ply)
 
 		elseif event == ARENA.clientEvents.DIE then
 
+			print("client", ply, "says they died")
 			game:update(frame)
-			if game.died and game.diedAt == frame then
+			if game.dead and game.diedAt == frame then
 				print("SUCCESSFUL death!", ply)
+			else
+				print("bad death! player says " .. tostring(frame) .. ", game " .. (game.dead and ("died at " .. game.diedAt) or "did not die!"))
 			end
 
 		end
@@ -274,7 +283,11 @@ function ARENA:sendSnapshot()
 			game.pendingSnapshots[snapshotID] = self.queue
 			game.pendingCount = game.pendingCount + 1
 
-			if game.pendingCount >= ARENA.maxUnacknowledgedSnapshots then
+			local nextID = next(game.pendingSnapshots)
+			if self.snapshotCount - nextID > ARENA.maxUnacknowledgedSnapshots then
+				print("Kicking player " .. tostring(game.uniqueID) .. " for failing to acknowledge old snapshot: " .. tostring(nextID))
+				game:killGame()
+			elseif game.pendingCount >= ARENA.maxUnacknowledgedSnapshots then
 				print("Kicking player " .. tostring(game.uniqueID) .. " for too many pending snapshots")
 				game:killGame()
 			end

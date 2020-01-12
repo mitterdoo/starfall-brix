@@ -431,6 +431,8 @@ function BRIX:killGame()
 
 	self.diedAt = self.frame
 	self.dead = true
+	self.currentPiece.piece = nil
+	self.currentPiece.type = -1
 	self.hook:run("die", self.lastGarbageSender)
 
 end
