@@ -21,6 +21,11 @@ BR = setmetatable({}, {__index = BRIX}) -- Inherit from engine
 BR.__index = BR
 
 
+BR.garbageNagLookup = {
+	[0] = 150,
+	[1] = 90,
+	[2] = 30
+}
 -- Clone hook table
 BR.hookNames = {
 	"changeTarget",		-- When the target has been changed
@@ -29,9 +34,12 @@ BR.hookNames = {
 	"attackersChanged",	-- When the list of players attacking us has been changed
 		-- table {attackerUniqueID, ...}
 
-	"badgeBits"			-- When we receive badge bits
+	"badgeBits",		-- When we receive badge bits
 		-- number count
 		-- number uniqueID of giver
+
+	"phaseChange"		-- When the game changes phase (halfway over, final showdown)
+		-- number phase (0 is start, 1 is halfway, 2 is showdown)
 }
 for _, name in pairs(BRIX.hookNames) do
 	table.insert(BR.hookNames, name)
@@ -129,6 +137,22 @@ function BR:removeAttacker(attacker)
 			return
 		end
 	end
+end
+
+function BR:changePhase(newPhase, frame)
+
+	if type(newPhase) ~= "number" or newPhase < 0 then
+		error("Invalid phase: " .. tostring(newPhase))
+	end
+	
+	self.phase = newPhase
+	if newPhase == 1 then
+		self:startLevelTimer(frame)
+	end
+	local nagDelay = BR.garbageNagLookup[newPhase]
+	self.params.garbageNagDelay = nagDelay
+	self.hook:run("phaseChange", newPhase)
+
 end
 
 function BR:startLevelTimer(frame)

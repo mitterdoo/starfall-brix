@@ -91,6 +91,9 @@ function ARENA:readyUp()
 	net.writeFloat(self.startTime)
 	net.send(self.connectedPlayers)
 
+	self.phaseStartHalfway = math.max(2, math.ceil(self.playerCount / 2))		-- Playercount at which the game speeds up
+	self.phaseStartShowdown = math.max(2, math.ceil(self.playerCount * 0.24))	-- Playercount at which garbage delay is quick
+
 	self.hookName = "brixNet" .. self.seed
 	hook.add("net", self.hookName, function(name, len, ply)
 
@@ -177,6 +180,15 @@ function ARENA:start()
 
 			self.remainingPlayers = self.remainingPlayers - 1
 
+			if self.remainingPlayers <= self.phaseStartHalfway and self.phase == 0 then
+				self.phase = 1
+				self:enqueue(e.CHANGEPHASE, self.phase, deathFrame)
+			end
+
+			if self.remainingPlayers <= self.phaseStartShowdown and self.phase == 1 then
+				self.phase = 2
+				self:enqueue(e.CHANGEPHASE, self.phase, deathFrame)
+			end
 
 		end)
 
@@ -360,8 +372,10 @@ function ARENA:sendSnapshot()
 			net.writeUInt(player, 6)
 			net.writeUInt(lines, 5)
 
-		elseif event == e.LEVELUP then
-			net.writeUInt(data[2], 32)
+		elseif event == e.CHANGEPHASE then
+			local phase, statedFrame = data[2], data[3]
+			net.writeUInt(phase, 2)
+			net.writeUInt(statedFrame, 32)
 		
 		else
 			error("Unknown event type " .. tostring(event) )
@@ -388,6 +402,8 @@ function br.createArena()
 	self.snapshots = {}		-- Lookup table of past snapshots sent to clients.
 	self.snapshotCount = 0
 	self.queue = {}			-- Ordered list of events in current snapshot
+
+	self.phase = 0
 
 	self.playerCount = 0
 	self.remainingPlayers = 0

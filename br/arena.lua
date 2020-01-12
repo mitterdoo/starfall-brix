@@ -43,15 +43,15 @@ ARENA.serverEvents = {
 	DIE = 2,		-- {UInt6 victim, UInt6 killer, UInt6 placement, UInt32 deathFrame, UInt6 badgeBits}
 					-- Signals a player's death, containing their placement in the match, the frame at which they died, and the badge bits transferred to the killer.
 
-	MATRIX_PLACE = 3,	-- {UInt6 player, UInt3 piece, UInt2 rotation, UInt4 x, Uint5 y, Bit monochrome}
+	MATRIX_PLACE = 3,	-- {UInt6 player, UInt3 piece, UInt2 rotation, Int5 x, Int6 y, Bit monochrome}
 						-- Signals placing a piece on the field.
 
 
 	MATRIX_GARBAGE = 4, -- {UInt6 player, UInt5 lineCount, UInt4 gap1, UInt4 gap2, ...}
 	MATRIX_SOLID = 5,	-- {UInt6 player, UInt5 lineCount}
 
-	LEVELUP = 6		-- {UInt32 frame}
-						-- Frame at which the level up timer should be started at
+	CHANGEPHASE = 6		-- {UInt2 Phase, UInt32 frame}
+						-- When the server changes phase. 0 for normal, 1 for speedup begin, 2 for final showdown
 
 }
 
@@ -117,7 +117,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 
 		local event = data[1]
 		if event == e.DAMAGE then
-			print(SERVER, "DAMAGE")
 			local attacker, lines, victims = data[2], data[3], data[4]
 
 			for _, id in pairs(victims) do
@@ -131,7 +130,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 			end
 
 		elseif event == e.TARGET then
-			print(SERVER, "TARGET")
 			local attacker, victims = data[2], data[3]
 
 			for _, id in pairs(victims) do
@@ -149,14 +147,13 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				game.hook:run("playerTarget", attacker, victims)
 			end
 		
-		elseif event == e.LEVELUP then
-			print(SERVER, "LEVELUO")
-			game:startLevelTimer(data[2])
+		elseif event == e.CHANGEPHASE then
+			local phase, statedFrame = data[2], data[3]
+			game:changePhase(phase, statedFrame)
 
 		elseif CLIENT then
 
 			if event == e.DIE then -- useless on server
-				print(SERVER, "DIE")
 				local victim, killer, placement, deathFrame, badgeBits = data[2], data[3], data[4], data[5], data[6]
 
 				if victim == game.uniqueID then
@@ -167,7 +164,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				if enemy then
 					enemy.dead = true
 					enemy.placement = placement
-					game.playerCount = game.playerCount - 1
+					game.remainingPlayers = game.remainingPlayers - 1
 				end
 
 				if killer == game.uniqueID then
@@ -181,7 +178,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)
 
 			elseif event == e.MATRIX_PLACE and data[2] ~= game.uniqueID then
-				print(SERVER, "PLACEMENT")
 				local player, pieceID, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6]
 
 				local piece = brix.pieces[pieceID]
@@ -190,7 +186,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				game.hook:run("playerMatrixPlace", player, pieceID, rot, x, y, mono)
 
 			elseif event == e.MATRIX_GARBAGE and data[2] ~= game.uniqueID then
-				print(SERVER, "GARBAGE")
 				local player, gaps = data[2], data[3]
 
 				game.arena[player]:garbage(gaps)
@@ -198,7 +193,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				game.hook:run("playerMatrixGarbage", player, gaps)
 			
 			elseif event == e.MATRIX_SOLID and data[2] ~= game.uniqueID then
-				print(SERVER, "SOLID")
 				local player, lines = data[2], data[3]
 
 				local obj = game.arena[player]

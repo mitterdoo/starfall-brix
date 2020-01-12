@@ -119,8 +119,8 @@ function br.connectToServer(callback)
 					end
 				end
 				arena.tempArena = players
+				arena.remainingPlayers = playerCount
 				arena.playerCount = playerCount
-				arena.arenaSize = playerCount
 
 				-- TODO: hook when new players joined
 
@@ -275,8 +275,8 @@ function ARENA:handleServerSnapshot()
 
 			data = {event, player, lines}
 		
-		elseif event == e.LEVELUP then
-			data = {event, net.readUInt(32)}
+		elseif event == e.CHANGEPHASE then
+			data = {event, net.readUInt(2), net.readUInt(32)}
 		else
 			error("Unknown event type " .. tostring(event) .. " when decoding")
 		end
