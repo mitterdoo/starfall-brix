@@ -90,7 +90,6 @@ function BRIX:co_main()
 	::beginTimer::
 		p = self.currentPiece
 		if not self:_fits(p.piece, p.rot, p.x, p.y) then
-			print(SERVER, "BLOCK OUT")
 			break
 		end -- block out
 		if not self:fitsDown() then goto locking end
@@ -323,7 +322,6 @@ function BRIX:co_main()
 	::lock::
 		lockedVisibly, tspin = self:lock()
 		if not lockedVisibly then
-			print(SERVER, "LOCK OUT")
 			break
 		end
 		
@@ -346,6 +344,9 @@ function BRIX:co_main()
 			linesSent = self:clearGarbage(linesSent)
 			self.hook:run("lock", tricks, self.currentCombo, linesSent, lines)
 			if linesSent > 0 then
+
+				self.hook:run("preGarbageSend", linesSent)
+
 				self.hook:run("garbageSend", linesSent)
 			end
 			
@@ -369,7 +370,6 @@ function BRIX:co_main()
 			if self:garbageDumpPending() then
 				self:sleep("dumpDelay", self.params.garbageDumpDelay)
 				if not self:dumpCurrentGarbage() then
-					print(SERVER, "TOP OUT")
 					break
 				end
 			end
@@ -379,7 +379,6 @@ function BRIX:co_main()
 		self.hook:run("completion")
 
 		if self.solidGarbage > 0 and not self:dumpSolidGarbage() then
-			print(SERVER, "TOP OUT")
 			break
 		end
 		
@@ -433,6 +432,7 @@ function BRIX:killGame()
 	self.dead = true
 	self.currentPiece.piece = nil
 	self.currentPiece.type = -1
+	self.kickReason = "died at frame " .. self.diedAt
 	self.hook:run("die", self.lastGarbageSender)
 
 end

@@ -47,6 +47,7 @@ function ARENA:connectPlayer(ply)
 	game.player = ply
 	game.pendingSnapshots = {}
 	game.pendingCount = 0
+	game.targetChanges = {}
 
 	self.arena[id] = game
 	table.insert(self.connectedPlayers, ply)
@@ -140,6 +141,34 @@ function ARENA:start()
 	-- Setup each game object
 	for id, game in pairs(self.arena) do
 
+		game.hook("preGarbageSend", function(lines)
+		
+			-- We must know where to send our garbage, since the player retargets when sending any garbage.
+			local curFrame = game.frame
+
+			if game.targetChanges[curFrame] ~= nil then 
+				-- We already changed target this frame. don't worry
+				print("Target change already exists this frame. disregarding...")
+				game.targetChanges[curFrame] = nil
+				return
+			end
+
+			game.waitingForTarget = curFrame -- Signal client snapshot handler to use callEvent instead of userinput
+			local event, target = game:pullEvent()
+			game.waitingForTarget = nil
+
+			if event ~= "sv_changeTarget" then
+				print("Player " .. tostring(game.uniqueID) .. " cleared line, but did not send a target change!")
+				print("Instead, got event", event, target)
+				print("Frame", curFrame)
+				game:killGame()
+				game.kickReason = "Cleared line, didn't send target change"
+			else
+				game:userInput(curFrame, br.inputEvents.CHANGE_TARGET, target)
+			end
+
+		end)
+
 		game.hook("garbageSend", function(lines)
 		
 			local target = game.target
@@ -175,7 +204,7 @@ function ARENA:start()
 
 			local placement, deathFrame, badgeBits = self.remainingPlayers, game.diedAt, game.badgeBits + 1
 
-			--print("__server die", game.uniqueID, killer, placement, deathFrame, badgeBits)
+			print("__server die", game.uniqueID, killer, placement, deathFrame, badgeBits)
 			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits)
 
 			self.remainingPlayers = self.remainingPlayers - 1
@@ -229,7 +258,11 @@ end
 function ARENA:handleClientSnapshot(game, ply)
 
 	if game.dead then
-		print("Player", ply, "is dead. disregarding their net message")
+		if not game.printedDisregard then
+			game.printedDisregard = true
+			print("Player", ply, "is dead. disregarding their net messages")
+			print("   reason: " .. tostring(game.kickReason))
+		end
 		return
 	end
 
@@ -250,7 +283,12 @@ function ARENA:handleClientSnapshot(game, ply)
 		elseif event == ARENA.clientEvents.TARGET then
 			local target = net.readUInt(6)
 			
-			game:userInput(frame, br.inputEvents.CHANGE_TARGET, target)
+			if game.waitingForTarget then
+				game:callEvent(game.waitingForTarget, "sv_changeTarget", target)
+			else
+				game.targetChanges[frame] = target
+				game:userInput(frame, br.inputEvents.CHANGE_TARGET, target)
+			end
 
 		elseif event == ARENA.clientEvents.ACKNOWLEDGE then
 			local snapshotID = net.readUInt(32)
@@ -299,9 +337,11 @@ function ARENA:sendSnapshot()
 			if self.snapshotCount - nextID > ARENA.maxUnacknowledgedSnapshots then
 				print("Kicking player " .. tostring(game.uniqueID) .. " for failing to acknowledge old snapshot: " .. tostring(nextID))
 				game:killGame()
+				game.kickReason = "Failed to acknowledge old snapshot " .. nextID
 			elseif game.pendingCount >= ARENA.maxUnacknowledgedSnapshots then
 				print("Kicking player " .. tostring(game.uniqueID) .. " for too many pending snapshots")
 				game:killGame()
+				game.kickReason = "Timed out"
 			end
 		end
 

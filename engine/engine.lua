@@ -118,6 +118,7 @@ BRIX.hookNames = { -- These are legal hooks in the game
 		-- number senderUniqueID
 		-- number frame
 	"garbageReceive",       -- When the game has received a command to queue garbage (the beginning of the garbage "fly" animation)
+	"preGarbageSend",		-- Same as below, but called before the below hook.
 	"garbageSend",			-- When the game has lines (leftover from clearing garbage queue) to send out
 		-- number lines
 	"danger",                -- When the matrix enters/exits "the red".

@@ -21,18 +21,23 @@ function ENEMY:place(piece, rot, x, y, mono)
 		self.matrix:clear(lines)
 	end
 	
-	print("CLIENT ENEMY PLACE", self.uniqueID, piece.type, rot, 'x', x, 'y', y, mono)
 	if self.matrix.cellCount >= brix.dangerCapacity then
-		self.danger = self.matrix.cellCount - brix.dangerCapacity
-	else
-		self.danger = false
+		self.danger = math.max(0, self.matrix.cellCount - brix.dangerCapacity)
 	end
 
 end
 
 function ENEMY:giveBadgeBits(badgeBits)
 	self.badgeBits = self.badgeBits + badgeBits
+	self.matrix.invalid = true
 end
+
+ARENA.targetModes = {
+	ATTACKER = 8,
+	BADGES = 9,
+	KO = 10,
+	RANDOM = 11
+}
 
 function br.createEnemy(uniqueID)
 
@@ -41,7 +46,7 @@ function br.createEnemy(uniqueID)
 	self.uniqueID = uniqueID
 	self.badgeBits = 0
 	self.matrix = brix.makeMatrix(brix.w, brix.trueHeight)
-	self.danger = false
+	self.danger = 0
 
 	return setmetatable(self, ENEMY)
 
@@ -53,10 +58,105 @@ function ARENA:enqueue(...)
 
 end
 
+-- returns const table
+function ARENA:getTargets()
+
+	if self.target == 0 then
+		return self.attackers
+	else
+		return {self.target}
+	end
+
+end
+
 function ARENA:userInput(input, down)
 
+	if input >= ARENA.targetModes.ATTACKER then
+		self:changeTargetMode(input)
+		return
+	end
 	local frame = brix.getFrame(timer.realtime() - self.startTime)
 	return BR.userInput(self, frame, input, down)
+
+end
+
+function ARENA:changeTargetMode(mode)
+
+	self.targetMode = mode
+	self.hook:run("changeTargetMode", mode)
+	print("Changing target since the player requested it")
+	self:pickTarget()
+
+end
+
+local sort_badges = function(a, b)
+	return a.badgeBits > b.badgeBits
+end
+
+local sort_danger = function(a, b)
+	return a.danger > b.danger
+end
+
+function ARENA:_setTarget(target)
+
+	self:userInput(br.inputEvents.CHANGE_TARGET, target)
+
+end
+
+-- Picks a target based on the current target mode
+function ARENA:pickTarget()
+
+	local mode = self.targetMode
+
+	local players = {}
+	local playerCount = 0
+	for _, enemy in pairs(self.arena) do
+		if not enemy.dead then
+			table.insert(players, enemy)
+			playerCount = playerCount + 1
+		end
+	end
+
+	-- Shuffle the players, so "identical" enemies, when being sorted, will be picked randomly
+	if mode == ARENA.targetModes.BADGES or mode == ARENA.targetModes.KO then
+		local shuffledPlayers = {}
+		for i = playerCount, 1, -1 do
+			local index = math.random(i)
+			local enemy = table.remove(players, index)
+			table.insert(shuffledPlayers, enemy)
+		end
+
+		players = shuffledPlayers
+		shuffledPlayers = nil
+	end
+
+	if playerCount == 0 then
+		self:_setTarget(0)
+		return
+	elseif playerCount == 1 then
+		self:_setTarget(players[1].uniqueID)
+		return
+	end
+
+
+	if mode == ARENA.targetModes.ATTACKER then
+		if #self.attackers == 0 then
+			enemy = players[math.random(#players)]
+			self:_setTarget(enemy.uniqueID)
+		else
+			self:_setTarget(0)
+		end
+	elseif mode == ARENA.targetModes.BADGES then
+		table.sort(players, sort_badges)
+		self:_setTarget(players[1].uniqueID)
+	elseif mode == ARENA.targetModes.KO then
+		table.sort(players, sort_danger)
+		self:_setTarget(players[1].uniqueID)
+	elseif mode == ARENA.targetModes.RANDOM then
+		self:_setTarget( players[math.random(#players)].uniqueID )
+	else
+		error("Invalid target mode " .. tostring(mode))
+	end
 
 end
 
@@ -66,6 +166,7 @@ function br.createArena(seed, uniqueID)
 
 	self.queue = {}
 	self.arena = {}
+	self.targetMode = ARENA.targetModes.RANDOM
 
 	self.hook("preInput", function(when, input, pressed)
 
@@ -82,6 +183,15 @@ function br.createArena(seed, uniqueID)
 	self.hook("die", function()
 	
 		self:enqueue(self.clientEvents.DIE, self.diedAt)
+
+	end)
+
+	self.hook("preGarbageSend", function()
+	
+		print("Changing target since garbage was sent")
+		self:pickTarget()
+		-- This will automatically :enqueue() a target change in the queue.
+		-- The server, once it clears a line, will wait for a target change from the client.
 
 	end)
 
@@ -142,6 +252,13 @@ function br.connectToServer(callback)
 
 end
 
+function ARENA:start()
+
+	self:changeTargetMode(ARENA.targetModes.RANDOM)
+
+	BR.start(self)
+end
+
 -- Called when the server has notified us that the game is about to start.
 function ARENA:onReady()
 
@@ -181,6 +298,8 @@ function ARENA:onReady()
 			end
 		end
 	end)
+
+	self.hook:run("arenaFinalized")
 
 end
 

@@ -121,11 +121,12 @@ end
 function BR:addAttacker(attacker)
 	local attackers = self.attackers
 	for _, id in pairs(attackers) do
-		if id == attacker then return end
+		if id == attacker then return false end
 	end
 
 	table.insert(attackers, attacker)
 	self:setAttackers(attackers)
+	return true
 end
 
 function BR:removeAttacker(attacker)
@@ -134,9 +135,10 @@ function BR:removeAttacker(attacker)
 		if id == attacker then
 			table.remove(attackers, key)
 			self:setAttackers(attackers)
-			return
+			return true
 		end
 	end
+	return false
 end
 
 function BR:changePhase(newPhase, frame)
@@ -144,7 +146,7 @@ function BR:changePhase(newPhase, frame)
 	if type(newPhase) ~= "number" or newPhase < 0 then
 		error("Invalid phase: " .. tostring(newPhase))
 	end
-	
+
 	self.phase = newPhase
 	if newPhase == 1 then
 		self:startLevelTimer(frame)
@@ -309,7 +311,7 @@ function BR:userInput(frame, input, down)
 		-- down is no longer down; it now denotes the uniqueID we are attacking
 		local target = down
 		if target == self.uniqueID then
-			--error("Attempt to attack self!")
+			error("Attempt to attack self!")
 		end
 
 		if type(target) ~= "number" then
