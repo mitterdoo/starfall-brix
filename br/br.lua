@@ -240,7 +240,7 @@ function BR:levelUpCheck()
 			self.params.monochrome = true
 		end
 
-		if level >= maxLevel + 6 then
+		if level >= maxLevel + 10 then
 			self:queueSolidGarbage(1)
 		end
 

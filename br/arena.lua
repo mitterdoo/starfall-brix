@@ -105,7 +105,9 @@ ARENA.hookNames = {
 	"changeTargetMode", 	-- Our game has changed targeting mode
 		-- number mode (see ARENA.targetModes)
 
-	"arenaFinalized"
+	"arenaFinalized",
+
+	"finish"				-- Called when the match is over
 }
 
 for _, name in pairs(BR.hookNames) do
@@ -150,9 +152,11 @@ function br.handleServerSnapshot(game, frame, snapshot)
 			changed = game:removeAttacker(attacker)
 
 		::found::
+			if changed then
+				print(CLIENT and "CLIENT" or "SERVER", game.uniqueID, "attackers changed to", table.concat(game.attackers, ", "))
+			end
 			if CLIENT then
-				if changed and game.targetMode == ARENA.targetModes.ATTACK then
-					print("Changing target since enemies passing criteria has changed")
+				if changed and game.targetMode == ARENA.targetModes.ATTACKER then
 					game:pickTarget()
 				end
 				game.hook:run("playerTarget", attacker, victims)
@@ -174,7 +178,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				local enemy = game.arena[victim]
 				for _, id in pairs(game:getTargets()) do
 					if id == victim then
-						print("Changing target since old target died")
+						print("CLIENT changing targets since target has died")
 						game:pickTarget()
 					end
 				end
@@ -183,6 +187,9 @@ function br.handleServerSnapshot(game, frame, snapshot)
 					enemy.placement = placement
 					game:removeAttacker(victim)
 					game.remainingPlayers = game.remainingPlayers - 1
+					if killer == game.uniqueID then
+						enemy.killedByUs = true
+					end
 				end
 
 				if killer == game.uniqueID then
@@ -194,6 +201,13 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				end
 
 				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)
+
+				if game.remainingPlayers <= 1 then
+					game:finish()
+					if not game.dead then
+						game.hook:run("win")
+					end
+				end
 
 			elseif event == e.MATRIX_PLACE and data[2] ~= game.uniqueID then
 				local player, pieceID, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6]

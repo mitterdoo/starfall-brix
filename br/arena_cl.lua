@@ -55,6 +55,16 @@ end
 function ARENA:enqueue(...)
 
 	table.insert(self.queue, {...})
+	local i = #self.queue -- TODO: when SF fixes table.insert's return value, use that instead
+
+
+	local time = timer.realtime()
+	if time ~= self.currentInstant_Time then
+		self.currentInstant = {i}
+		self.currentInstant_Time = time
+	else
+		table.insert(self.currentInstant, i)
+	end
 
 end
 
@@ -84,7 +94,6 @@ function ARENA:changeTargetMode(mode)
 
 	self.targetMode = mode
 	self.hook:run("changeTargetMode", mode)
-	print("Changing target since the player requested it")
 	self:pickTarget()
 
 end
@@ -168,6 +177,9 @@ function br.createArena(seed, uniqueID)
 	self.arena = {}
 	self.targetMode = ARENA.targetModes.RANDOM
 
+	self.currentInstant = {} -- List of indices in queue that were set this frame
+	self.currentInstant_Time = -1
+
 	self.hook("preInput", function(when, input, pressed)
 
 		self:enqueue(self.clientEvents.INPUT, when, input, pressed)
@@ -188,11 +200,21 @@ function br.createArena(seed, uniqueID)
 
 	self.hook("preGarbageSend", function()
 	
-		print("Changing target since garbage was sent")
+		local oldCount = #self.currentInstant
 		self:pickTarget()
-		-- This will automatically :enqueue() a target change in the queue.
-		-- The server, once it clears a line, will wait for a target change from the client.
-
+		local newCount = #self.currentInstant
+		print("clientside", oldCount, newCount)
+		for i = newCount, oldCount + 1, -1 do
+			local key = self.currentInstant[i]
+			if self.queue[key][1] == self.clientEvents.TARGET then
+				local event = table.remove(self.queue, key)
+				table.insert(self.queue, self.currentInstant[1], event)
+				print("reversed! client changed target to " .. event[3])
+				self.currentInstant = {}
+				return
+			end
+		end
+		print("COULD NOT FIND TARGET TO SWAP")
 	end)
 
 	return self
@@ -303,11 +325,24 @@ function ARENA:onReady()
 
 end
 
+-- Disconnects from the server
+function ARENA:finish()
+
+	self.dead = true -- don't allow any more inputs
+	self.hook:run("finish")
+	if not self.hookName then return end
+	hook.remove("think", self.hookName)
+	hook.remove("net", self.hookName)
+
+end
+
 function ARENA:sendSnapshot()
 
 	local e = ARENA.clientEvents
 	net.start(ARENA.netTag)
 	net.writeUInt(#self.queue, 10)
+
+		--print("====CLIENT SNAPSHOT START")
 	for _, data in pairs(self.queue) do
 
 		local event = data[1]
@@ -315,17 +350,21 @@ function ARENA:sendSnapshot()
 		net.writeUInt(event, 2)
 		net.writeUInt(frame, 32)
 
+		--print("↓    frame", frame)
 		if event == e.INPUT then
 			local input, down = data[3], data[4]
+			--print("> INPUT", input, down)
 			net.writeUInt(input, 3)
 			net.writeBit(down and 1 or 0)
 
 		elseif event == e.TARGET then
 			local target = data[3]
+			--print("> TARGET", target)
 			net.writeUInt(target, 6)
 
 		elseif event == e.ACKNOWLEDGE then
 			local snapshotID = data[3]
+			--print("> ACKNOWLEDGE", snapshotID)
 			net.writeUInt(snapshotID, 32)
 
 		elseif event == e.DIE then

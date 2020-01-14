@@ -424,6 +424,8 @@ function BRIX:co_main()
 
 	self:killGame()
 
+	print(CLIENT and "client" or "server", "reached end of mainloop")
+
 end
 
 function BRIX:killGame()

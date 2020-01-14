@@ -126,10 +126,22 @@ end
 
 function ARENA:targetSanityCheck(target, game)
 	if target == 0 and #game.attackers == 0 or
-		not self.arena[target] or
-		self.arena[target].dead
+		target ~= 0 and not self.arena[target] or
+		target ~= 0 and self.arena[target].dead
 		or target == game.uniqueID
 	then
+
+		print("SERVER " .. game.uniqueID .. " picking random target because:")
+		if target == 0 and #game.attackers == 0 then
+			print("No attackers")
+		elseif target ~= 0 and not self.arena[target] then
+			print("Target " .. tostring(target) .. " does not exist")
+		elseif target ~= 0 and self.arena[target].dead then
+			print("Target " .. tostring(target) .. " is dead")
+		elseif target == game.uniqueID then
+			print("Targets self")
+		end
+
 		target = self:pickRandomTarget(game.uniqueID)
 	end
 	return target
@@ -144,7 +156,9 @@ function ARENA:start()
 		game.hook("preGarbageSend", function(lines)
 		
 			-- We must know where to send our garbage, since the player retargets when sending any garbage.
+			--[[
 			local curFrame = game.frame
+			local lastEvent = game.lastEvent
 
 			if game.targetChanges[curFrame] ~= nil then 
 				-- We already changed target this frame. don't worry
@@ -154,18 +168,29 @@ function ARENA:start()
 			end
 
 			game.waitingForTarget = curFrame -- Signal client snapshot handler to use callEvent instead of userinput
-			local event, target = game:pullEvent()
-			game.waitingForTarget = nil
-
-			if event ~= "sv_changeTarget" then
-				print("Player " .. tostring(game.uniqueID) .. " cleared line, but did not send a target change!")
-				print("Instead, got event", event, target)
-				print("Frame", curFrame)
-				game:killGame()
-				game.kickReason = "Cleared line, didn't send target change"
-			else
-				game:userInput(curFrame, br.inputEvents.CHANGE_TARGET, target)
+			
+			print("Server preGarbageSend. CurFrame: " .. curFrame)
+			for k, v in pairs(game.timers) do
+				print("> Timer: " .. tostring(k) .. ": " .. tostring(v))
 			end
+
+			while true do
+				local event, target = game:pullEvent()
+
+				if event == "sv_changeTarget" then
+					if game.frame ~= game.waitingForTarget then
+						game:killGame()
+						game.kickReason = "Target change was not the same frame of line clear"
+						return
+					end
+					game.waitingForTarget = nil
+					game:userInput(curFrame, br.inputEvents.CHANGE_TARGET, target)
+					break
+				else
+					print("serverside waiting for target change but got", event, target)
+				end
+			end]]
+			
 
 		end)
 
@@ -181,7 +206,9 @@ function ARENA:start()
 				targets = {target}
 			end
 			lines = math.ceil(lines / #targets)
-			--print("__server garbage send", game.uniqueID, lines)
+			for _, id in pairs(targets) do
+				print("SERVER", game.uniqueID, "send garbage", id,lines)
+			end
 
 			self:enqueue(e.DAMAGE, game.uniqueID, lines, targets)
 
@@ -219,6 +246,11 @@ function ARENA:start()
 				self:enqueue(e.CHANGEPHASE, self.phase, deathFrame)
 			end
 
+			if self.remainingPlayers <= 1 then
+				print("SERVER GAME OVER")
+				self.dead = true
+			end
+
 		end)
 
 		game.hook("prelock", function(piece, rot, x, y, mono)
@@ -247,6 +279,9 @@ function ARENA:start()
 				self.nextSnapshot = self.nextSnapshot + self.refreshRate
 			end
 			self:sendSnapshot()
+			if self.dead then
+				hook.remove("think", self.hookName)
+			end
 		end
 
 	end)
@@ -268,24 +303,34 @@ function ARENA:handleClientSnapshot(game, ply)
 
 	local eventCount = net.readUInt(10) -- max 1024
 
+	local d = ply == owner() and false
+	if d then
+		print("====SERVER/CLIENT SNAPSHOT")
+	end
+
 	for i = 1, eventCount do
 
 		local event = net.readUInt(2)
 		local frame = net.readUInt(32)
 
+		if d then print("↓    frame", frame) end
 		if event == ARENA.clientEvents.INPUT then
 			local input = net.readUInt(3)
 			local down = net.readBit() == 1
 			
+			if d then print("> INPUT", input, down) end
 			game:userInput(frame, input, down)
 
 
 		elseif event == ARENA.clientEvents.TARGET then
 			local target = net.readUInt(6)
 			
+			if d then print("> TARGET", target) end
 			if game.waitingForTarget then
+				if d then print(">>> plugging wait", game.waitingForTarget) end
 				game:callEvent(game.waitingForTarget, "sv_changeTarget", target)
 			else
+				if d then print(">>> regular") end
 				game.targetChanges[frame] = target
 				game:userInput(frame, br.inputEvents.CHANGE_TARGET, target)
 			end
@@ -297,6 +342,7 @@ function ARENA:handleClientSnapshot(game, ply)
 			if not snapshot then
 				print(ply, "tried to acknowledge unknown snapshotID " .. tostring(snapshotID) .. "!")
 			else
+				if d then print("> ACKNOWLEDGE", snapshotID) end
 				br.handleServerSnapshot(game, frame, snapshot)
 				game.pendingSnapshots[snapshotID] = nil
 				game.pendingCount = game.pendingCount - 1
