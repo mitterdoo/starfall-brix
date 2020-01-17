@@ -203,18 +203,15 @@ function br.createArena(seed, uniqueID)
 		local oldCount = #self.currentInstant
 		self:pickTarget()
 		local newCount = #self.currentInstant
-		print("clientside", oldCount, newCount)
 		for i = newCount, oldCount + 1, -1 do
 			local key = self.currentInstant[i]
 			if self.queue[key][1] == self.clientEvents.TARGET then
 				local event = table.remove(self.queue, key)
 				table.insert(self.queue, self.currentInstant[1], event)
-				print("reversed! client changed target to " .. event[3])
 				self.currentInstant = {}
 				return
 			end
 		end
-		print("COULD NOT FIND TARGET TO SWAP")
 	end)
 
 	return self

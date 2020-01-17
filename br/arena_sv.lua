@@ -48,6 +48,7 @@ function ARENA:connectPlayer(ply)
 	game.pendingSnapshots = {}
 	game.pendingCount = 0
 	game.targetChanges = {}
+	game.arena = self
 
 	self.arena[id] = game
 	table.insert(self.connectedPlayers, ply)

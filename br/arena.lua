@@ -166,7 +166,17 @@ function br.handleServerSnapshot(game, frame, snapshot)
 			local phase, statedFrame = data[2], data[3]
 			game:changePhase(phase, statedFrame)
 
-		elseif CLIENT then
+		elseif SERVER then
+
+			if event == e.DIE then
+				local victim = data[2]
+				local enemy = game.arena.arena[victim]
+				if enemy then
+					game:removeAttacker(victim)
+				end
+			end
+
+		else
 
 			if event == e.DIE then -- useless on server
 				local victim, killer, placement, deathFrame, badgeBits = data[2], data[3], data[4], data[5], data[6]
