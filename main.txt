@@ -1,0 +1,42 @@
+--@name BRIX 33: Stack to the Death
+--@author mitterdoo
+--@shared
+--@include brix/client/main.lua
+--@clientmain brix/client/main.lua
+--@include brix/br/arena_sv.lua
+
+require("brix/br/arena_sv.lua")
+Arena = br.createArena()
+
+function Arena:preConnect(ply)
+
+    return true
+end
+
+function Arena:onConnect(ply)
+end
+
+hook.add("PlayerSay", "start", function(ply, text)
+
+    if ply == owner() and text == "$s" then
+        Arena:readyUp()
+        hook.remove("PlayerSay", "start")
+        
+        timer.create("arenaDebug", 0.1, 0, function()
+        
+            net.start("brix_debug")
+            net.writeUInt(Arena.playerCount, 6)
+            for id, game in pairs(Arena.arena) do
+                net.writeUInt(id, 6)
+                net.writeUInt(game.pendingCount, 8)
+            end
+            net.send()
+
+        end)
+
+    end
+
+end)
+
+
+Arena:open()
