@@ -173,6 +173,8 @@ function br.createArena(seed, uniqueID)
 
 	local self = br.createGame(ARENA, seed, uniqueID)
 
+	self.selfEnemy = br.createEnemy(uniqueID)
+
 	self.queue = {}
 	self.arena = {}
 	self.targetMode = ARENA.targetModes.RANDOM

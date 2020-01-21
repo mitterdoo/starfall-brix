@@ -219,25 +219,36 @@ function br.handleServerSnapshot(game, frame, snapshot)
 					end
 				end
 
-			elseif event == e.MATRIX_PLACE and data[2] ~= game.uniqueID then
+			elseif event == e.MATRIX_PLACE then
 				local player, pieceID, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6]
 
+				local enemy = game.arena[player]
+				if player == game.uniqueID then
+					enemy = game.selfEnemy
+				end
 				local piece = brix.pieces[pieceID]
-				game.arena[player]:place(piece, rot, x, y, mono)
+					enemy:place(piece, rot, x, y, mono)
 
 				game.hook:run("playerMatrixPlace", player, pieceID, rot, x, y, mono)
 
-			elseif event == e.MATRIX_GARBAGE and data[2] ~= game.uniqueID then
+			elseif event == e.MATRIX_GARBAGE then
 				local player, gaps = data[2], data[3]
 
-				game.arena[player]:garbage(gaps)
+				local enemy = game.arena[player]
+				if player == game.uniqueID then
+					enemy = game.selfEnemy
+				end
+				enemy:garbage(gaps)
 
 				game.hook:run("playerMatrixGarbage", player, gaps)
 			
-			elseif event == e.MATRIX_SOLID and data[2] ~= game.uniqueID then
+			elseif event == e.MATRIX_SOLID then
 				local player, lines = data[2], data[3]
 
 				local obj = game.arena[player]
+				if player == game.uniqueID then
+					obj = game.selfEnemy
+				end
 				for i = 1, lines do
 					obj:garbage()
 				end
