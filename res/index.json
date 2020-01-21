@@ -17,6 +17,7 @@
 	"se_piece_contact.wav":		1,
 	"se_piece_hold.wav":			1,
 	"se_piece_lock.wav":			1,
+	"se_piece_harddrop.wav":	1,
 	"se_piece_rotate.wav":		1,
 	"se_piece_softdrop.wav":		1,
 	"se_piece_special.wav":		1,
