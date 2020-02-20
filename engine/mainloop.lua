@@ -235,7 +235,7 @@ function BRIX:co_main()
 					if self:moveLeft() then
 						attempts, lowest = self:checkAttempts(attempts, lowest)
 						if self:fitsDown() then
-							self:startTimer("drop", self:getFramesPerDrop())
+							self:startTimer("drop", 0)
 							goto falling
 						end
 					end
@@ -245,7 +245,7 @@ function BRIX:co_main()
 					if self:moveRight() then
 						attempts, lowest = self:checkAttempts(attempts, lowest)
 						if self:fitsDown() then
-							self:startTimer("drop", self:getFramesPerDrop())
+							self:startTimer("drop", 0)
 							goto falling
 						end
 					end
@@ -259,7 +259,7 @@ function BRIX:co_main()
 					if self:moveLeft() then
 						attempts, lowest = self:checkAttempts(attempts, lowest)
 						if self:fitsDown() then
-							self:startTimer("drop", self:getFramesPerDrop())
+							self:startTimer("drop", 0)
 							goto falling
 						else
 							self.hook:run("pieceLockNag")
@@ -272,7 +272,7 @@ function BRIX:co_main()
 					if self:moveRight() then
 						attempts, lowest = self:checkAttempts(attempts, lowest)
 						if self:fitsDown() then
-							self:startTimer("drop", self:getFramesPerDrop())
+							self:startTimer("drop", 0)
 							goto falling
 						else
 							self.hook:run("pieceLockNag")
@@ -291,7 +291,7 @@ function BRIX:co_main()
 				elseif what == cevents.ROT_CW and self:rotateClockwise() then
 					attempts, lowest = self:checkAttempts(attempts, lowest, true)
 					if self:fitsDown() then
-						self:startTimer("drop", self:getFramesPerDrop())
+						self:startTimer("drop", 0)
 						goto falling
 					else
 						self.hook:run("pieceLockNag")
@@ -300,7 +300,7 @@ function BRIX:co_main()
 				elseif what == cevents.ROT_CCW and self:rotateAntiClockwise() then
 					attempts, lowest = self:checkAttempts(attempts, lowest, true)
 					if self:fitsDown() then
-						self:startTimer("drop", self:getFramesPerDrop())
+						self:startTimer("drop", 0)
 						goto falling
 					else
 						self.hook:run("pieceLockNag")
