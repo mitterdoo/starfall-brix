@@ -8,6 +8,10 @@
 local sheets = {}
 local allCoords = {}
 
+
+local SMALL_RESOLUTION = true or ({render.getGameResolution()})[2] < 1024
+
+
 local function errFunc(txt)
 	print("ERROR", txt)
 	hook.add("render", "err", function()
@@ -46,8 +50,12 @@ local function createSheet(idx, path, coords)
 				tryApplyingTexture()
 				return
 			end
+
 			sheets[idx] = {mat = newMat, coords = coords}
 			allCoords[idx] = coords
+			if SMALL_RESOLUTION then
+				performLayout(0, 0, 512, 512)
+			end
 		
 		end, function()
 		
@@ -187,8 +195,10 @@ end
 local const = 0.4 / 1024 -- cut off ugly pixels that have blended in
 function sprite.draw(idx, x, y, w, h)
 
+	local scaling = SMALL_RESOLUTION and 0.5 or 1
+
 	local data = curSheet.coords[idx] or defaultData
-	render.drawTexturedRectUV(x, y, w, h, data[1] / 1024 + const, data[2] / 1024 + const, (data[1] + data[3]) / 1024 - const, (data[2] + data[4]) / 1024 - const)
+	render.drawTexturedRectUV(x, y, w, h, data[1] * scaling / 1024 + const, data[2] * scaling / 1024 + const, (data[1] + data[3]) * scaling / 1024 - const, (data[2] + data[4]) * scaling / 1024 - const)
 
 end
 
