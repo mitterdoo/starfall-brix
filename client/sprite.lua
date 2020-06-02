@@ -9,7 +9,7 @@ local sheets = {}
 local allCoords = {}
 
 
-local SMALL_RESOLUTION = true or ({render.getGameResolution()})[2] < 1024
+local SMALL_RESOLUTION = ({render.getGameResolution()})[2] < 1024
 
 
 local function errFunc(txt)
@@ -201,23 +201,3 @@ function sprite.draw(idx, x, y, w, h)
 	render.drawTexturedRectUV(x, y, w, h, data[1] * scaling / 1024 + const, data[2] * scaling / 1024 + const, (data[1] + data[3]) * scaling / 1024 - const, (data[2] + data[4]) * scaling / 1024 - const)
 
 end
-
-
---[[
-local brixBlockData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABTUlEQVRoge3Zv6rCMBiG8adpFenk4mV5p66O3omDk4P/iCVGpEjOcIh4NK2eQb8WvmdsKLw/2i3ZYrEghBAulwt9KssynHNZ4ZwL0+mUuq7x3kvveitjDN57ZrNZMM45drsdg8GAsiylt70sjl8ulxyPRwyAtbYXiPvx+/3+91k87DoiNR7uANBdRNN4eABA9xBt4wGK1EvWWgAmkwnD4fCzC190Op0ax0PiC8SstZzP548Ne7f1et04HloAfUkB0ilAOgVIpwDpFCCdAqRTgHQKkE4B0ilAOgVIpwDpFCCdAqRTgHTJC47Ydrtls9l8a0syYwx5nnO9XpPnjYCqqlitVq2XC9+oLEvG43EjIvkLdWU8gPf+duWV5/nT+ROgS+NjbYg/gC6OjzUhboAuj4+lEAb6MT72iCgOh0M2n89DVVXC0/7XaDSiKIrsB4Dj3GnjnS3HAAAAAElFTkSuQmCC"
-local assetAttempts = 0
-function attemptCreateBlockAsset()
-    brixBlock = render.getTextureID( brixBlockData, function(mat, url, w, h, performLayout)
-        if mat then
-            performLayout(0, 0, 1024,1024)
-        elseif assetAttempts < 10 then
-            assetAttempts = assetAttempts + 1
-            --error("could not load the image")
-            attemptCreateBlockAsset()
-        end
-    end, function()
-        ready = true
-    end )
-end
-attemptCreateBlockAsset()
-]]
