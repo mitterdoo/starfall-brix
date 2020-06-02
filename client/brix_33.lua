@@ -1,3 +1,7 @@
+--[[
+	The main clientside code for BRIX 33. Handles all rendering.
+]]
+
 --@name BRIX 33
 --@author mitterdoo
 --@shared

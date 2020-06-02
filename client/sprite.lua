@@ -1,5 +1,7 @@
 --[[
 	This should be run within a loader coroutine, as this code is blocking.
+
+	Sprite library. Loads all required images and spritesheets, and exposes helper functions to render them to the screen.
 ]]
 --@name BRIX: Sprite loader
 --@author mitterdoo

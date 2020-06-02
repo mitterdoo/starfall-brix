@@ -1,3 +1,7 @@
+--[[
+	A sound system that uses the downloaded assets. Supports basic looping.
+]]
+
 --@client
 
 sound = {}

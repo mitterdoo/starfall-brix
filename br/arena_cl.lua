@@ -1,3 +1,7 @@
+--[[
+	Clientside Arena implementation. Adds functionality to communicate with the server.
+]]
+
 --@name BRIX: Arena (clientside)
 --@author mitterdoo
 --@client

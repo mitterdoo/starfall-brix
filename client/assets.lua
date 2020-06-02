@@ -1,3 +1,8 @@
+--[[
+	A special asset downloader library with basic file versioning.
+	Saves downloaded assets to disk, and redownloads updated files
+]]
+
 --@client
 
 assets = {}
@@ -36,7 +41,6 @@ function assets.download(url)
 	assets.queue = {}
 	for path, version in pairs(index) do
 		local current = assets.versionIndex[path]
-		print(path, version, current)
 		if not current or current ~= version then
 			-- Outdated or new. download it
 			table.insert(assets.queue, {

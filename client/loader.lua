@@ -1,3 +1,8 @@
+--[[
+	An asynchronous loader library. Provides basic progress bar support.
+	Once the loader is finished, calls the "load" hook.
+]]
+
 --@name Loader
 --@author mitterdoo
 --@client

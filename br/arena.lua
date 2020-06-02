@@ -1,3 +1,10 @@
+--[[
+
+	The main Arena object. Behavior differs between SERVER and CLIENT.
+	This object is responsible for maintaining an online connection.
+
+]]
+
 --@name BRIX: Arena
 --@author mitterdoo
 --@shared
