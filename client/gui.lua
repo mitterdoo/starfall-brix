@@ -5,7 +5,11 @@
 --@name GUI
 --@author Ranthos
 --@client
+--@include brix/client/gui/rtcontrol.lua
 
+local loadControls = {
+	"RTControl"
+}
 
 gui = {}
 gui.Classes = {}
@@ -18,6 +22,61 @@ local protected = {
 	"SetPos",
 	"SetScale"
 }
+
+local transforms = {}
+	
+local function getMatrix(x, y, sw, sh)
+
+	local m = Matrix()
+	m:setTranslation(Vector(x, y, 0))
+	m:setScale(Vector(sw, sh, 0))
+	return m
+
+end
+function gui.pushTransform(x, y, sw, sh)
+
+	local transform
+	if y ~= nil then
+		transform = {x = x, y = y, sw = sw, sh = sh}
+	else
+		transform = x
+	end
+	table.insert(transforms, transform)
+
+	render.pushMatrix(getMatrix(transform.x, transform.y, transform.sw, transform.sh))
+
+end
+
+function gui.popTransform()
+	if #transforms == 0 then return end
+	local transform = table.remove(transforms, #transforms)
+
+	render.popMatrix()
+
+	return transform
+end
+
+function gui.popAllTransforms()
+
+	local toReturn = {}
+	for i = #transforms, 1, -1 do
+		local transform = gui.popTransform()
+		gui.popTransform()
+		table.insert(toReturn, transform)
+	end
+
+	return toReturn
+
+end
+
+function gui.pushTransforms(list)
+
+	for _, transform in pairs(list) do
+		gui.pushTransform(transform)
+	end
+
+end
+
 
 local CTRL = {}
 CTRL.__index = CTRL
@@ -41,16 +100,8 @@ function gui.Register(className, panelTable, baseName)
 		panelTable.super = baseTable
 		setmetatable(panelTable, {__index = baseTable})
 	end
+	panelTable.__index = panelTable
 	gui.Classes[className] = panelTable
-
-end
-
-local function getControlMatrix(ctrl)
-
-	local m = Matrix()
-	m:setTranslation(Vector(ctrl.x, ctrl.y, 0))
-	m:setScale(Vector(ctrl.scale_w, ctrl.scale_h, 0))
-	return m
 
 end
 
@@ -68,6 +119,13 @@ end
 function CTRL:OnRemove()
 
 end
+
+function CTRL:Paint(w, h)
+
+end
+
+
+
 
 function CTRL:Remove()
 
@@ -113,16 +171,6 @@ function CTRL:SetScale(w, h)
 
 end
 
-function CTRL:Paint(w, h)
-	render.setRGBA(255, 255, 0, 255)
-	render.drawRectFast(0, 0, w, h)
-	render.setRGBA(255, 0, 0, 255)
-	render.drawRectFast(0, 0, w/2, h/2)
-	
-	render.setRGBA(0, 0, 0, 255)
-	render.drawText(0, 0, "Hello, world", 0)
-end
-
 function CTRL:Add(child)
 	child.parent = self
 	table.insert(self.children, child)
@@ -132,18 +180,30 @@ function CTRL:DrawChildren()
 
 	for _, child in pairs(self.children) do
 	
-		local m = getControlMatrix(child)
-		render.pushMatrix(m)
+		gui.pushTransform(child.x, child.y, child.scale_w, child.scale_h)
 		
 		child:Draw()
 		
-		render.popMatrix()
+		gui.popTransform()
 	
 	end
 
 end
 
 gui.Classes["Control"] = CTRL
+
+
+for _, name in pairs(loadControls) do
+
+	require("brix/client/gui/" .. name:lower() .. ".lua")
+
+end
+_G.PANEL = nil
+
+
+local root
+local _noParent_reference = {} -- store a reference to this table we only created here
+
 
 function gui.Create(className, parent)
 
@@ -161,7 +221,10 @@ function gui.Create(className, parent)
 	ctrl.children = {}
 	
 	setmetatable(ctrl, gui.Classes[className])
-	if parent ~= nil then
+	if parent == nil then
+		parent = root
+	end
+	if parent ~= _noParent_reference then
 		parent:Add(ctrl)
 	end
 	ctrl:Init()
@@ -171,27 +234,14 @@ function gui.Create(className, parent)
 
 end
 
-local root = gui.Create("Control")
-root:SetPos(400, 400)
-root:SetSize(200, 200)
+root = gui.Create("Control", _noParent_reference)
+root:SetSize(render.getGameResolution())
 
-local whoa = gui.Create("Control", root)
-whoa:SetPos(100, 100)
-whoa:SetSize(50, 50)
-
-
-hook.add("postdrawhud", "gui", function()
-
-	local w, h = render.getGameResolution()
-	
-	root.scale_w = math.sin(timer.realtime() * math.pi) * 0.5 + 1
-	root.scale_h = root.scale_w
-	
-	local m = getControlMatrix(root)
-	render.pushMatrix(m)
+function gui.Draw()
+	gui.pushTransform(root.x, root.y, root.scale_w, root.scale_h)
 	
 	root:Draw()
 	
-	render.popMatrix()
-
-end)
+	
+	gui.popTransform()
+end
