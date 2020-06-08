@@ -54,6 +54,7 @@ local function createSheet(idx, path, coords)
 			end
 
 			sheets[idx] = {mat = newMat, coords = coords}
+			sprite.mats[idx] = newMat
 			allCoords[idx] = coords
 			if SMALL_RESOLUTION then
 				performLayout(0, 0, 512, 512)
@@ -72,6 +73,7 @@ end
 
 sprite = {}
 sprite.sheets = allCoords
+sprite.mats = {}
 
 createSheet(1, assets.files["skin1.png"], {
 
