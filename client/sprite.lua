@@ -82,6 +82,7 @@ sprite.mats = {}
 createSheet(1, assets.files["skin1.png"], {
 
 	pieces = 0, -- reference value for ordered sprites
+	-- Sprites for colored pieces
 	[0] = {0, 0, 48, 48},
 	[1] = {48, 0, 48, 48},
 	[2] = {48 * 2, 0, 48, 48},
@@ -90,10 +91,10 @@ createSheet(1, assets.files["skin1.png"], {
 	[5] = {48, 48, 48, 48},
 	[6] = {48 * 2, 48, 48, 48},
 
-	garbage = 7,
+	garbage = 7, -- Garbage block
 	[7] = {48 * 3, 48, 48, 48},
 
-	pieceGhosts = 8,
+	pieceGhosts = 8, -- Ghosts of pieces
 	[8] = {0, 48 * 2, 48, 48},
 	[9] = {48, 48 * 2, 48, 48},
 	[10] = {48 * 2, 48 * 2, 48, 48},
@@ -105,19 +106,22 @@ createSheet(1, assets.files["skin1.png"], {
 	garbageSolid = 15,
 	[15] = {48 * 3, 48 * 3, 48, 48},
 
+	-- Monochrome pieces for hardmode
 	classicPiece = 16,
 	classicPieceGhost = 17,
 	[16] = {320, 384, 48, 48},
 	[17] = {368, 384, 48, 48},
 
+	-- Enemy matrix background
 	enemy = 18,
 	[18] = {0, 192, 64, 128},
 
-	ko = 19,
+	ko = 19, -- KO icon
 	[19] = {64, 192, 64, 64},
-	ko_us = 20,
+	ko_us = 20, -- Our KO icon
 	[20] = {64, 256, 64, 64},
 
+	-- 16 badge bit progress sprites
 	badgeBits = 21,
 	[21] = {0, 320, 64, 64},
 	[22] = {0, 320 + 64 * 1, 64, 64},
@@ -136,8 +140,8 @@ createSheet(1, assets.files["skin1.png"], {
 	[35] = {64, 320 + 64 * 6, 64, 64},
 	[36] = {64, 320 + 64 * 7, 64, 64},
 
-	[39] = {128, 192 + 80*5, 96, 80},
-	digits = 40,
+	[39] = {128, 192 + 80*5, 96, 80}, -- slash
+	digits = 40, -- numeric digits 0-9
 	[40] = {128, 192 + 80*0, 96, 80},
 	[41] = {128, 192 + 80*1, 96, 80},
 	[42] = {128, 192 + 80*2, 96, 80},
@@ -155,6 +159,7 @@ createSheet(3, assets.files["playfield.png"], {
 	
 	field = 0,
 	[0] = {0, 0, 1024, 1024},
+	-- The rest of these are mainly reference points for placing down elements
 		field_main = {146 * 2, 476 * 2, 22 * 2}, -- x, y, brickSize
 		field_main_clip = {292, 72 - 17, 440, 880 + 17}, -- x, y, w, h
 		field_garbage = {108 * 2, 474 * 2, 22 * 2},
@@ -163,7 +168,7 @@ createSheet(3, assets.files["playfield.png"], {
 
 		arena_stats = {752, 597, 104, 355},
 
-	enemy = 1,
+	enemy = 1, -- 32 enemy locations
 	[1] = {20, 52, 48, 96},
 	[2] = {76, 52, 48, 96},
 	[3] = {20, 168, 48, 96},
