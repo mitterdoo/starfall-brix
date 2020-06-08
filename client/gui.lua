@@ -26,7 +26,11 @@ local protected = {
 	"Add",
 	"SetSize",
 	"SetPos",
-	"SetScale"
+	"SetScale",
+	"ReconstructMatrix",
+	"_matrix",
+	"SetWide",
+	"SetTall"
 }
 
 local transforms = {}
@@ -49,7 +53,7 @@ function gui.pushTransform(x, y, sw, sh)
 	end
 	table.insert(transforms, transform)
 
-	render.pushMatrix(getMatrix(transform.x, transform.y, transform.sw, transform.sh))
+	render.pushMatrix(getMatrix(transform.x, transform.y, transform.sw, transform.sh), false)
 
 end
 
@@ -60,6 +64,14 @@ function gui.popTransform()
 	render.popMatrix()
 
 	return transform
+end
+
+function gui.pushControl(ctrl)
+
+	local m = ctrl._matrix
+	table.insert(transforms, m)
+	render.pushMatrix(m.Matrix, false)
+
 end
 
 function gui.popAllTransforms()
@@ -160,14 +172,41 @@ function CTRL:Remove()
 	end
 end
 
+function CTRL:ReconstructMatrix()
+
+	self._matrix = {x = self.x, y = self.y, sw = self.scale_w, sh = self.scale_h, Matrix = getMatrix(self.x, self.y, self.scale_w, self.scale_h)}
+
+end
+
 function CTRL:SetSize(w, h)
 	self.w = w
 	self.h = h
+	local f = self.OnSizeChange
+	if type(f) == "function" then
+		f(self, w, h)
+	end
+end
+
+function CTRL:SetWide(w)
+	self.w = w
+	local f = self.OnSizeChange
+	if type(f) == "function" then
+		f(self, w, self.h)
+	end
+end
+
+function CTRL:SetTall(h)
+	self.h = h
+	local f = self.OnSizeChange
+	if type(f) == "function" then
+		f(self, self.w, h)
+	end
 end
 
 function CTRL:SetPos(x, y)
 	self.x = x
 	self.y = y
+	self:ReconstructMatrix()
 end
 
 function CTRL:SetScale(w, h)
@@ -178,6 +217,7 @@ function CTRL:SetScale(w, h)
 	
 	self.scale_w = w
 	self.scale_h = h
+	self:ReconstructMatrix()
 
 end
 
@@ -190,7 +230,7 @@ function CTRL:DrawChildren()
 
 	for _, child in pairs(self.children) do
 	
-		gui.pushTransform(child.x, child.y, child.scale_w, child.scale_h)
+		gui.pushControl(child)
 		
 		child:Draw()
 		
@@ -237,6 +277,7 @@ function gui.Create(className, parent)
 	if parent ~= _noParent_reference then
 		parent:Add(ctrl)
 	end
+	ctrl:ReconstructMatrix()
 	ctrl:Init()
 	
 	return ctrl
@@ -248,7 +289,7 @@ root = gui.Create("Control", _noParent_reference)
 root:SetSize(render.getGameResolution())
 
 function gui.Draw()
-	gui.pushTransform(root.x, root.y, root.scale_w, root.scale_h)
+	gui.pushControl(root)
 	
 	root:Draw()
 	
