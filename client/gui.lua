@@ -6,9 +6,15 @@
 --@author Ranthos
 --@client
 --@include brix/client/gui/rtcontrol.lua
+--@include brix/client/gui/sprite.lua
+--@include brix/client/gui/multisprite.lua
+--@include brix/client/gui/number.lua
 
 local loadControls = {
-	"RTControl"
+	"RTControl",
+	"Sprite",
+	"MultiSprite",
+	"Number",
 }
 
 gui = {}
@@ -117,6 +123,10 @@ function CTRL:Init()
 end
 
 function CTRL:OnRemove()
+
+end
+
+function CTRL:OnSizeChanged(w, h)
 
 end
 
