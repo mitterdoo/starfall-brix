@@ -200,6 +200,10 @@ function sprite.draw(idx, x, y, w, h)
 	local scaling = SMALL_RESOLUTION and 0.5 or 1
 
 	local data = curSheet.coords[idx] or defaultData
+	if w == nil then
+		w = data[3]
+		h = data[4]
+	end
 	render.drawTexturedRectUV(x, y, w, h, data[1] * scaling / 1024 + const, data[2] * scaling / 1024 + const, (data[1] + data[3]) * scaling / 1024 - const, (data[2] + data[4]) * scaling / 1024 - const)
 
 end
