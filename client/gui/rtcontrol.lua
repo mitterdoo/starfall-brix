@@ -1,6 +1,7 @@
 --@client
 
 local PANEL = {}
+local SmallResScale = gui.SmallResolution and 0.5 or 1
 local RTStack = {}
 local function pushRT(name)
 	table.insert(RTStack, 1, name)
@@ -30,7 +31,7 @@ function PANEL:Draw()
 		pushRT(self.RTName)
 		render.clear(transparent, true)
 
-		self:Paint(self.w, self.h)
+		self:Paint(self.w * SmallResScale, self.h * SmallResScale)
 		self:DrawChildren()
 
 		popRT()
@@ -43,7 +44,7 @@ function PANEL:Draw()
 
 	render.setRenderTargetTexture(self.RTName)
 	render.setRGBA(255, 255, 255, 255)
-	render.drawTexturedRectUV(0, 0, self.w, self.h, 0, 0, self.w / 1024, self.h / 1024)
+	render.drawTexturedRectUV(0, 0, self.w, self.h, 0, 0, self.w * SmallResScale / 1024, self.h * SmallResScale / 1024)
 	
 
 end
@@ -142,13 +143,15 @@ function PANEL:Draw()
 
 		local memory = gui.popAllTransforms()
 
-		clearRTSection(self.RTName, x, y, self.dw, self.dh)
+		clearRTSection(self.RTName, x * SmallResScale, y * SmallResScale, self.dw * SmallResScale, self.dh * SmallResScale)
 		pushRT(self.RTName)
 
-		gui.pushTransform(x, y, 1, 1)
+		render.enableScissorRect(x * SmallResScale, y * SmallResScale, (x + self.dw) * SmallResScale, (y + self.dh) * SmallResScale)
+		gui.pushTransform(x * SmallResScale, y * SmallResScale, SmallResScale, SmallResScale)
 		self:Paint(self.dw, self.dh)
 		self:DrawChildren()
 		gui.popTransform()
+		render.disableScissorRect()
 
 		popRT()
 
@@ -162,8 +165,8 @@ function PANEL:Draw()
 	render.setRenderTargetTexture(self.RTName)
 	render.setRGBA(255, 255, 255, 255)
 
-	local u1, v1 = x / 1024, y / 1024
-	local u2, v2 = (x + self.dw) / 1024, (y + self.dh) / 1024
+	local u1, v1 = x * SmallResScale / 1024, y * SmallResScale / 1024
+	local u2, v2 = (x + self.dw) * SmallResScale / 1024, (y + self.dh) * SmallResScale / 1024
 
 	render.drawTexturedRectUV(0, 0, self.w, self.h, u1 + const, v1 + const, u2 - const, v2 - const)
 
