@@ -95,7 +95,7 @@ function gui.popAllMatrices()
 	local toReturn = {}
 	for i = #matrices, 1, -1 do
 		local matrix = gui.popMatrix()
-		table.insert(toReturn, matrix)
+		table.insert(toReturn, 1, matrix)
 	end
 
 	return toReturn
