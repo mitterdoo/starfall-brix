@@ -10,13 +10,15 @@
 --@include brix/client/gui/multisprite.lua
 --@include brix/client/gui/number.lua
 --@include brix/client/gui/emitter.lua
+--@include brix/client/gui/glow.lua
 
 local loadControls = {
 	"RTControl",
 	"Sprite",
 	"MultiSprite",
 	"Number",
-	"Emitter"
+	"Emitter",
+	"Glow"
 }
 
 gui = {}
@@ -47,13 +49,29 @@ function gui.getMatrix(x, y, sw, sh)
 
 end
 
-function gui.popMatrix()
-	if #matrices == 0 then return end
-	local matrix = table.remove(matrices, #matrices)
+local function round( num, idp )
 
-	render.popMatrix()
+	local mult = 10 ^ ( idp or 0 )
+	return math.floor( num * mult + 0.5 ) / mult
 
-	return matrix
+end
+
+function gui.AbsolutePos(ox, oy)
+
+	local x, y, sw, sh = 0, 0, 1, 1
+	for _, mat in pairs(matrices) do
+	
+		local tr, scale = mat:getTranslation(), mat:getScale()
+		x = x + tr[1] * sw
+		y = y + tr[2] * sh
+
+		sw = sw * scale[1]
+		sh = sh * scale[2]
+
+	end
+
+	return round(x + ox * sw, 0), round(y + oy * sh, 0)
+
 end
 
 function gui.pushMatrix(mat)
@@ -61,6 +79,15 @@ function gui.pushMatrix(mat)
 	table.insert(matrices, mat)
 	render.pushMatrix(mat)
 
+end
+
+function gui.popMatrix()
+	if #matrices == 0 then return end
+	local matrix = table.remove(matrices, #matrices)
+
+	render.popMatrix()
+
+	return matrix
 end
 
 function gui.popAllMatrices()
@@ -282,10 +309,12 @@ root = gui.Create("Control", _noParent_reference)
 root:SetSize(render.getGameResolution())
 
 function gui.Draw()
+	hook.run("guiPreDraw")
 	gui.pushMatrix(root._matrix)
 	
 	root:Draw()
 	
 	
 	gui.popMatrix()
+	hook.run("guiPostDraw")
 end

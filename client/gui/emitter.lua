@@ -1,4 +1,5 @@
 local PANEL = {}
+local particles = {}
 
 local function lerp( delta, from, to )
 
@@ -21,15 +22,12 @@ local function lerpColorVector(delta, from, to)
 end
 function PANEL:Init()
 
-	self.particles = {}
 	self.sheet = 1
 	self.sprite = 0
 
 	self.spriteW = 1
 	self.spriteH = 1
 
-	self.emissionRate = 1
-	self.lastEmission = 0
 	self.lifetime = 1
 
 	self.angleInitial = 0
@@ -37,9 +35,11 @@ function PANEL:Init()
 
 	self.sizeA = 32
 	self.sizeB = 32
+	self.sizePerc = 1
 
 	self.colorA = Vector(255, 255, 255)
 	self.colorB = Vector(255, 255, 255)
+	self.colorPerc = 1
 
 	self.randAngle = false
 	self.randAngleSpeedMin = 0
@@ -48,6 +48,7 @@ function PANEL:Init()
 
 	self.alphaA = 255
 	self.alphaB = 255
+	self.alphaPerc = 1
 
 	self.velX = 0
 	self.velY = 0
@@ -71,10 +72,6 @@ function PANEL:SetSprite(spriteIdx)
 	else
 		self.spriteW, self.spriteH = 1, 1
 	end
-end
-
-function PANEL:SetEmissionRate(frames)
-	self.emissionRate = frames
 end
 
 function PANEL:SetLifetime(frames)
@@ -116,29 +113,37 @@ function PANEL:SetGravity(gx, gy)
 	self.gravY = gy
 end
 
-function PANEL:SetSizeEnvelope(a, b)
+function PANEL:SetSizeEnvelope(a, b, perc)
 	self.sizeA = a
 	self.sizeB = b
+	self.sizePerc = perc or 1
 end
 
-function PANEL:SetColorEnvelope(a, b)
+function PANEL:SetColorEnvelope(a, b, perc)
 	self.colorA = Vector(a.r, a.g, a.b)
 	self.colorB = Vector(b.r, b.g, b.b)
+	self.colorPerc = perc or 1
 end
 
-function PANEL:SetAlphaEnvelope(a, b)
+function PANEL:SetAlphaEnvelope(a, b, perc)
 	self.alphaA = a
 	self.alphaB = b
+	self.alphaPerc = perc or 1
 end
 
 function PANEL:Emit(time)
 
+	time = time or timer.realtime()
 	local vel = Vector(self.velX, self.velY)
 	vel = Vector(math.random()*2-1, math.random()*2-1, 0):getNormalized() * self.randVel + vel
 
+	local x, y = math.random(0, self.w), math.random(0, self.h)
+	x, y = gui.AbsolutePos(x, y)
+
 	local particle = {
-		x = math.random(0, self.w),
-		y = math.random(0, self.h),
+		emitter = self,
+		x = x,
+		y = y,
 		vx = vel[1],
 		vy = vel[2],
 		angleSpeed = self.angleSpeed + math.random(self.randAngleSpeedMin, self.randAngleSpeedMax),
@@ -146,37 +151,31 @@ function PANEL:Emit(time)
 		death = time + self.lifetime,
 		angle = self.randAngle and math.random(0, 359) or self.angleInitial
 	}
-	table.insert(self.particles, particle)
+	table.insert(particles, particle)
 
 end
 
-function PANEL:Think()
+local lastDraw
+
+hook.add("guiPreDraw", "ControlEmitter", function()
 
 	local time = timer.realtime()
-	local dt = time - self.lastThink
-	self.lastThink = time
-
-
-	if time >= self.lastEmission + self.emissionRate then
-
-		self.lastEmission = time
-		self:Emit(time)
-
-	end
+	local dt = lastDraw and (time - lastDraw) or 0
+	lastDraw = time
 
 	while true do
-		local particle = self.particles[1]
+		local particle = particles[1]
 		if particle ~= nil and particle.death <= time then
-			table.remove(self.particles, 1)
+			table.remove(particles, 1)
 		else
 			break
 		end
 	end
 
-	local gravX = self.gravX * dt
-	local gravY = self.gravY * dt
-	for _, particle in pairs(self.particles) do
+	for _, particle in pairs(particles) do
 
+		local gravX = particle.emitter.gravX * dt
+		local gravY = particle.emitter.gravY * dt
 		particle.angle = particle.angle + particle.angleSpeed * dt
 		particle.vx = particle.vx + gravX
 		particle.vy = particle.vy + gravY
@@ -185,33 +184,30 @@ function PANEL:Think()
 
 	end
 
-end
+end)
 
-function PANEL:Paint(w, h)
+hook.add("guiPostDraw", "ControlEmitter", function()
 
-	local spr = self.sprite
-	if spr then
-		sprite.setSheet(self.sheet)
-	end
-
-	local ratio = self.spriteW / self.spriteH
-	local isWide = self.spriteW >= self.spriteH
 	local m = Matrix()
+	for _, particle in pairs(particles) do
+		local self = particle.emitter
+		local spr = self.sprite
+		if spr then
+			sprite.setSheet(self.sheet)
+		end
 
-	local time = timer.realtime()
+		local ratio = self.spriteW / self.spriteH
+		local isWide = self.spriteW >= self.spriteH
 
-	local sizeA, sizeB = self.sizeA, self.sizeB
-	local colorA, colorB = self.colorA, self.colorB
-	local alphaA, alphaB = self.alphaA, self.alphaB
+		local time = timer.realtime()
 
-	for _, particle in pairs(self.particles) do
 
 		local perc = (time - particle.birth) / (particle.death - particle.birth)
 		local x, y = particle.x, particle.y
 
-		local size = lerp(perc, sizeA, sizeB)
-		local col = lerpColorVector(perc, colorA, colorB)
-		local alpha = lerp(perc, alphaA, alphaB)
+		local size = lerp(perc/self.sizePerc, self.sizeA, self.sizeB)
+		local col = lerpColorVector(perc/self.colorPerc, self.colorA, self.colorB)
+		local alpha = lerp(perc/self.alphaPerc, self.alphaA, self.alphaB)
 		render.setRGBA(col[1], col[2], col[3], alpha)
 
 		local sw, sh
@@ -246,7 +242,7 @@ function PANEL:Paint(w, h)
 
 	end
 
-end
+end)
 
 
 gui.Register("Emitter", PANEL, "Control")
