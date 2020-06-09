@@ -9,12 +9,14 @@
 --@include brix/client/gui/sprite.lua
 --@include brix/client/gui/multisprite.lua
 --@include brix/client/gui/number.lua
+--@include brix/client/gui/emitter.lua
 
 local loadControls = {
 	"RTControl",
 	"Sprite",
 	"MultiSprite",
 	"Number",
+	"Emitter"
 }
 
 gui = {}
