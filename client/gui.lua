@@ -19,6 +19,7 @@ local loadControls = {
 
 gui = {}
 gui.Classes = {}
+gui.SmallResolution = SMALL_RESOLUTION
 
 local protected = {
 	"DrawChildren",
