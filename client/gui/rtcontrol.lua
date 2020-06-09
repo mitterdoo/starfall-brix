@@ -26,7 +26,7 @@ function PANEL:Draw()
 
 	if self.invalid then
 	
-		local memory = gui.popAllTransforms()
+		local memory = gui.popAllMatrices()
 
 		pushRT(self.RTName)
 		render.clear(transparent, true)
@@ -36,7 +36,7 @@ function PANEL:Draw()
 
 		popRT()
 
-		gui.pushTransforms(memory)
+		gui.pushMatrices(memory)
 
 		self.invalid = false
 
@@ -141,21 +141,21 @@ function PANEL:Draw()
 
 	if self.invalid then
 
-		local memory = gui.popAllTransforms()
+		local memory = gui.popAllMatrices()
 
 		clearRTSection(self.RTName, x * SmallResScale, y * SmallResScale, self.dw * SmallResScale, self.dh * SmallResScale)
 		pushRT(self.RTName)
 
 		render.enableScissorRect(x * SmallResScale, y * SmallResScale, (x + self.dw) * SmallResScale, (y + self.dh) * SmallResScale)
-		gui.pushTransform(x * SmallResScale, y * SmallResScale, SmallResScale, SmallResScale)
+		gui.pushMatrix(gui.getMatrix(x * SmallResScale, y * SmallResScale, SmallResScale, SmallResScale))
 		self:Paint(self.dw, self.dh)
 		self:DrawChildren()
-		gui.popTransform()
+		gui.popMatrix()
 		render.disableScissorRect()
 
 		popRT()
 
-		gui.pushTransforms(memory)
+		gui.pushMatrices(memory)
 
 		self.invalid = false
 

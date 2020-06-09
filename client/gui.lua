@@ -34,9 +34,9 @@ local protected = {
 	"SetTall"
 }
 
-local transforms = {}
+local matrices = {}
 	
-local function getMatrix(x, y, sw, sh)
+function gui.getMatrix(x, y, sw, sh)
 
 	local m = Matrix()
 	m:setTranslation(Vector(x, y, 0))
@@ -44,54 +44,39 @@ local function getMatrix(x, y, sw, sh)
 	return m
 
 end
-function gui.pushTransform(x, y, sw, sh)
 
-	local transform
-	if y ~= nil then
-		transform = {x = x, y = y, sw = sw, sh = sh}
-	else
-		transform = x
-	end
-	table.insert(transforms, transform)
-
-	render.pushMatrix(getMatrix(transform.x, transform.y, transform.sw, transform.sh), false)
-
-end
-
-function gui.popTransform()
-	if #transforms == 0 then return end
-	local transform = table.remove(transforms, #transforms)
+function gui.popMatrix()
+	if #matrices == 0 then return end
+	local matrix = table.remove(matrices, #matrices)
 
 	render.popMatrix()
 
-	return transform
+	return matrix
 end
 
-function gui.pushControl(ctrl)
+function gui.pushMatrix(mat)
 
-	local m = ctrl._matrix
-	table.insert(transforms, m)
-	render.pushMatrix(m.Matrix, false)
+	table.insert(matrices, mat)
+	render.pushMatrix(mat)
 
 end
 
-function gui.popAllTransforms()
+function gui.popAllMatrices()
 
 	local toReturn = {}
-	for i = #transforms, 1, -1 do
-		local transform = gui.popTransform()
-		gui.popTransform()
-		table.insert(toReturn, transform)
+	for i = #matrices, 1, -1 do
+		local matrix = gui.popMatrix()
+		table.insert(toReturn, matrix)
 	end
 
 	return toReturn
 
 end
 
-function gui.pushTransforms(list)
+function gui.pushMatrices(list)
 
-	for _, transform in pairs(list) do
-		gui.pushTransform(transform)
+	for _, mat in pairs(list) do
+		gui.pushMatrix(mat)
 	end
 
 end
@@ -179,7 +164,7 @@ end
 
 function CTRL:ReconstructMatrix()
 
-	self._matrix = {x = self.x, y = self.y, sw = self.scale_w, sh = self.scale_h, Matrix = getMatrix(self.x, self.y, self.scale_w, self.scale_h)}
+	self._matrix = gui.getMatrix(self.x, self.y, self.scale_w, self.scale_h)
 
 end
 
@@ -235,12 +220,12 @@ function CTRL:DrawChildren()
 
 	for _, child in pairs(self.children) do
 	
-		gui.pushControl(child)
+		gui.pushMatrix(child._matrix)
 		
 		child:Think()
 		child:Draw()
 		
-		gui.popTransform()
+		gui.popMatrix()
 	
 	end
 
@@ -295,10 +280,10 @@ root = gui.Create("Control", _noParent_reference)
 root:SetSize(render.getGameResolution())
 
 function gui.Draw()
-	gui.pushControl(root)
+	gui.pushMatrix(root._matrix)
 	
 	root:Draw()
 	
 	
-	gui.popTransform()
+	gui.popMatrix()
 end
