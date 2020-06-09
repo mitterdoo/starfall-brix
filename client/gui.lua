@@ -142,6 +142,10 @@ function CTRL:OnSizeChanged(w, h)
 
 end
 
+function CTRL:Think()
+
+end
+
 function CTRL:Paint(w, h)
 
 end
@@ -232,6 +236,7 @@ function CTRL:DrawChildren()
 	
 		gui.pushControl(child)
 		
+		child:Think()
 		child:Draw()
 		
 		gui.popTransform()
