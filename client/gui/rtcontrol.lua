@@ -30,10 +30,12 @@ function PANEL:Draw()
 
 		pushRT(self.RTName)
 		render.clear(transparent, true)
+		gui.pushMatrix(gui.getMatrix(0, 0, SmallResScale, SmallResScale))
 
-		self:Paint(self.w * SmallResScale, self.h * SmallResScale)
+		self:Paint(self.w, self.h)
 		self:DrawChildren()
 
+		gui.popMatrix()
 		popRT()
 
 		gui.pushMatrices(memory)
@@ -146,12 +148,12 @@ function PANEL:Draw()
 		clearRTSection(self.RTName, x * SmallResScale, y * SmallResScale, self.dw * SmallResScale, self.dh * SmallResScale)
 		pushRT(self.RTName)
 
-		render.enableScissorRect(x * SmallResScale, y * SmallResScale, (x + self.dw) * SmallResScale, (y + self.dh) * SmallResScale)
+		gui.pushScissor(x * SmallResScale, y * SmallResScale, (x + self.dw) * SmallResScale, (y + self.dh) * SmallResScale)
 		gui.pushMatrix(gui.getMatrix(x * SmallResScale, y * SmallResScale, SmallResScale, SmallResScale))
 		self:Paint(self.dw, self.dh)
 		self:DrawChildren()
 		gui.popMatrix()
-		render.disableScissorRect()
+		gui.popScissor()
 
 		popRT()
 

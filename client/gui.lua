@@ -10,7 +10,7 @@
 --@include brix/client/gui/multisprite.lua
 --@include brix/client/gui/number.lua
 --@include brix/client/gui/emitter.lua
---@include brix/client/gui/glow.lua
+--@include brix/client/gui/field.lua
 
 local loadControls = {
 	"RTControl",
@@ -18,7 +18,7 @@ local loadControls = {
 	"MultiSprite",
 	"Number",
 	"Emitter",
-	"Glow"
+	"Field"
 }
 
 gui = {}
@@ -108,6 +108,22 @@ function gui.pushMatrices(list)
 		gui.pushMatrix(mat)
 	end
 
+end
+
+local scissorStack = {}
+function gui.pushScissor(x1, y1, x2, y2)
+	table.insert(scissorStack, {x1, y1, x2, y2})
+	render.enableScissorRect(x1, y1, x2, y2)
+end
+
+function gui.popScissor()
+	local ret = table.remove(scissorStack, #scissorStack)
+	if #scissorStack == 0 then
+		render.disableScissorRect()
+	else
+		render.enableScissorRect(unpack(scissorStack[#scissorStack]))
+	end
+	return ret
 end
 
 

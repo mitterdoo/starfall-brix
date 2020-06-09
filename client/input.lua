@@ -72,7 +72,7 @@ local GAMEPAD_INPUT = {
 
 local lastTargetMode = 0
 
-hook.add("xinputStick", hookName, function(controller, x, y, stick, when)
+hook.add("xinputStick", "xinput2brix", function(controller, x, y, stick, when)
 
 	if controller == 0 and stick == 1 then
 		local radius = math.sqrt(x^2 + y^2)
