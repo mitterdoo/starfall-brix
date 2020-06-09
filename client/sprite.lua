@@ -15,8 +15,7 @@ local sheets = {}
 local allCoords = {}
 
 
-SMALL_RESOLUTION = ({render.getGameResolution()})[2] < 1024 or true
-
+SMALL_RESOLUTION = ({render.getGameResolution()})[2] < 1024
 
 local function errFunc(txt)
 	print("ERROR", txt)
