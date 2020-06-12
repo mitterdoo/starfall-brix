@@ -248,7 +248,7 @@ function brix.makeMatrix(w, h)
 
 	end
 
-	function mat:garbage(gap)
+	function mat:garbage(gap, mono)
 
 		if type(gap) == "table" then
 			for _, thisGap in pairs(gap) do
@@ -268,7 +268,8 @@ function brix.makeMatrix(w, h)
 		local data = self.data:sub(1, w * (h-1))
 		local newLine
 		if gap then
-			newLine = string.rep("!", gap - 1) .. " " .. string.rep("!", w - gap)
+			local char = mono and "[" or "!"
+			newLine = string.rep(char, gap - 1) .. " " .. string.rep(char, w - gap)
 		else
 			newLine = string.rep("=", w)
 			self.solidHeight = self.solidHeight + 1
