@@ -1,10 +1,22 @@
 local PANEL = {}
 
+
+function PANEL:Init()
+
+	self.super.Init(self)
+	self:SetSize(1022, 1022)
+	self.allowSkyline = true
+	self.brickSize = 48
+
+end
+
 function PANEL:SetField(field)
 	self.field = field
 end
 
-local BLOCK_SIZE = 48
+function PANEL:SetBrickSize(size)
+	self.brickSize = size
+end
 
 local SPRITE_LOOKUP = {
 	["0"] = 0,
@@ -19,30 +31,29 @@ local SPRITE_LOOKUP = {
 	["["] = 16
 }
 
-function PANEL:Init()
-
-	self.super.Init(self)
-	self:SetSize(1022, 1022)
-	self.allowSkyline = true
-
-end
-
 function PANEL:Paint(w, h)
 
+	local BRICK_SIZE = self.brickSize
 	local sky = self.allowSkyline
 	sprite.setSheet(1)
 	render.setRGBA(220, 220, 220, 255)
-	local bottomY = BLOCK_SIZE * (sky and 21 or 20)
+	local bottomY = BRICK_SIZE * (sky and 21 or 20)
 
+	if sky then
+		gui.pushScissor(0, BRICK_SIZE/2, BRICK_SIZE * 10, BRICK_SIZE*21)
+	end
 	for x = 0, 9 do
 		for y = 0, (sky and 20 or 19) do
 
 			local spr = SPRITE_LOOKUP[self.field:get(x, y)]
 			if spr then
-				sprite.draw(spr, x * BLOCK_SIZE, bottomY - BLOCK_SIZE * (y+1), BLOCK_SIZE, BLOCK_SIZE)
+				sprite.draw(spr, x * BRICK_SIZE, bottomY - BRICK_SIZE * (y+1), BRICK_SIZE, BRICK_SIZE)
 			end
 
 		end
+	end
+	if sky then
+		gui.popScissor()
 	end
 
 end

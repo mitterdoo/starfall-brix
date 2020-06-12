@@ -35,6 +35,7 @@ local KEYBOARD_INPUT = { -- Keyboard input mappings
 hook.add("inputPressed", "input2brix", function(button)
 
 	if input.getCursorVisible() then return end
+	if xinput.getControllers()[0] then return end
 	local map = KEYBOARD_INPUT[button]
 	if map ~= nil then
 		hook.run("brixPressed", map)
@@ -45,6 +46,7 @@ end)
 hook.add("inputReleased", "input2brix", function(button)
 
 	if input.getCursorVisible() then return end
+	if xinput.getControllers()[0] then return end
 	local map = KEYBOARD_INPUT[button]
 	if map ~= nil then
 		hook.run("brixReleased", map)

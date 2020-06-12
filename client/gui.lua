@@ -11,6 +11,8 @@
 --@include brix/client/gui/number.lua
 --@include brix/client/gui/emitter.lua
 --@include brix/client/gui/field.lua
+--@include brix/client/gui/piece.lua
+--@include brix/client/gui/lineclear.lua
 
 local loadControls = {
 	"RTControl",
@@ -18,7 +20,9 @@ local loadControls = {
 	"MultiSprite",
 	"Number",
 	"Emitter",
-	"Field"
+	"Field",
+	"Piece",
+	"LineClear"
 }
 
 gui = {}
@@ -35,7 +39,8 @@ local protected = {
 	"ReconstructMatrix",
 	"_matrix",
 	"SetWide",
-	"SetTall"
+	"SetTall",
+	"SetVisible"
 }
 
 local matrices = {}
@@ -112,6 +117,8 @@ end
 
 local scissorStack = {}
 function gui.pushScissor(x1, y1, x2, y2)
+	x1, y1 = gui.AbsolutePos(x1, y1)
+	x2, y2 = gui.AbsolutePos(x2, y2)
 	table.insert(scissorStack, {x1, y1, x2, y2})
 	render.enableScissorRect(x1, y1, x2, y2)
 end
@@ -256,6 +263,10 @@ function CTRL:SetScale(w, h)
 
 end
 
+function CTRL:SetVisible(visible)
+	self.visible = visible
+end
+
 function CTRL:Add(child)
 	child.parent = self
 	table.insert(self.children, child)
@@ -265,12 +276,14 @@ function CTRL:DrawChildren()
 
 	for _, child in pairs(self.children) do
 	
-		gui.pushMatrix(child._matrix)
-		
-		child:Think()
-		child:Draw()
-		
-		gui.popMatrix()
+		if child.visible then
+			gui.pushMatrix(child._matrix)
+			
+			child:Think()
+			child:Draw()
+			
+			gui.popMatrix()
+		end
 	
 	end
 
@@ -304,6 +317,7 @@ function gui.Create(className, parent)
 	ctrl.h = 64
 	ctrl.scale_w = 1
 	ctrl.scale_h = 1
+	ctrl.visible = true
 	ctrl.children = {}
 	
 	setmetatable(ctrl, gui.Classes[className])
