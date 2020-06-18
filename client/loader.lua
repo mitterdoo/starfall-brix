@@ -44,9 +44,14 @@ function loader.run(func)
 		end)
 		if not ok then
 			if type(err) == "table" then
-				error(err.message .. "\nthe stack: " .. err.traceback)
+				print("<LOADER ERROR>")
+				print(tostring(err.message))
+				for _, line in pairs(string.split(err.traceback, "\n")) do
+					print(line)
+				end
+				error(tostring(err.message) .. "\nthe stack: " .. tostring(err.traceback))
 			end
-			error(err)
+			error(tostring(err))
 		end
 	end
 
