@@ -36,41 +36,10 @@ local function createSheet(idx, path, coords)
 		error("Attempt to create spritesheet from unknown path: " .. tostring(path))
 	end
 
-	local mat = material.create("UnlitGeneric")
-	local body = file.read(path)
-	body = http.base64Encode(body):gsub("\n", "")
-	body = "data:image/png;base64," .. body
-
-	local tryApplyingTexture
-	local tries = 0
-
-	tryApplyingTexture = function()
-		if tries > 10 then
-			error("Too many attempts to apply spritesheet " .. tostring(path))
-		end
-		tries = tries + 1
-		loader.status = "LOADING SPRITESHEET (attempt " .. tries .. ")\n" .. path
-		mat:setTextureURL("$basetexture", body, function(newMat, _, w, h, performLayout)
-			if not newMat then
-				tryApplyingTexture()
-				return
-			end
-
-			sheets[idx] = {mat = newMat, coords = coords}
-			sprite.mats[idx] = newMat
-			allCoords[idx] = coords
-			if SMALL_RESOLUTION then
-				performLayout(0, 0, 512, 512)
-			end
-		
-		end, function()
-		
-			loader.resume()
-
-		end)
-	end
-	tryApplyingTexture()
-	loader.await()
+	local mat = material.createFromImage("data/sf_filedata/" .. path, "")
+	sheets[idx] = {mat = mat, coords = coords}
+	sprite.mats[idx] = mat
+	allCoords[idx] = coords
 
 end
 
@@ -272,16 +241,29 @@ function sprite.setSheet(idx)
 	render.setMaterial(curSheet.mat)
 end
 
-local const = 0.4 / 1024 -- cut off ugly pixels that have blended in
+local drawFast = render.drawTexturedRectUVFast
+
+local scale = 1025 / 1024 -- i dont know :/
 function sprite.draw(idx, x, y, w, h)
 
-	local scaling = SMALL_RESOLUTION and 0.5 or 1
+	local resScaling = SMALL_RESOLUTION and 0.5 or 1
 
 	local data = curSheet.coords[idx] or defaultData
 	if w == nil then
 		w = data[3]
 		h = data[4]
 	end
-	render.drawTexturedRectUV(x, y, w, h, data[1] * scaling / 1024 + const, data[2] * scaling / 1024 + const, (data[1] + data[3]) * scaling / 1024 - const, (data[2] + data[4]) * scaling / 1024 - const)
+
+	local u0, v0, u1, v1 = data[1] * resScaling / 1024,
+		data[2] * resScaling / 1024,
+		(data[1] + data[3]) * resScaling / 1024,
+		(data[2] + data[4]) * resScaling / 1024
+
+	u0 = u0 * scale
+	v0 = v0 * scale
+	u1 = u1 * scale
+	v1 = v1 * scale
+
+	drawFast(x, y, w, h, u0, v0, u1, v1)
 
 end

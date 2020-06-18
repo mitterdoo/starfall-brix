@@ -18,6 +18,16 @@ if file.exists(indexFile) then
 end
 assets.files = {}
 
+local function normalizePath(path)
+
+	if path:sub(-3):lower() == "png" then
+		return path
+	else
+		return path .. ".dat"
+	end
+
+end
+
 function assets.download(url)
 
 	-- First, download the index file
@@ -48,7 +58,8 @@ function assets.download(url)
 				path = path
 			})
 		else
-			assets.files[path] = assetFolder .. path .. ".dat"
+			assets.files[path] = normalizePath(assetFolder .. path)
+			print("wrote path", path)
 		end
 	end
 	local count = #assets.queue
@@ -75,7 +86,7 @@ function assets.download(url)
 				error("Could not get file " .. info.url .. ": error code " .. tostring(code))
 			end
 
-			local path = assetFolder .. info.path .. ".dat"
+			local path = normalizePath(assetFolder .. info.path)
 			file.write(path, body)
 			assets.files[info.path] = path
 			loader.resume()
