@@ -40,6 +40,20 @@ function brix.normalPiece(piece)
 	return bit.band(0x7, piece)
 end
 
+function brix.getPieceSpawnPos(type)
+
+	local piece = brix.pieces[brix.normalPiece(type)]
+	local x = brix.w / 2 - math.ceil(piece.size / 2)
+	local y
+	if brix.normalPiece(type) == pid.i then
+		y = brix.h - 3
+	else
+		y = brix.h - piece.size
+	end
+	return x, y + 1
+
+end
+
 function BRIX:newPiece(type)
 
 	if self.currentPiece.type >= 0 then

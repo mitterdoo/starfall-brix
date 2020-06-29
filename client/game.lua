@@ -41,6 +41,12 @@ local piece = gui.Create("Piece", FieldPos)
 piece:SetBrickSize(brickSize)
 piece:SetVisible(false)
 
+local blockoutPiece = gui.Create("Piece", FieldPos)
+blockoutPiece:SetBrickSize(brickSize)
+blockoutPiece:SetVisible(false)
+blockoutPiece:SetIsBlockout(true)
+
+
 local normal_piece = brix.normalPiece
 
 br.connectToServer(function(arena)
@@ -61,6 +67,17 @@ br.connectToServer(function(arena)
 		piece:SetPieceID(p.type) pieceGhost:SetPieceID(p.type)
 		piece:SetRotation(rot)
 		pieceGhost:SetRotation(rot)
+
+		if mat.highestPoint > 16 then
+			local nextType = arena.pieceQueue[1]
+			blockoutPiece:SetPieceID(nextType)
+			local bx, by = blockoutPiece:GetPiecePos(brix.getPieceSpawnPos(nextType))
+			blockoutPiece:SetPos(bx, by)
+			blockoutPiece:SetVisible(true)
+		else
+			blockoutPiece:SetVisible(false)
+		end
+
 
 	end)
 
@@ -103,6 +120,7 @@ br.connectToServer(function(arena)
 	
 		piece:SetVisible(false)
 		pieceGhost:SetVisible(false)
+		blockoutPiece:SetVisible(false)
 
 	end)
 

@@ -338,11 +338,21 @@ function brix.makeMatrix(w, h)
 		local filled = #self.data:gsub(" ", "") -- Find out how many cells are occupied
 		self.cellCount = filled
 
+		for i = h-1, 0, -1 do
+			if not self:isRowClear(i) then
+				self.highestPoint = i + 1
+				return
+			end
+		end
+
+		self.highestPoint = 0
+
 	end
 
 	mat.solidHeight = 0
 	mat.invalid = true -- Can be used to detect changes
 	mat.cellCount = 0
+	mat.highestPoint = 0
 
 	return mat
 
