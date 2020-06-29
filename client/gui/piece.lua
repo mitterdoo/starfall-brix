@@ -8,6 +8,7 @@ function PANEL:Init()
 	self.size = self.piece.size
 	self.mono = false
 	self.ghost = false
+	self.blockout = false
 	self.holdLocked = false
 	self.rot = 0
 	self.brickSize = 48
@@ -24,6 +25,10 @@ end
 
 function PANEL:SetIsGhost(ghost)
 	self.ghost = ghost
+end
+
+function PANEL:SetIsBlockout(blockout)
+	self.blockout = blockout
 end
 
 local normal_piece = brix.normalPiece
@@ -52,7 +57,7 @@ function PANEL:GetPiecePos(x, y)
 
 	local s = self.brickSize
 
-	local px, py = x * s, -(y) * s
+	local px, py = x * s, -y * s
 	return px, py
 
 end
@@ -66,18 +71,22 @@ function PANEL:Paint(w, h)
 	local p = self.piece
 	local size = p.size
 
-	local mono, ghost, locked, rot, brickSize = self.mono, self.ghost, self.holdLocked, self.rot, self.brickSize
+	local mono, ghost, locked, rot, brickSize, blockout = self.mono, self.ghost, self.holdLocked, self.rot, self.brickSize, self.blockout
 	local spr
-	if mono then
-		if not ghost then
-			spr = 16
+	if not blockout then
+		if mono then
+			if not ghost then
+				spr = 16
+			else
+				spr = 17
+			end
+		elseif locked then
+			spr = 7
 		else
-			spr = 17
+			spr = (ghost and 8 or 0) + self.pieceID
 		end
-	elseif locked then
-		spr = 7
 	else
-		spr = (ghost and 8 or 0) + self.pieceID
+		spr = 82
 	end
 
 	local shape = p.shape
