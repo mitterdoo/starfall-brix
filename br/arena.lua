@@ -159,9 +159,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 			changed = game:removeAttacker(attacker)
 
 		::found::
-			if changed then
-				print(CLIENT and "CLIENT" or "SERVER", game.uniqueID, "attackers changed to", table.concat(game.attackers, ", "))
-			end
 			if CLIENT then
 				if changed and game.targetMode == ARENA.targetModes.ATTACKER then
 					game:pickTarget()
@@ -195,7 +192,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				local enemy = game.arena[victim]
 				for _, id in pairs(game:getTargets()) do
 					if id == victim then
-						print("CLIENT changing targets since target has died")
 						game:pickTarget()
 					end
 				end

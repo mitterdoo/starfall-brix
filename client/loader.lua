@@ -176,7 +176,6 @@ to temporarily change them.]], 1)
 	require("brix/client/sprite.lua")
 	require("brix/client/sound.lua")
 	
-	print("Finish")
 	hook.remove("render", "loader")
 
 end)

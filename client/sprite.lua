@@ -17,19 +17,6 @@ local allCoords = {}
 
 SMALL_RESOLUTION = ({render.getGameResolution()})[2] < 1024
 
-local function errFunc(txt)
-	print("ERROR", txt)
-	hook.add("render", "err", function()
-		
-		render.setRGBA(255,0,0, 255)
-		render.drawRect(0, 0, 512, 512)
-		render.setRGBA(255, 255, 255, 255)
-		--render.setFont("DermaLarge")
-		render.drawText(0, 0, txt)
-
-	end)
-end
-
 local function createSheet(idx, path, coords)
 
 	if not file.exists(path) then

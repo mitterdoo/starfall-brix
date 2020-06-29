@@ -59,7 +59,6 @@ function assets.download(url)
 			})
 		else
 			assets.files[path] = normalizePath(assetFolder .. path)
-			print("wrote path", path)
 		end
 	end
 	local count = #assets.queue
