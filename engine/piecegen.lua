@@ -77,7 +77,6 @@ function BRIX:newPiece(type)
 
 
 	p.piece = brix.pieces[ brix.normalPiece(p.type) ]
-	p.x = brix.w / 2 - math.ceil(p.piece.size / 2)
 
 	local delay, are = self.params.autoRepeatSpeed, self.params.are_charge
 	if self.inputs[brix.inputEvents.MOVELEFT] then
@@ -99,13 +98,7 @@ function BRIX:newPiece(type)
 		self.areCancel_Right = nil
 	end
 	
-	
-	if brix.normalPiece(p.type) == pid.i then
-		p.y = brix.h - 3
-	else
-		p.y = brix.h - p.piece.size
-	end
-	p.y = p.y + 1
+	p.x, p.y = brix.getPieceSpawnPos(p.type)
 
 	self.hook:run("pieceSpawn", p.piece, p.rot, p.x, p.y)
 
