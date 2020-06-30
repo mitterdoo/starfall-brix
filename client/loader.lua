@@ -14,6 +14,14 @@ loader = {}
 
 local co -- The main coroutine
 loader.await = coroutine.yield
+
+function loader.sleep(time)
+
+	timer.simple(time, loader.resume)
+	loader.await()
+
+end
+
 local shouldResume = false
 
 function loader.resume(useHook)

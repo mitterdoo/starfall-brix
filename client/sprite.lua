@@ -13,20 +13,43 @@
 
 local sheets = {}
 local allCoords = {}
+local sheetsToLoad = {}
 
+local function loadSheets()
 
-SMALL_RESOLUTION = ({render.getGameResolution()})[2] < 1024
+	local count = #sheetsToLoad
 
-local function createSheet(idx, path, coords)
+	loader.stepCount = count
+	for i = 1, count do
+
+		local idx, path, coords = unpack(sheetsToLoad[i])
+
+		loader.curStep = i
+		loader.status = "Loading spritesheet\n" .. path
 
 	if not file.exists(path) then
 		error("Attempt to create spritesheet from unknown path: " .. tostring(path))
 	end
 
+		local start = timer.systime()
 	local mat = material.createFromImage("data/sf_filedata/" .. path, "")
+		local loadTime = timer.systime() - start
 	sheets[idx] = {mat = mat, coords = coords}
 	sprite.mats[idx] = mat
 	allCoords[idx] = coords
+
+
+		loader.sleep(loadTime * 8)
+	end
+
+	loader.curStep = 0
+	loader.stepCount = 1
+
+end
+
+local function createSheet(idx, path, coords)
+
+	table.insert(sheetsToLoad, {idx, path, coords})
 
 end
 
@@ -234,6 +257,11 @@ for i = 1, 11 do
 	})
 
 end
+
+
+
+
+loadSheets()
 
 local defaultData = {0, 0, 0, 0}
 
