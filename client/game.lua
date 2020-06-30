@@ -25,6 +25,12 @@ local x, y, brickSize = unpack(sprite.sheets[3].field_main)
 
 local TopFieldPos = gui.Create("Control", root)
 TopFieldPos:SetPos(x, y)
+
+local fieldDanger = gui.Create("Danger", TopFieldPos)
+fieldDanger:SetPos(0, brickSize * -20)
+fieldDanger:SetSize(brickSize * 10, brickSize * 20)
+
+
 local FieldPos = gui.Create("Control", Board)
 FieldPos:SetPos(x, y)
 
@@ -121,6 +127,12 @@ br.connectToServer(function(arena)
 		piece:SetVisible(false)
 		pieceGhost:SetVisible(false)
 		blockoutPiece:SetVisible(false)
+
+	end)
+
+	arena.hook("danger", function(danger)
+	
+		fieldDanger:SetInDanger(danger)
 
 	end)
 
