@@ -2,16 +2,8 @@
 
 local PANEL = {}
 local SmallResScale = gui.SmallResolution and 0.5 or 1
-local RTStack = {}
-local function pushRT(name)
-	table.insert(RTStack, 1, name)
-	render.selectRenderTarget(name)
-end
-
-local function popRT()
-	table.remove(RTStack, 1)
-	render.selectRenderTarget(RTStack[1])
-end
+local pushRT = gui.pushRT
+local popRT = gui.popRT
 
 
 function PANEL:Init()

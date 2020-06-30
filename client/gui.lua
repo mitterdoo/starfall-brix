@@ -136,6 +136,16 @@ function gui.popScissor()
 end
 
 
+local RTStack = {}
+function gui.pushRT(name)
+	table.insert(RTStack, 1, name)
+	render.selectRenderTarget(name)
+end
+
+function gui.popRT()
+	table.remove(RTStack, 1)
+	render.selectRenderTarget(RTStack[1])
+end
 local CTRL = {}
 CTRL.__index = CTRL
 
