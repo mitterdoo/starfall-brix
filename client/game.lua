@@ -8,6 +8,9 @@ require("brix/br/arena_cl.lua")
 require("brix/client/gui.lua")
 require("brix/client/input.lua")
 
+local bg = gui.Create("Background")
+bg:SetSize(render.getGameResolution())
+
 local root = gui.Create("Control")
 root:SetSize(1024, 1024)
 root:SetPos(1920 / 2 - 1024/2, 1080 / 2 - 1024/2)
@@ -130,6 +133,12 @@ br.connectToServer(function(arena)
 		blockoutPiece:SetVisible(false)
 
 		hook.remove("postdrawhud", "brix")
+
+	end)
+
+	arena.hook("levelUp", function(newLevel)
+	
+		bg:SetLevel(newLevel)
 
 	end)
 

@@ -14,6 +14,7 @@
 --@include brix/client/gui/piece.lua
 --@include brix/client/gui/lineclear.lua
 --@include brix/client/gui/danger.lua
+--@include brix/client/gui/background.lua
 
 local loadControls = {
 	"RTControl",
@@ -24,7 +25,8 @@ local loadControls = {
 	"Field",
 	"Piece",
 	"LineClear",
-	"Danger"
+	"Danger",
+	"Background"
 }
 
 gui = {}
