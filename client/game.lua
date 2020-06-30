@@ -119,10 +119,21 @@ RT:SetSize(1024, 1024)
 			local p = gui.Create("PieceIcon", NextPiecePos)
 			local thisSize = i == 1 and brickSize or (brickSize - 4)
 			p:SetBrickSize(thisSize)
+			p:SetVisible(false)
 
 			p:SetPos(i == 1 and 0 or 2, (5 - i) * -brickSize * 4)
 			NextPieces[i] = p
 		end
+
+	end
+
+	local HoldPiece = gui.Create("PieceIcon", RT)
+	do
+
+		local x, y, brickSize = unpack(sprite.sheets[3].field_hold)
+		HoldPiece:SetPos(x, y)
+		HoldPiece:SetBrickSize(brickSize)
+		HoldPiece:SetVisible(false)
 
 	end
 
@@ -159,6 +170,15 @@ br.connectToServer(function(arena)
 
 			local ctrl = NextPieces[i]
 			ctrl:SetPieceID(arena.pieceQueue[i])
+			ctrl:SetVisible(true)
+
+		end
+
+		if arena.held ~= -1 then
+
+			HoldPiece:SetVisible(true)
+			HoldPiece:SetPieceID(arena.held)
+			HoldPiece:SetIsHoldLocked(arena.heldThisPhase)
 
 		end
 
