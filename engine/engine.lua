@@ -140,7 +140,8 @@ BRIX.hookNames = { -- These are legal hooks in the game
 		-- pieceState (game.currentPiece)
 	"pieceLand",            -- When the piece touches down on the ground
 	"pieceLockNag",			-- When the piece has begun lockdown timer, and has touched the ground, or rotated
-	"die",                  -- When local player dies.
+	"pieceQueueUpdate",		-- When the piece queue has been modified
+	"die",					-- When local player dies.
 		-- number killerUniqueID (0 when suicide)
 
 	"completion",			-- Completion phase entered. Called before level up. Add instant solid garbage here

@@ -24,15 +24,22 @@ function BRIX:takePieceFromBag()
 end
 
 function BRIX:populatePieceQueue()
+	local modified = false
 	while #self.pieceQueue < brix.pieceQueueSize do
 		table.insert(self.pieceQueue, self:takePieceFromBag())
+		modified = true
+	end
+	if modified then
+		self.hook:run("pieceQueueUpdate")
 	end
 end
 
 function BRIX:takePieceFromQueue()
 
 	self:populatePieceQueue()
-	return table.remove(self.pieceQueue, 1)
+	local id, index = table.remove(self.pieceQueue, 1)
+	self.hook:run("pieceQueueUpdate")
+	return id, index
 
 end
 
