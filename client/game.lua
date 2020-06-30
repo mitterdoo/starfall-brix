@@ -14,8 +14,9 @@ $	Next piece spawnpoint outline when nearing blockout
 $	Danger indicator
 $	Level backgrounds
 $	Glow rendering layer (with gameboard outline)
-	Next pieces
+$	Next pieces
 	Hold piece
+	Garbage meter (with effects)
 	Badges
 	Remaining players
 	KO count
@@ -41,12 +42,32 @@ $	Glow rendering layer (with gameboard outline)
 require("brix/br/arena_cl.lua")
 require("brix/client/gui.lua")
 require("brix/client/input.lua")
+--[[
 
+	bg
+	root
+		Board
+		Field_UnderMatrix
+			fieldDanger
+		RT
+			FieldPos
+				fieldCtrl
+				pieceGhost
+				piece
+				blockoutPiece
+			NextPiecePos
+				{nextPieces}
+			HoldPiece
+		Field_OverMatrix
+
+
+]]
 local bg = gui.Create("Background")
 bg:SetSize(render.getGameResolution())
 
 local root = gui.Create("Control")
 root:SetSize(1024, 1024)
+root:SetScale(1, 1)
 root:SetPos(1920 / 2 - 1024/2, 1080 / 2 - 1024/2)
 
 local x, y, brickSize = unpack(sprite.sheets[3].field_main)
@@ -234,8 +255,6 @@ br.connectToServer(function(arena)
 
 		local perc = quotaAverage() / quotaMax()
 		perc = math.ceil(perc * 1000) / 10
-		render.setRGBA(255, 0, 255, 255)
-		render.drawText(64, 500, perc .. "%", 1)
 
 		if arena.started then
 			local frame = brix.getFrame(timer.realtime() - arena.startTime)
@@ -254,6 +273,8 @@ br.connectToServer(function(arena)
 		end
 
 		gui.Draw()
+		render.setRGBA(255, 0, 255, 255)
+		render.drawText(64, 500, perc .. "%", 1)
 
 	end)
 
