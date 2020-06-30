@@ -180,6 +180,7 @@ function BRIX:hold(buffered)
 	self.currentPiece.type = -1
 	self.currentPiece.piece = nil
 	if current == -1 then current = nil end
+	self.heldThisPhase = true
 	self:newPiece(current)
 	
 	if not buffered then
@@ -187,7 +188,6 @@ function BRIX:hold(buffered)
 	else
 		self.hook:run("pieceBufferHold")
 	end
-	self.heldThisPhase = true
 	return true
 
 end
