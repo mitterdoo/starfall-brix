@@ -148,6 +148,49 @@ function gui.popRT()
 	table.remove(RTStack, 1)
 	render.selectRenderTarget(RTStack[1])
 end
+
+local glowRT = "guiGlow"
+render.createRenderTarget(glowRT)
+
+function gui.clearGlow()
+	gui.pushRT(glowRT)
+	render.clear(Color(0, 0, 0, 0), true)
+	gui.popRT()
+end
+
+local game_w, game_h = render.getGameResolution()
+local glow_scaleW, glow_scaleH = 1024 / game_w, 1024 / game_h
+
+local prevMatrixStack
+function gui.startGlow()
+
+	if prevMatrixStack ~= nil then
+		error("already started glow")
+	end
+
+	prevMatrixStack = gui.popAllMatrices()
+	local m = gui.getMatrix(0, 0, glow_scaleW, glow_scaleH)
+	gui.pushRT(glowRT)
+	gui.pushMatrix(m)
+	gui.pushMatrices(prevMatrixStack)
+
+end
+
+function gui.endGlow()
+
+	if prevMatrixStack == nil then
+		error("glow not started")
+	end
+
+	gui.popAllMatrices()
+	gui.popRT()
+
+	gui.pushMatrices(prevMatrixStack)
+	prevMatrixStack = nil
+
+end
+
+
 local CTRL = {}
 CTRL.__index = CTRL
 
@@ -354,6 +397,7 @@ root:SetSize(render.getGameResolution())
 
 function gui.Draw()
 	hook.run("guiPreDraw")
+	gui.clearGlow()
 	gui.pushMatrix(root._matrix)
 	
 	root:Draw()
@@ -361,4 +405,19 @@ function gui.Draw()
 	
 	gui.popMatrix()
 	hook.run("guiPostDraw")
+
+	gui.pushRT(glowRT)
+
+	local blurw, blurh = 8, 8
+
+	render.drawBlurEffect(blurw * glow_scaleW, blurh * glow_scaleH, 1)
+	render.setMaterialEffectBloom(glowRT, 1, 1, 1, 10)
+	gui.popRT()
+
+	render.setMaterialEffectAdd(glowRT)
+	render.setRGBA(255, 255, 255, 255)
+	for i = 1, 2 do
+		render.drawTexturedRect(0, 0, game_w, game_h)
+	end
+
 end
