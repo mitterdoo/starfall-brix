@@ -64,13 +64,14 @@ br.connectToServer(function(arena)
 
 	arena.hook("pieceSpawn", function(p, rot, x, y)
 
+		local type = arena.currentPiece.type
 		piece:SetVisible(true) pieceGhost:SetVisible(true)
 		x, y = piece:GetPiecePos(x, y)
 		piece:SetPos(x, y)
 		local ghostX, ghostY = arena:getFallLocation()
 		ghostX, ghostY = pieceGhost:GetPiecePos(ghostX, ghostY)
 		pieceGhost:SetPos(ghostX, ghostY)
-		piece:SetPieceID(p.type) pieceGhost:SetPieceID(p.type)
+		piece:SetPieceID(type) pieceGhost:SetPieceID(type)
 		piece:SetRotation(rot)
 		pieceGhost:SetRotation(rot)
 
