@@ -3,6 +3,40 @@
 --@include brix/br/arena_cl.lua
 --@include brix/client/input.lua
 
+--[[
+	Optimize Particles. Particles needed:
+		Outgoing attack with sparkles
+		Incoming/standby attacks
+		Full badge sparkles
+		Hard drop whoosh and sparkles
+
+$	Next piece spawnpoint outline when nearing blockout
+$	Danger indicator
+$	Level backgrounds
+$	Glow rendering layer (with gameboard outline)
+	Next pieces
+	Hold piece
+	Badges
+	Remaining players
+	KO count
+	Enemies
+	KO icons on enemies
+	Attacker lines
+	"Watch Out!"
+	Outgoing attacks
+	Bonus multiplier
+	"x players remain!"
+	Countdown timer
+	Attack strategy
+	Manual targeting
+	KO between other players shown on battlefield
+
+	SFX
+
+	Title screen
+	Spectator screen
+	Controls configurator
+]]
 
 require("brix/br/arena_cl.lua")
 require("brix/client/gui.lua")
