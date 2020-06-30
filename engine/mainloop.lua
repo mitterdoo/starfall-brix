@@ -73,7 +73,7 @@ function BRIX:co_main()
 		local attempts = 0
 		local lowest = brix.trueHeight
 		local instantLock = false
-		local dropFrames, p, px, py, event, what, down, newLow, lockedVisibly, tspin
+		local dropFrames, p, px, py, event, what, down, newLow, lockedVisibly, tspin, forceDropped
 	::startOver::
 		
 		--generation
@@ -104,8 +104,12 @@ function BRIX:co_main()
 		
 		if dropFrames <= 1 / 20 then -- 20G, drop to bottom immediately
 			px, py = self:getFallLocation()
+			forceDropped = py ~= p.y
 			p.x = px
 			p.y = py
+			if forceDropped then
+				self.hook:run("pieceFall")
+			end
 			goto locking
 		else
 			self:startTimer("drop", 0) -- drops immediately
