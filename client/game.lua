@@ -10,7 +10,7 @@ require("brix/client/input.lua")
 
 local root = gui.Create("Control")
 root:SetSize(1024, 1024)
-root:SetPos(200, 32)
+root:SetPos(1920 / 2 - 1024/2, 1080 / 2 - 1024/2)
 
 
 local RT = gui.Create("RTControl", root)
@@ -128,6 +128,8 @@ br.connectToServer(function(arena)
 		pieceGhost:SetVisible(false)
 		blockoutPiece:SetVisible(false)
 
+		hook.remove("postdrawhud", "brix")
+
 	end)
 
 	arena.hook("danger", function(danger)
@@ -151,9 +153,11 @@ br.connectToServer(function(arena)
 		end
 
 	end)
+	hook.add("postdrawhud", "brix", function()
 
-
-	hook.add("postdrawhud", "", function()
+		local w, h = render.getGameResolution()
+		sprite.setSheet(20 + math.min(11, arena:calcLevel()) - 1)
+		sprite.draw(0, 0, 0, w, h)
 
 		local perc = quotaAverage() / quotaMax()
 		perc = math.ceil(perc * 1000) / 10

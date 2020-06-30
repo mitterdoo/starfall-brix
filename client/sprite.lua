@@ -226,6 +226,15 @@ createSheet(3, assets.files["playfield.png"], {
 	watchOutAttachRight = {335 + 354, 976 + 38/2}
 
 })
+
+for i = 1, 11 do
+
+	createSheet(19 + i, assets.files["level_" .. i .. "_bg.png"], {
+		[0] = {0, 0, 1024, 1024}
+	})
+
+end
+
 local defaultData = {0, 0, 0, 0}
 
 local curSheet
