@@ -41,11 +41,16 @@ function PANEL:Paint()
 	end
 
 	local col = lerpColorVector(frac, colorA, colorB)
-	render.setRGBA(col[1], col[2], col[3], 255 - frac*255)
 	local s = self.brickSize
 
 	local wide = s * 10 * (1 + frac * 0.45)
 	local tall = s * (1 - frac*0.8)
+
+	render.setRGBA(col[1], col[2], col[3], 255 - frac*255)
+	
+	gui.startGlow()
+	render.drawRect(wide / -2, s * 0.5 + tall/-2, wide, tall)
+	gui.endGlow()
 
 	render.drawRect(wide / -2, s * 0.5 + tall/-2, wide, tall)
 
