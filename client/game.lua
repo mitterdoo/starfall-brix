@@ -108,24 +108,6 @@ RT:SetSize(1024, 1024)
 		blockoutPiece:SetVisible(false)
 		blockoutPiece:SetIsBlockout(true)
 	
-	local NextPieces = {}
-	do
-		local NextPiecePos = gui.Create("Control", RT)
-		local x, y, brickSize = unpack(sprite.sheets[3].field_next)
-
-		NextPiecePos:SetPos(x, y)
-
-		for i = 1, 5 do
-			local p = gui.Create("PieceIcon", NextPiecePos)
-			local thisSize = i == 1 and brickSize or (brickSize - 4)
-			p:SetBrickSize(thisSize)
-			p:SetVisible(false)
-
-			p:SetPos(i == 1 and 0 or 2, (5 - i) * -brickSize * 4)
-			NextPieces[i] = p
-		end
-
-	end
 
 	local HoldPiece = gui.Create("PieceIcon", RT)
 	do
@@ -136,6 +118,25 @@ RT:SetSize(1024, 1024)
 		HoldPiece:SetVisible(false)
 
 	end
+local NextPieces = {}
+local NextPieceRT = gui.Create("RTControl", root)
+do
+	local x, y, brickSize = unpack(sprite.sheets[3].field_next)
+
+	NextPieceRT:SetPos(x, y - brickSize * 4 * 5)
+	NextPieceRT:SetSize(1024, 1024)
+
+	for i = 1, 5 do
+		local p = gui.Create("PieceIcon", NextPieceRT)
+		local thisSize = i == 1 and brickSize or (brickSize - 4)
+		p:SetBrickSize(thisSize)
+		p:SetVisible(false)
+
+		p:SetPos(i == 1 and 0 or 2, i * brickSize * 4)
+		NextPieces[i] = p
+	end
+
+end
 
 
 
@@ -213,6 +214,12 @@ br.connectToServer(function(arena)
 	arena.hook("pieceFall", function()
 		piece:SetPos(piece:GetPiecePos(arena.currentPiece.x, arena.currentPiece.y))
 		pieceGhost:SetPos(pieceGhost:GetPiecePos(arena:getFallLocation()))
+	end)
+
+	arena.hook("pieceQueueUpdate", function()
+	
+		NextPieceRT.invalid = true
+
 	end)
 
 	arena.hook("lock", function(tricks, combo, linesSent, linesCleared)
