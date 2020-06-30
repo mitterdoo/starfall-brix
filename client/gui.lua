@@ -29,7 +29,7 @@ local loadControls = {
 
 gui = {}
 gui.Classes = {}
-gui.SmallResolution = SMALL_RESOLUTION
+gui.SmallResolution = ({render.getGameResolution()})[2] < 1024
 
 local protected = {
 	"DrawChildren",

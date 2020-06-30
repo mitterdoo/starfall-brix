@@ -30,12 +30,12 @@ function PANEL:Draw()
 
 		pushRT(self.RTName)
 		render.clear(transparent, true)
-		--gui.pushMatrix(gui.getMatrix(0, 0, SmallResScale, SmallResScale))
+		gui.pushMatrix(gui.getMatrix(0, 0, SmallResScale, SmallResScale))
 
 		self:Paint(self.w, self.h)
 		self:DrawChildren()
 
-		--gui.popMatrix()
+		gui.popMatrix()
 		popRT()
 
 		gui.pushMatrices(memory)

@@ -277,7 +277,7 @@ local drawFast = render.drawTexturedRectUVFast
 local scale = 1025 / 1024 -- i dont know :/
 function sprite.draw(idx, x, y, w, h)
 
-	local resScaling = SMALL_RESOLUTION and 0.5 or 1
+	local resScaling = 1
 
 	local data = curSheet.coords[idx] or defaultData
 	if w == nil then
