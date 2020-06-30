@@ -49,45 +49,67 @@ local root = gui.Create("Control")
 root:SetSize(1024, 1024)
 root:SetPos(1920 / 2 - 1024/2, 1080 / 2 - 1024/2)
 
+local x, y, brickSize = unpack(sprite.sheets[3].field_main)
 
-local RT = gui.Create("RTControl", root)
-RT:SetSize(1024, 1024)
-
-local Board = gui.Create("Sprite", RT)
+local Board = gui.Create("Sprite", root) -- Board sprite
 Board:SetSheet(3)
 Board:SetSprite(0)
 
 
-local x, y, brickSize = unpack(sprite.sheets[3].field_main)
+local Field_UnderMatrix = gui.Create("Control", root) -- Draw this underneath the matrix
+Field_UnderMatrix:SetPos(x, y)
 
-local TopFieldPos = gui.Create("Control", root)
-TopFieldPos:SetPos(x, y)
+	local fieldDanger = gui.Create("Danger", Field_UnderMatrix)
+	fieldDanger:SetPos(0, brickSize * -20)
+	fieldDanger:SetSize(brickSize * 10, brickSize * 20)
 
-local fieldDanger = gui.Create("Danger", TopFieldPos)
-fieldDanger:SetPos(0, brickSize * -20)
-fieldDanger:SetSize(brickSize * 10, brickSize * 20)
+local RT = gui.Create("RTControl", root) -- This contains everything that is rendered discretely
+RT:SetSize(1024, 1024)
+
+	local FieldPos = gui.Create("Control", RT)
+	FieldPos:SetPos(x, y)
+
+		local fieldCtrl = gui.Create("Field", FieldPos)
+		fieldCtrl:SetPos(0, -brickSize * 21)
+		fieldCtrl:SetBrickSize(brickSize)
+
+		local pieceGhost = gui.Create("Piece", FieldPos)
+		pieceGhost:SetBrickSize(brickSize)
+		pieceGhost:SetVisible(false)
+		pieceGhost:SetIsGhost(true)
+
+		local piece = gui.Create("Piece", FieldPos)
+		piece:SetBrickSize(brickSize)
+		piece:SetVisible(false)
+
+		local blockoutPiece = gui.Create("Piece", FieldPos)
+		blockoutPiece:SetBrickSize(brickSize)
+		blockoutPiece:SetVisible(false)
+		blockoutPiece:SetIsBlockout(true)
+	
+	local NextPieces = {}
+	do
+		local NextPiecePos = gui.Create("Control", RT)
+		local x, y, brickSize = unpack(sprite.sheets[3].field_next)
+
+		NextPiecePos:SetPos(x, y)
+
+		for i = 1, 5 do
+			local p = gui.Create("PieceIcon", NextPiecePos)
+			local thisSize = i == 1 and brickSize or (brickSize - 4)
+			p:SetBrickSize(thisSize)
+
+			p:SetPos(i == 1 and 0 or 2, (5 - i) * -brickSize * 4)
+			NextPieces[i] = p
+		end
+
+	end
 
 
-local FieldPos = gui.Create("Control", Board)
-FieldPos:SetPos(x, y)
 
-local fieldCtrl = gui.Create("Field", FieldPos)
-fieldCtrl:SetPos(0, -brickSize * 21)
-fieldCtrl:SetBrickSize(brickSize)
+local Field_OverMatrix = gui.Create("Control", root) -- Draw this on top of the matrix
+Field_OverMatrix:SetPos(x, y)
 
-local pieceGhost = gui.Create("Piece", FieldPos)
-pieceGhost:SetBrickSize(brickSize)
-pieceGhost:SetVisible(false)
-pieceGhost:SetIsGhost(true)
-
-local piece = gui.Create("Piece", FieldPos)
-piece:SetBrickSize(brickSize)
-piece:SetVisible(false)
-
-local blockoutPiece = gui.Create("Piece", FieldPos)
-blockoutPiece:SetBrickSize(brickSize)
-blockoutPiece:SetVisible(false)
-blockoutPiece:SetIsBlockout(true)
 
 
 local normal_piece = brix.normalPiece
@@ -111,6 +133,13 @@ br.connectToServer(function(arena)
 		piece:SetPieceID(type) pieceGhost:SetPieceID(type)
 		piece:SetRotation(rot)
 		pieceGhost:SetRotation(rot)
+
+		for i = 1, 5 do
+
+			local ctrl = NextPieces[i]
+			ctrl:SetPieceID(arena.pieceQueue[i])
+
+		end
 
 		if mat.highestPoint > 16 then
 			local nextType = arena.pieceQueue[1]
@@ -152,7 +181,7 @@ br.connectToServer(function(arena)
 
 		for _, line in pairs(linesCleared) do
 
-			local anim = gui.Create("LineClear", TopFieldPos)
+			local anim = gui.Create("LineClear", Field_OverMatrix)
 			anim:SetBrickSize(brickSize)
 			anim:SetLine(line)
 

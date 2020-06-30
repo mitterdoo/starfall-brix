@@ -64,8 +64,10 @@ end
 
 local sub = string.sub
 local getShapeIndex = brix.getShapeIndex
-function PANEL:Paint(w, h)
+function PANEL:Paint(w, h, ox, oy)
 
+	ox = ox or 0
+	oy = oy or 0
 	render.setRGBA(255, 255, 255, 255)
 	sprite.setSheet(1)
 	local p = self.piece
@@ -95,7 +97,7 @@ function PANEL:Paint(w, h)
 		for x = 0, size-1 do
 			local i = getShapeIndex(x, y, rot, size)
 			if sub(shape, i, i) == "x" then
-				sprite.draw(spr, x * brickSize, (y + 1) * -brickSize, brickSize, brickSize)
+				sprite.draw(spr, ox + x * brickSize, oy + (y + 1) * -brickSize, brickSize, brickSize)
 			end
 		end
 	end

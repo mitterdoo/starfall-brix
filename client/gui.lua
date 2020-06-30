@@ -12,6 +12,7 @@
 --@include brix/client/gui/emitter.lua
 --@include brix/client/gui/field.lua
 --@include brix/client/gui/piece.lua
+--@include brix/client/gui/pieceicon.lua
 --@include brix/client/gui/lineclear.lua
 --@include brix/client/gui/danger.lua
 --@include brix/client/gui/background.lua
@@ -24,6 +25,7 @@ local loadControls = {
 	"Emitter",
 	"Field",
 	"Piece",
+	"PieceIcon",
 	"LineClear",
 	"Danger",
 	"Background"
