@@ -27,16 +27,16 @@ local function loadSheets()
 		loader.curStep = i
 		loader.status = "Loading spritesheet\n" .. path
 
-	if not file.exists(path) then
-		error("Attempt to create spritesheet from unknown path: " .. tostring(path))
-	end
+		if not file.exists(path) then
+			error("Attempt to create spritesheet from unknown path: " .. tostring(path))
+		end
 
 		local start = timer.systime()
-	local mat = material.createFromImage("data/sf_filedata/" .. path, "")
+		local mat = material.createFromImage("data/sf_filedata/" .. path, "")
 		local loadTime = timer.systime() - start
-	sheets[idx] = {mat = mat, coords = coords}
-	sprite.mats[idx] = mat
-	allCoords[idx] = coords
+		sheets[idx] = {mat = mat, coords = coords}
+		sprite.mats[idx] = mat
+		allCoords[idx] = coords
 
 
 		loader.sleep(loadTime * 8)
