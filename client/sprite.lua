@@ -200,11 +200,11 @@ createSheet(3, assets.files["playfield.png"], {
 	field = 0,
 	[0] = {0, 0, 1024, 1024},
 	-- The rest of these are mainly reference points for placing down elements
-		field_main = {146 * 2, 476 * 2, 22 * 2}, -- x, y, brickSize
+		field_main = {292, 952, 44}, -- x, y, brickSize
 		field_main_clip = {292, 72 - 17, 440, 880 + 17}, -- x, y, w, h
-		field_garbage = {108 * 2, 474 * 2, 22 * 2},
-		field_next = {378 * 2, 287 * 2, 12 * 2},
-		field_hold = {86 * 2, 95 * 2, 12 * 2},
+		field_garbage = {216, 948, 44},
+		field_next = {756, 574, 24},
+		field_hold = {172, 190, 24},
 
 		arena_stats = {752, 597, 104, 355},
 
