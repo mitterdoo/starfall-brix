@@ -102,7 +102,7 @@ hook.add("guiPostDraw", "emitter", function()
 	while true do
 		local p = table.remove(g_positions, 1)
 		if p ~= nil then
-			p[6](p[1], p[2], p[3], p[4], p[5], true)
+			p[6](p[1], p[2], p[3], p[4], p[5], false)
 		else
 			break
 		end
