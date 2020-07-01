@@ -228,29 +228,39 @@ function CTRL:Draw()
 
 	self:Paint(self.w, self.h)
 	self:DrawChildren()
+	self:PostPaint(self.w, self.h)
 
 end
 
+-- Called after the control has been created.
 function CTRL:Init()
 
 end
 
+-- Called when the control is about to be removed.
 function CTRL:OnRemove()
 
 end
 
+-- Called when the size has changed
 function CTRL:OnSizeChanged(w, h)
 
 end
 
+-- Called before draw
 function CTRL:Think()
 
 end
 
+-- Called when the control must be drawn. This is drawn before children.
 function CTRL:Paint(w, h)
 
 end
 
+-- Same as Paint, but called after children have been drawn.
+function CTRL:PostPaint(w, h)
+
+end
 
 
 
