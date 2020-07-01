@@ -50,7 +50,11 @@ local protected = {
 	"_matrix",
 	"SetWide",
 	"SetTall",
-	"SetVisible"
+	"SetVisible",
+	"GetPos",
+	"GetSize",
+	"GetWide",
+	"GetTall"
 }
 
 local matrices = {}
@@ -318,10 +322,26 @@ function CTRL:SetTall(h)
 	end
 end
 
+function CTRL:GetSize()
+	return self.w, self.h
+end
+
+function CTRL:GetWide()
+	return self.w
+end
+
+function CTRL:GetTall()
+	return self.h
+end
+
 function CTRL:SetPos(x, y)
 	self.x = x
 	self.y = y
 	self:ReconstructMatrix()
+end
+
+function CTRL:GetPos()
+	return self.x, self.y
 end
 
 function CTRL:SetScale(w, h)
