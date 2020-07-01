@@ -15,7 +15,7 @@ $	Danger indicator
 $	Level backgrounds
 $	Glow rendering layer (with gameboard outline)
 $	Next pieces
-	Hold piece
+$	Hold piece
 	Garbage meter (with effects)
 	Badges
 	Remaining players
