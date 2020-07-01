@@ -16,6 +16,8 @@
 --@include brix/client/gui/lineclear.lua
 --@include brix/client/gui/danger.lua
 --@include brix/client/gui/background.lua
+--@include brix/client/gui/garbagecluster.lua
+--@include brix/client/gui/garbagequeue.lua
 
 local loadControls = {
 	"RTControl",
@@ -28,7 +30,9 @@ local loadControls = {
 	"PieceIcon",
 	"LineClear",
 	"Danger",
-	"Background"
+	"Background",
+	"GarbageCluster",
+	"GarbageQueue"
 }
 
 gui = {}
