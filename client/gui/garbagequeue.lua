@@ -1,6 +1,14 @@
 local PANEL = {}
 
-local clusterSpacing = 4
+--[[
+$	Dump
+	Offset
+$	Activate (0)
+$	Nag (1)
+$	Nag (2, flaming)
+]]
+
+local clusterSpacing = 8
 function PANEL:Init()
 
 	self.brickSize = 48
@@ -10,6 +18,19 @@ end
 
 function PANEL:SetBrickSize(size)
 	self.brickSize = size
+end
+
+function PANEL:GetHeightOfCluster(cluster)
+
+	local height = 0
+	local brickSize = self.brickSize
+	for k, c in pairs(self.clusters) do
+		if k == cluster then return height end
+		height = height + brickSize*c.count + clusterSpacing
+	end
+
+	return height
+
 end
 
 local function fx_FlashCluster(x, y, w, h, frac, glow)
@@ -33,6 +54,29 @@ local function fx_FlashClusterRed(x, y, w, h, frac, glow)
 	local c = (1-frac)*255
 	--frac = (frac - 0.6) / 0.6
 	render.setRGBA(255, c, c, c)
+	render.drawRectFast(x, y, w, h)
+
+end
+
+local function fx_FlashOffset(x, y, w, h, frac, glow)
+
+	local c = (1-frac)*255
+	--frac = (frac - 0.6) / 0.6
+	render.setRGBA(0, 255, 255, c)
+	render.drawRectFast(x, y, w, h)
+
+end
+
+
+local function fx_Fire(x, y, w, h, frac, glow)
+
+	local c = (1-frac)*255
+	--frac = (frac - 0.6) / 0.6
+	if glow then
+		render.setRGBA(255, 255, 0, c/2)
+	else
+		render.setRGBA(255, c*0.7, 0, c)
+	end
 	render.drawRectFast(x, y, w, h)
 
 end
@@ -71,7 +115,7 @@ local function fx_BlockDumpRaise(x, y, w, h, frac, glow)
 
 end
 
-function PANEL:FlashCluster()
+function PANEL:Anim_Flash(isRed)
 
 	local animDuration = 1/3
 	local c = self.clusters[1]
@@ -79,34 +123,92 @@ function PANEL:FlashCluster()
 
 	local count = c.count
 	local brickSize = self.brickSize
+	local colorFunc = isRed and fx_FlashClusterRed or fx_FlashClusterYellow
 	for i = 1, count do
 
 		local pos, scale = Vector(brickSize/2, brickSize/2 - brickSize*i, 0)
 		pos, scale = self:AbsolutePos(pos)
 		gfx.EmitParticle(
-			pos, pos,
-			Vector(brickSize, brickSize, 0)*scale,
-			Vector(brickSize * 1.4, brickSize*0.9, 0)*scale,
+			{pos, pos},
+			{Vector(brickSize, brickSize, 0)*scale,
+			Vector(brickSize * 1.4, brickSize*0.9, 0)*scale},
 			0, animDuration*0.4,
 			fx_FlashCluster, true, true
 		)
 
 	end
 
-	local pos, scale = Vector(brickSize/2, brickSize * -count / 2, 0)
-	pos, scale = self:AbsolutePos(pos)
+	local pos, scale = self:AbsolutePos(Vector(brickSize/2, brickSize * -count/2, 0))
 	gfx.EmitParticle(
-		pos, pos,
-		Vector(brickSize, brickSize*count, 0)*scale,
-		Vector(brickSize + brickSize*0.2, brickSize*count + brickSize*0.2, 0)*scale,
+		{pos, pos},
+		{Vector(brickSize, brickSize*count, 0)*scale,
+		Vector(brickSize * 1.2, brickSize*count, 0)*scale},
 		0, animDuration,
-		fx_FlashClusterRed, false, true
+		colorFunc, true, true
+	)
+
+end
+function PANEL:Anim_Fire()
+
+	local animDuration = 1/4
+	local c = self.clusters[1]
+	if c == nil then return end
+
+	local count = c.count
+	local brickSize = self.brickSize
+
+	local pos, scale = self:AbsolutePos(Vector(brickSize/2, brickSize * -count/2, 0))
+	gfx.EmitParticle(
+		{pos, pos},
+		{Vector(brickSize, brickSize*count, 0)*scale,
+		Vector(brickSize * 1.2, brickSize*count, 0)*scale},
+		0, animDuration,
+		fx_Fire, true, true
 	)
 
 end
 
+function PANEL:Anim_Offset(count)
 
-local deltaGarbageToMatrixCenter
+	local animDuration = 1/3
+	local brickSize = self.brickSize
+
+	local heights = {}
+	for k, cluster in pairs(self.clusters) do
+
+		local h = self:GetHeightOfCluster(k)
+		if cluster.count < count then
+			for i = 1, cluster.count do
+				table.insert(heights, h + brickSize * (i-1))
+			end
+			count = count - cluster.count
+		else
+			for i = 1, count do
+				table.insert(heights, h + brickSize * (i-1))
+			end
+			break
+		end
+
+	end
+	
+	for _, y in pairs(heights) do
+
+		local pos, scale = Vector(brickSize/2, -y - brickSize/2, 0)
+		pos, scale = self:AbsolutePos(pos)
+		gfx.EmitParticle(
+			{pos, pos},
+			{Vector(brickSize, brickSize, 0)*scale,
+			Vector(brickSize * 1.4, brickSize*0.9, 0)*scale},
+			0, animDuration,
+			fx_FlashOffset, true, true
+		)
+
+	end
+
+end
+
+
+local deltaGarbageToMatrixCenter -- The distance from the garbage absolute pos, to the center of the matrix.
 do
 	local garbage = sprite.sheets[3].field_garbage
 	local field = sprite.sheets[3].field_main
@@ -115,7 +217,7 @@ do
 		field[2] - field[3]/2 - (garbage[2] - garbage[3]/2), 0)
 end
 
-function PANEL:Test()
+function PANEL:Anim_Dump()
 	local brickSize = self.brickSize
 
 	do
@@ -159,7 +261,7 @@ function PANEL:Test()
 
 	do
 
-		local startPos, scale = self:AbsolutePos(Vector(brickSize/2, 0, 0) + deltaGarbageToMatrixCenter)
+		local startPos = self:AbsolutePos(Vector(brickSize/2, 0, 0) + deltaGarbageToMatrixCenter)
 		local endPos = startPos - Vector(0, brickSize * 4, 0)
 		local size = Vector(brickSize * 10, brickSize * 0.5, 0)
 
@@ -174,11 +276,39 @@ function PANEL:Test()
 
 end
 
+function PANEL:RemoveBlocks(count)
+
+	for i = 1, count do
+		local cur = self.clusters[1]
+		if not cur then break end
+
+		cur.count = cur.count - 1
+		if cur.count == 0 then
+			cur:Remove()
+			table.remove(self.clusters, 1)
+		end
+
+	end
+
+	for k, cluster in pairs(self.clusters) do
+		cluster:SetPos(0, -self:GetHeightOfCluster(k))
+	end
+
+end
+
+
+
+
+
 function PANEL:Enqueue(lines)
 
+	local brickSize = self.brickSize
+	local height = self:GetHeightOfCluster(#self.clusters + 1)
+
+
 	local g = gui.Create("GarbageCluster", self)
-	g:SetBrickSize(self.brickSize)
-	g:SetPos(0, 0)
+	g:SetBrickSize(brickSize)
+	g:SetPos(0, -height)
 	g:SetCount(lines)
 	table.insert(self.clusters, g)
 
