@@ -52,11 +52,19 @@ end
 function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, glow, centered)
 
 	if type(keys_Pos[1]) ~= "table" then
-		keys_Pos = {{0, keys_Pos[1]}, {1, keys_Pos[2]}}
+		local count = #keys_Pos - 1
+		for k, value in pairs(keys_Pos) do
+			local key = count ~= 0 and ((k-1) / count) or 0
+			keys_Pos[k] = {key, value}
+		end
 	end
 
 	if type(keys_Size[1]) ~= "table" then
-		keys_Size = {{0, keys_Size[1]}, {1, keys_Size[2]}}
+		local count = #keys_Size - 1
+		for k, value in pairs(keys_Size) do
+			local key = count ~= 0 and ((k-1) / count) or 0
+			keys_Size[k] = {key, value}
+		end
 	end
 
 	if centered then
