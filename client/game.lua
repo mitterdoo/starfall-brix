@@ -231,9 +231,16 @@ br.connectToServer(function(arena)
 
 		for _, line in pairs(linesCleared) do
 
-			local anim = gui.Create("LineClear", Field_OverMatrix)
-			anim:SetBrickSize(brickSize)
-			anim:SetLine(line)
+			local pos, scale = Field_OverMatrix:AbsolutePos(Vector(brickSize*5, brickSize/-2 - line*brickSize, 0))
+			local startSize = Vector(brickSize*10, brickSize, 0)
+			local endSize = Vector(brickSize * 10 * 1.45, brickSize * 0.8, 0)
+
+			gfx.EmitParticle(
+				{pos, pos},
+				{startSize*scale, endSize*scale},
+				0, 0.1,
+				gfx.Draw_LineClear,
+				true, true)
 
 		end
 
