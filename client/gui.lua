@@ -54,7 +54,8 @@ local protected = {
 	"GetPos",
 	"GetSize",
 	"GetWide",
-	"GetTall"
+	"GetTall",
+	"AbsolutePos"
 }
 
 local matrices = {}
@@ -378,6 +379,43 @@ function CTRL:DrawChildren()
 			gui.popMatrix()
 		end
 	
+	end
+
+end
+
+function CTRL:AbsolutePos(ox, oy)
+
+	local isVec = false
+	if type(ox) == "Vector" then
+		oy = ox[2]
+		ox = ox[1]
+		isVec = true
+	end
+
+	local mats = {}
+	local cur = self
+	while cur do
+		table.insert(mats, 1, cur._matrix)
+		cur = cur.parent
+	end
+
+	local x, y, sw, sh = 0, 0, 1, 1
+	for _, mat in pairs(mats) do
+	
+		local tr, scale = mat:getTranslation(), mat:getScale()
+		x = x + tr[1] * sw
+		y = y + tr[2] * sh
+
+		sw = sw * scale[1]
+		sh = sh * scale[2]
+
+	end
+
+	local resultX, resultY = round(x + ox * sw, 0), round(y + oy * sh, 0)
+	if isVec then
+		return Vector(resultX, resultY, 0), Vector(sw, sh, 0)
+	else
+		return resultX, resultY, sw, sh
 	end
 
 end

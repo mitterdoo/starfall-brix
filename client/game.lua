@@ -1,5 +1,6 @@
 --@client
 --@include brix/client/gui.lua
+--@include brix/client/gfx.lua
 --@include brix/br/arena_cl.lua
 --@include brix/client/input.lua
 
@@ -41,6 +42,7 @@ $	Hold piece
 
 require("brix/br/arena_cl.lua")
 require("brix/client/gui.lua")
+require("brix/client/gfx.lua")
 require("brix/client/input.lua")
 --[[
 
