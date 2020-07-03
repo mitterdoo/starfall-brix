@@ -18,6 +18,10 @@ $	Glow rendering layer (with gameboard outline)
 $	Next pieces
 $	Hold piece
 	Garbage meter (with effects)
+	Line clear messages (quad, allclear, tspin, etc.)
+	Countdown timer
+	Bonus multiplier
+	"x players remain!"
 	Badges
 	Remaining players
 	KO count
@@ -26,9 +30,6 @@ $	Hold piece
 	Attacker lines
 	"Watch Out!"
 	Outgoing attacks
-	Bonus multiplier
-	"x players remain!"
-	Countdown timer
 	Attack strategy
 	Manual targeting
 	KO between other players shown on battlefield
