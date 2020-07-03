@@ -57,9 +57,9 @@ require("brix/client/input.lua")
 				pieceGhost
 				piece
 				blockoutPiece
-			NextPiecePos
-				{nextPieces}
 			HoldPiece
+		NextPieceRT
+			{nextPieces}
 		Field_OverMatrix
 
 
@@ -144,10 +144,6 @@ end
 
 local Field_OverMatrix = gui.Create("Control", root) -- Draw this on top of the matrix
 Field_OverMatrix:SetPos(x, y)
-
-
-
-local normal_piece = brix.normalPiece
 
 br.connectToServer(function(arena)
 
