@@ -9,11 +9,9 @@
 --@include brix/client/gui/sprite.lua
 --@include brix/client/gui/multisprite.lua
 --@include brix/client/gui/number.lua
---@include brix/client/gui/emitter.lua
 --@include brix/client/gui/field.lua
 --@include brix/client/gui/piece.lua
 --@include brix/client/gui/pieceicon.lua
---@include brix/client/gui/lineclear.lua
 --@include brix/client/gui/danger.lua
 --@include brix/client/gui/background.lua
 --@include brix/client/gui/garbagecluster.lua
@@ -24,11 +22,9 @@ local loadControls = {
 	"Sprite",
 	"MultiSprite",
 	"Number",
-	"Emitter",
 	"Field",
 	"Piece",
 	"PieceIcon",
-	"LineClear",
 	"Danger",
 	"Background",
 	"GarbageCluster",
