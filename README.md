@@ -8,4 +8,4 @@ This is a work in progress, so it is not ready for other people to use. Includin
 If none of that makes sense to you, this code is not for you.
 
 ## DISCLAIMER
-This source code may, and will *only* be used **non**-commercially. It may ***not*** be used to make any profit whatsoever. The code was written for learning purposes for its developer. If there are any other concerns, please contact the developer at mitterdoo@live.com
+The code was written for learning purposes for its developer, and was not made with the purpose of commercial profit. If there are any other concerns, please review the [LICENSE.md](https://github.com/mitterdoo/starfall-brix/blob/master/LICENSE.md), or contact the developer at mitterdoo@live.com
