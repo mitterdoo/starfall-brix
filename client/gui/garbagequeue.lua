@@ -60,9 +60,8 @@ end
 
 local function fx_FlashOffset(x, y, w, h, frac, glow)
 
-	local c = (1-frac)*255
 	--frac = (frac - 0.6) / 0.6
-	render.setRGBA(0, 255, 255, c)
+	render.setRGBA((1-frac)^2*255, 255, 255, math.sqrt(1-frac)*255)
 	render.drawRectFast(x, y, w, h)
 
 end
@@ -112,6 +111,44 @@ local function fx_BlockDumpRaise(x, y, w, h, frac, glow)
 	local c = (1-frac)^2*255
 	render.setRGBA(255, 255, c, c)
 	render.drawRectFast(x, y, w, h)
+
+end
+
+local function random2D()
+
+	local rad = math.random() * math.pi * 2
+	return Vector(math.sin(rad), math.cos(rad), 0)
+
+end
+
+function PANEL:Anim_BrickSplode(pos, anim, startSize, endSize, speed, count)
+
+	count = count or 4
+	local scale
+	pos, scale = self:AbsolutePos(pos)
+	local brickSize = self.brickSize
+
+	local size = {
+		Vector(startSize, startSize, 0) * scale,
+		Vector(endSize, endSize, 0) * scale
+	}
+	for i = 1, 6 do
+
+		local startPos = pos + Vector(math.random() * brickSize, math.random() * -brickSize, 0)
+		local delta = (startPos - (pos + Vector(brickSize/2, brickSize/-2, 0))):getNormalized()
+
+		local keys_Pos = {startPos, startPos + delta * speed}
+
+		gfx.EmitParticle(
+			keys_Pos,
+			size,
+			0,
+			1/3,
+			anim,
+			true, true
+		)
+
+	end
 
 end
 
@@ -195,13 +232,15 @@ function PANEL:Anim_Offset(count)
 
 		local pos, scale = Vector(brickSize/2, -y - brickSize/2, 0)
 		pos, scale = self:AbsolutePos(pos)
+		local bsize = Vector(brickSize, brickSize, 0)*scale
 		gfx.EmitParticle(
-			{pos, pos},
-			{Vector(brickSize, brickSize, 0)*scale,
-			Vector(brickSize * 1.4, brickSize*0.9, 0)*scale},
+			{pos, pos, pos, pos, pos, pos, pos},
+			{bsize, bsize*1.5, bsize, bsize*1.5, bsize, bsize*1.5, bsize},
 			0, animDuration,
-			fx_FlashOffset, true, true
+			fx_FlashOffset, false, true
 		)
+
+		self:Anim_BrickSplode(Vector(0, -y, 0), fx_FlashOffset, 20, 15, 30, 4)
 
 	end
 
@@ -219,6 +258,10 @@ end
 
 function PANEL:Anim_Dump()
 	local brickSize = self.brickSize
+
+	do
+		self:Anim_BrickSplode(Vector(0, 0, 0), fx_BlockDump, 20, 15, 60, 6)
+	end
 
 	do
 		local pos, scale = self:AbsolutePos(Vector(brickSize/2, brickSize/-2, 0))
@@ -295,6 +338,7 @@ function PANEL:RemoveBlocks(count)
 	end
 
 end
+
 
 
 
