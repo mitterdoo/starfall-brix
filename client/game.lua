@@ -311,6 +311,19 @@ br.connectToServer(function(arena)
 
 	end)
 
+	hook.add("calcview", "fps", function(pos, ang, fov, znear, zfar)
+
+		if not arena.dead then
+			return {
+				origin = Vector(0, 0, -60000),
+				angles = Angle(90, 0, 0),
+				znear = 1,
+				zfar = 2
+			}
+		end
+
+	end)
+
 
 end)
 
