@@ -141,7 +141,13 @@ do
 
 end
 
+local Garbage = gui.Create("GarbageQueue", root)
+do
+	local x, y, garbageBrickSize = unpack(sprite.sheets[3].field_garbage)
 
+	Garbage:SetBrickSize(garbageBrickSize)
+	Garbage:SetPos(x, y)
+end
 
 local Field_OverMatrix = gui.Create("Control", root) -- Draw this on top of the matrix
 Field_OverMatrix:SetPos(x, y)
@@ -219,6 +225,26 @@ br.connectToServer(function(arena)
 	
 		NextPieceRT.invalid = true
 
+	end)
+
+	arena.hook("garbageQueue", function(lines, sender, frame)
+		Garbage:Enqueue(lines)
+	end)
+
+	arena.hook("garbageActivate", function()
+		Garbage:SetState(1)
+	end)
+
+	arena.hook("garbageNag", function(second)
+		Garbage:SetState(second and 3 or 2)
+	end)
+
+	arena.hook("garbageCancelled", function(count)
+		Garbage:Offset(count)
+	end)
+
+	arena.hook("garbageDump", function()
+		Garbage:Dump()
 	end)
 
 	arena.hook("lock", function(tricks, combo, linesSent, linesCleared)

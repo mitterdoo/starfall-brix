@@ -8,6 +8,8 @@ $	Nag (1)
 $	Nag (2, flaming)
 ]]
 
+local fireFlashFrequency = 0.5
+
 local clusterSpacing = 8
 function PANEL:Init()
 
@@ -339,7 +341,21 @@ function PANEL:RemoveBlocks(count)
 
 end
 
+function PANEL:Think()
 
+	local c = self.clusters[1]
+	if not c then return end
+
+	if c.state == 3 then
+		local t = timer.realtime()
+		if not c.nextFlash or t >= c.nextFlash then
+			c.nextFlash = t + fireFlashFrequency
+			self:Anim_Fire()
+		end
+	end
+
+
+end
 
 
 
@@ -355,6 +371,35 @@ function PANEL:Enqueue(lines)
 	g:SetPos(0, -height)
 	g:SetCount(lines)
 	table.insert(self.clusters, g)
+
+end
+
+function PANEL:SetState(newState)
+
+	local c = self.clusters[1]
+	if not c then return end
+	if c.state == newState then return end
+
+	c:SetState(newState)
+	if newState == 1 then
+		self:Anim_Flash()
+	elseif newState == 2 or newState == 3 then
+		self:Anim_Flash(true)
+	end
+
+end
+
+function PANEL:Offset(count)
+
+	self:Anim_Offset(count)
+	self:RemoveBlocks(count)
+
+end
+
+function PANEL:Dump()
+
+	self:Anim_Dump()
+	self:RemoveBlocks(1)
 
 end
 
