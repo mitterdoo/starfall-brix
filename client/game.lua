@@ -17,7 +17,7 @@ $	Level backgrounds
 $	Glow rendering layer (with gameboard outline)
 $	Next pieces
 $	Hold piece
-	Garbage meter (with effects)
+$	Garbage meter (with effects)
 	Line clear messages (quad, allclear, tspin, etc.)
 	Countdown timer
 	Bonus multiplier
