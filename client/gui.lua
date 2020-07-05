@@ -5,31 +5,7 @@
 --@name GUI
 --@author Ranthos
 --@client
---@include brix/client/gui/rtcontrol.lua
---@include brix/client/gui/sprite.lua
---@include brix/client/gui/multisprite.lua
---@include brix/client/gui/number.lua
---@include brix/client/gui/field.lua
---@include brix/client/gui/piece.lua
---@include brix/client/gui/pieceicon.lua
---@include brix/client/gui/danger.lua
---@include brix/client/gui/background.lua
---@include brix/client/gui/garbagecluster.lua
---@include brix/client/gui/garbagequeue.lua
-
-local loadControls = {
-	"RTControl",
-	"Sprite",
-	"MultiSprite",
-	"Number",
-	"Field",
-	"Piece",
-	"PieceIcon",
-	"Danger",
-	"Background",
-	"GarbageCluster",
-	"GarbageQueue"
-}
+--@includedir brix/client/gui
 
 gui = {}
 gui.Classes = {}
@@ -418,12 +394,7 @@ end
 
 gui.Classes["Control"] = CTRL
 
-
-for _, name in pairs(loadControls) do
-
-	require("brix/client/gui/" .. name:lower() .. ".lua")
-
-end
+requiredir("brix/client/gui")
 _G.PANEL = nil
 
 
