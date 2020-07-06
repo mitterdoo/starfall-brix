@@ -1,3 +1,4 @@
+-- Countdown timer
 hook.add("brConnect", "countdown", function(game, arena)
 
 	local textSprite, numberSprite
