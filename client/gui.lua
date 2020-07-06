@@ -145,6 +145,8 @@ local game_w, game_h = render.getGameResolution()
 local glow_scaleW, glow_scaleH = 1024 / game_w, 1024 / game_h
 
 local prevMatrixStack
+
+gui.isGlowing = false
 function gui.startGlow()
 
 	if prevMatrixStack ~= nil then
@@ -156,6 +158,8 @@ function gui.startGlow()
 	gui.pushRT(glowRT)
 	gui.pushMatrix(m)
 	gui.pushMatrices(prevMatrixStack)
+
+	gui.isGlowing = true
 
 end
 
@@ -170,6 +174,8 @@ function gui.endGlow()
 
 	gui.pushMatrices(prevMatrixStack)
 	prevMatrixStack = nil
+
+	gui.isGlowing = false
 
 end
 
@@ -333,6 +339,10 @@ function CTRL:SetVisible(visible)
 	self.visible = visible
 end
 
+function CTRL:SetGlow(isGlowing)
+	self.glow = isGlowing
+end
+
 function CTRL:Add(child)
 	child.parent = self
 	table.insert(self.children, child)
@@ -346,6 +356,11 @@ function CTRL:DrawChildren()
 			gui.pushMatrix(child._matrix)
 			
 			child:Think()
+			if child.glow and not gui.isGlowing then
+				gui.startGlow()
+				child:Draw()
+				gui.endGlow()
+			end
 			child:Draw()
 			
 			gui.popMatrix()
@@ -394,7 +409,11 @@ end
 
 gui.Classes["Control"] = CTRL
 
-requiredir("brix/client/gui")
+local ag = requiredir("brix/client/gui", {
+	"rtcontrol.lua",
+	"piece.lua",
+	"sprite.lua"
+})
 _G.PANEL = nil
 
 
