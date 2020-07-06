@@ -4,7 +4,7 @@ function PANEL:Init()
 
 	self.color = Color(255, 255, 255)
 	self.value = "0"
-	self.align = 0
+	self.align = -1
 
 end
 
@@ -28,9 +28,9 @@ function PANEL:Paint(w, h)
 	local length = #self.value
 	local origin_x
 	local align = self.align
-	if align == 0 then
+	if align == -1 then
 		origin_x = 0
-	elseif align == 1 then
+	elseif align == 0 then
 		origin_x = w * length / -2
 	else
 		origin_x = w * -length
