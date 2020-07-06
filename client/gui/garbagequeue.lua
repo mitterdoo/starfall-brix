@@ -134,7 +134,7 @@ function PANEL:Anim_BrickSplode(pos, anim, startSize, endSize, speed, count)
 		Vector(startSize, startSize, 0) * scale,
 		Vector(endSize, endSize, 0) * scale
 	}
-	for i = 1, 6 do
+	for i = 1, count do
 
 		local startPos = pos + Vector(math.random() * brickSize, math.random() * -brickSize, 0)
 		local delta = (startPos - (pos + Vector(brickSize/2, brickSize/-2, 0))):getNormalized()
@@ -262,7 +262,7 @@ function PANEL:Anim_Dump()
 	local brickSize = self.brickSize
 
 	do
-		self:Anim_BrickSplode(Vector(0, 0, 0), fx_BlockDump, 20, 15, 60, 6)
+		self:Anim_BrickSplode(Vector(0, 0, 0), fx_BlockDump, 20, 15, 60, 3)
 	end
 
 	do
