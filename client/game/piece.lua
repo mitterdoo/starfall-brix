@@ -179,8 +179,8 @@ hook.add("brConnect", "piece", function(game, arena)
 			local pos = sparklePos + sparkleBounds * Vector(math.random(), math.random(), 0)
 			local p = gfx.EmitParticle(
 				{pos, pos - Vector(0, brickSize * (1 + math.random()*4), 0)*scale},
-				{sparkleSize, Vector(0, 0, 0)},
-				0, 0.5,
+				{sparkleSize * (1 + math.random() * 0.2), Vector(0, 0, 0)},
+				0, 0.5 + math.random() * 0.1,
 				fx_HardDropSparkle,
 				true, true
 			)
