@@ -1,4 +1,7 @@
 -- Graphics for rendering the active, next, and hold pieces
+local sub = string.sub
+local getShapeIndex = brix.getShapeIndex
+
 hook.add("brConnect", "piece", function(game, arena)
 
 	local piece = game.controls.piece
@@ -88,7 +91,7 @@ hook.add("brConnect", "piece", function(game, arena)
 
 			local pos, scale = Field_OverMatrix:AbsolutePos(Vector(brickSize*5, brickSize/-2 - line*brickSize, 0))
 			local startSize = Vector(brickSize*10, brickSize, 0)
-			local endSize = Vector(brickSize * 10 * 1.45, brickSize * 0.8, 0)
+			local endSize = Vector(brickSize * 10 * 1.45, brickSize * 0.1, 0)
 
 			gfx.EmitParticle(
 				{pos, pos},
@@ -98,6 +101,92 @@ hook.add("brConnect", "piece", function(game, arena)
 				true, true)
 
 		end
+
+	end)
+
+	local function fx_HardDrop(x, y, w, h, frac, isGlow)
+
+		if not isGlow then return end
+		render.setRGBA(255, 255, 255, (1-frac)^2*40)
+		render.drawRectFast(x, y, w, h)
+
+	end
+
+	local function fx_HardDropSparkle(x, y, w, h, frac, isGlow)
+
+		render.setRGBA(255, 255, 150, (1-frac)^2*255)
+		sprite.setSheet(1)
+		sprite.draw(78, x, y, w, h)
+
+	end
+
+	local curSparkles = {}
+
+	arena.hook("pieceHardDrop", function(p)
+
+		local obbmins, obbmaxs = Vector(16, 16, 0), Vector(-1, -1, 0)
+
+		local rot, size = p.rot, p.piece.size
+
+		local shape = p.piece.shape
+
+		local ox, oy = p.x, p.y
+		for y = 0, size-1 do
+			for x = 0, size-1 do
+				local i = getShapeIndex(x, y, rot, size)
+				if sub(shape, i, i) == "x" then
+					if x < obbmins[1] then
+						obbmins[1] = x
+					end
+					if y < obbmins[2] then
+						obbmins[2] = y
+					end
+
+					if x > obbmaxs[1] then
+						obbmaxs[1] = x
+					end
+					if y > obbmaxs[2] then
+						obbmaxs[2] = y
+					end
+					
+				end
+			end
+		end
+
+		local obbsize = (obbmaxs + Vector(1, 1, 0) - obbmins)
+		local matSize = obbsize * brickSize
+		local matPos = (Vector(ox, oy + obbsize[2], 0) + obbmins) * brickSize * Vector(1, -1, 0)
+
+		local pos, scale = Field_OverMatrix:AbsolutePos(matPos)
+		local endPos = pos - Vector(0, 10, 0) * brickSize
+		local startSize = matSize
+		local endSize = startSize + (pos - endPos)
+		gfx.EmitParticle(
+			{pos, endPos},
+			{startSize*scale, endSize*scale},
+			0, 1/4,
+			fx_HardDrop,
+			true, false
+		)
+
+		local sparkleBounds = startSize + Vector(2, 0, 0) * brickSize * scale
+		local sparklePos = pos - Vector(1, 0, 0) * brickSize * scale
+
+		gfx.KillParticles(curSparkles)
+		curSparkles = {}
+		local sparkleSize = Vector(brickSize, brickSize, 0) * 0.2 * scale
+		for i = 1, 6 do
+			local pos = sparklePos + sparkleBounds * Vector(math.random(), math.random(), 0)
+			local p = gfx.EmitParticle(
+				{pos, pos - Vector(0, brickSize * (1 + math.random()*4), 0)*scale},
+				{sparkleSize, Vector(0, 0, 0)},
+				0, 0.5,
+				fx_HardDropSparkle,
+				true, true
+			)
+			curSparkles[p] = true
+		end
+
 
 	end)
 
