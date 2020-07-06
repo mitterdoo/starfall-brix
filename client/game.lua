@@ -19,7 +19,7 @@ $	Glow rendering layer (with gameboard outline)
 $	Next pieces
 $	Hold piece
 $	Garbage meter (with effects)
-	Countdown timer
+$	Countdown timer
 	Line clear messages (quad, allclear, tspin, etc.)
 	Bonus multiplier
 	"x players remain!"
