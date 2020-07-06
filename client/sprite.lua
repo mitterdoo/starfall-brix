@@ -280,7 +280,7 @@ end
 local drawFast = render.drawTexturedRectUVFast
 
 local scale = 1025 / 1024 -- i dont know :/
-function sprite.draw(idx, x, y, w, h)
+function sprite.draw(idx, x, y, w, h, halign, valign)
 
 	local resScaling = 1
 
@@ -289,6 +289,20 @@ function sprite.draw(idx, x, y, w, h)
 		w = data[3]
 		h = data[4]
 	end
+	
+	halign = halign or -1
+	valign = valign or -1
+	if halign == 0 then
+		x = x - w/2
+	elseif halign == 1 then
+		x = x - w
+	end
+	if valign == 0 then
+		y = y - h/2
+	elseif valign == 1 then
+		y = y - h
+	end
+
 
 	local u0, v0, u1, v1 = data[1] * resScaling / 1024,
 		data[2] * resScaling / 1024,

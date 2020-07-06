@@ -8,6 +8,21 @@ function PANEL:Init()
 	self.sprite = 0
 	self.trueSize = true
 	self.color = Color(255, 255, 255)
+	self.halign = -1
+	self.valign = -1
+end
+
+function PANEL:SetAlign(h, v)
+	self.halign = h
+	self.valign = v
+end
+
+function PANEL:SetHAlign(h)
+	self.halign = h
+end
+
+function PANEL:SetVAlign(v)
+	self.valign = v
 end
 
 function PANEL:SetColor(col)
@@ -44,9 +59,9 @@ function PANEL:Paint(w, h)
 	setSheet(self.sheet)
 	render.setColor(self.color)
 	if self.trueSize then
-		drawSprite(self.sprite, 0, 0)
+		drawSprite(self.sprite, 0, 0, nil, nil, self.halign, self.valign)
 	else
-		drawSprite(self.sprite, 0, 0, w, h)
+		drawSprite(self.sprite, 0, 0, w, h, self.halign, self.valign)
 	end
 
 end
