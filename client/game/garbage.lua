@@ -1,5 +1,5 @@
 -- Graphics for garbage queue
-hook.add("brCreate", "garbage", function(game, arena)
+hook.add("brConnect", "garbage", function(game, arena)
 
 	local Garbage = game.controls.Garbage
 
