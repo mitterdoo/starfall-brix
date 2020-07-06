@@ -14,7 +14,7 @@
 	"se_game_nag2.wav":			1,
 	"se_game_offset1.wav":		1,
 	"se_game_offset2.wav":		1,
-	"se_piece_contact.wav":		1,
+	"se_piece_contact.wav":		2,
 	"se_piece_hold.wav":			1,
 	"se_piece_lock.wav":			1,
 	"se_piece_harddrop.wav":	1,
