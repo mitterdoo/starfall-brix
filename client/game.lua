@@ -244,10 +244,6 @@ function createGame()
 			gui.Draw()
 			render.setRGBA(255, 0, 255, 255)
 			render.drawText(64, 500, perc .. "%", 1)
-			if arena.started then
-				render.setRGBA(0, 255, 0, 255)
-				render.drawRectFast(0, 0, 64, 64)
-			end
 
 		end)
 
