@@ -93,6 +93,23 @@ function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, 
 		i = i + 1
 	end
 
+	return particle
+
+end
+
+function gfx.KillParticles(refs) -- keys must be refs to particle
+
+	local i = 1
+	while true do
+		local p = g_particles[i]
+		if p == nil then break end
+		if refs[p] then
+			table.remove(g_particles, i)
+		else
+			i = i + 1
+		end
+	end
+
 end
 
 hook.add("guiPostDraw", "emitter", function()
