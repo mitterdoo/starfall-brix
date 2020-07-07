@@ -47,7 +47,9 @@ require("brix/br/arena_cl.lua")
 require("brix/client/gui.lua")
 require("brix/client/gfx.lua")
 require("brix/client/input.lua")
-requiredir("brix/client/game")
+requiredir("brix/client/game", {
+	"scoreboard.lua"
+})
 --[[
 
 	Background
