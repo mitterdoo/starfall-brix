@@ -80,6 +80,37 @@ function ARENA:connectPlayer(ply)
 
 end
 
+function ARENA:connectBot()
+
+	if self.playerCount == self.maxPlayers then
+		print("Max players reached!")
+		return
+	end
+
+	local index = math.random(1, #self.uniqueIDs)
+	local id = table.remove(self.uniqueIDs, index)
+
+	local game = br.createGame(BR, self.seed, id)
+	game.bot = true
+	game.arena = self
+	
+	self.arena[id] = game
+	
+	self.playerCount = self.playerCount + 1
+	self.remainingPlayers = self.remainingPlayers + 1
+
+	net.start(ARENA.netConnectTag)
+	net.writeUInt(ARENA.connectEvents.UPDATE, 2)
+	net.writeUInt(self.playerCount, 6)
+
+	for plyID, _ in pairs(self.arena) do
+		net.writeUInt(plyID, 6)
+	end
+
+	net.send()
+
+end
+
 -- Call this when the server has been populated and should start
 function ARENA:readyUp()
 
@@ -268,7 +299,6 @@ function ARENA:handleClientSnapshot(game, ply)
 			if game.waitingForTarget then
 				game:callEvent(game.waitingForTarget, "sv_changeTarget", target)
 			else
-				game.targetChanges[frame] = target
 				game:userInput(frame, br.inputEvents.CHANGE_TARGET, target)
 			end
 
@@ -309,7 +339,15 @@ function ARENA:sendSnapshot()
 	local snapshotID = self.snapshotCount
 
 	for id, game in pairs(self.arena) do
-		if not game.dead then
+		if not game.dead and game.bot then
+			local frame = brix.getFrame(timer.curtime() - self.startTime)
+			print("update", id, frame)
+			game:update(frame)
+		end
+	end
+
+	for id, game in pairs(self.arena) do
+		if not game.dead and not game.bot then
 			game.pendingSnapshots[snapshotID] = self.queue
 			game.pendingCount = game.pendingCount + 1
 
@@ -442,6 +480,12 @@ hook.add("net", "brixConnect", function(name, len, ply)
 
 		for arena, _ in pairs(openServers) do
 			arena:connectPlayer(ply)
+		end
+
+	elseif name == "BRIX_BOT" and ply == owner() then
+
+		for arena, _ in pairs(openServers) do
+			arena:connectBot()
 		end
 
 	end
