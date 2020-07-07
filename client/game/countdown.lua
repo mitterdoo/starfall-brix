@@ -59,4 +59,48 @@ hook.add("brConnect", "countdown", function(game, arena)
 
 	end)
 
+	local function playersRemain(num)
+
+		local start = timer.realtime()
+
+		local ctrl = gui.Create("Control", root)
+		ctrl:SetPos(center_x, center_y)
+		ctrl:SetScale(0, 0)
+
+		local Ctrl_Count = gui.Create("Number", ctrl)
+		Ctrl_Count:SetSize(96, 80)
+		Ctrl_Count:SetColor(Color(200, 200, 200))
+		Ctrl_Count:SetAlign(0)
+		Ctrl_Count:SetValue(num)
+		Ctrl_Count:SetPos(0, -80)
+
+		local Ctrl_Label = gui.Create("Sprite", ctrl)
+		Ctrl_Label:SetColor(Color(200, 200, 200))
+		Ctrl_Label:SetAlign(0, -1)
+		Ctrl_Label:SetSheet(1)
+		Ctrl_Label:SetSprite(69)
+
+		local duration = 2
+		local transition = 0.1
+
+		function ctrl:Think()
+
+			local t = timer.realtime() - start
+
+			if t < transition then
+				ctrl:SetScale(1, t/transition)
+			elseif t >= duration - transition and t <= duration then
+				t = timeFrac(t, duration - transition, duration)
+				ctrl:SetScale(1, 1-t)
+			elseif t > duration then
+				ctrl:Remove()
+			elseif ctrl.scale_w ~= 1 then
+				ctrl:SetScale(1, 1)
+			end
+
+		end
+
+	end
+
+
 end)
