@@ -115,8 +115,9 @@ hook.add("brConnect", "piece", function(game, arena)
 	local function fx_HardDropSparkle(x, y, w, h, frac, isGlow)
 
 		render.setRGBA(255, 255, 150, (1-frac)^2*255)
-		sprite.setSheet(1)
-		sprite.draw(78, x, y, w, h)
+		render.drawRectFast(x, y, w, h)
+		--sprite.setSheet(1)
+		--sprite.draw(78, x, y, w, h)
 
 	end
 
@@ -180,7 +181,7 @@ hook.add("brConnect", "piece", function(game, arena)
 			local p = gfx.EmitParticle(
 				{pos, pos - Vector(0, brickSize * (1 + math.random()*4), 0)*scale},
 				{sparkleSize * (1 + math.random() * 0.2), Vector(0, 0, 0)},
-				0, 0.5 + math.random() * 0.1,
+				0, 0.5 + math.random() * 0.2,
 				fx_HardDropSparkle,
 				true, true
 			)
