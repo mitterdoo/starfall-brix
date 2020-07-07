@@ -153,7 +153,7 @@ createSheet(1, assets.files["skin1.png"], {
 	phase = 67,
 	[67] = {512, 640 + 96*0, 512, 96}, -- ready
 	[68] = {512, 640 + 96*1, 512, 96}, -- go
-	[69] = {448, 0, 320, 64}, -- players remaining
+	[69] = {449, 0, 318, 64}, -- players remaining
 	[70] = {512, 640 + 96*2, 512, 96}, -- victory
 
 	killCount = 71,
@@ -257,6 +257,19 @@ createSheet(3, assets.files["playfield.png"], {
 
 })
 
+createSheet(4, assets.files["test.png"], {
+	[0] = {16,  16, 64, 32},
+	[1] = {480, 16, 64, 32},
+	[2] = {944, 16, 64, 32},
+	[3] = {16,  496, 64, 32},
+	[4] = {480, 496, 64, 32},
+	[5] = {944, 496, 64, 32},
+	[6] = {16,  976, 64, 32},
+	[7] = {480, 976, 64, 32},
+	[8] = {944, 976, 64, 32},
+
+})
+
 for i = 1, 11 do
 
 	createSheet(19 + i, assets.files["level_" .. i .. "_bg.png"], {
@@ -281,10 +294,9 @@ end
 
 local drawFast = render.drawTexturedRectUVFast
 
-local scale = 1025 / 1024 -- i dont know :/
-function sprite.draw(idx, x, y, w, h, halign, valign)
+local scale = 1025 / 1024
 
-	local resScaling = 1
+function sprite.draw(idx, x, y, w, h, halign, valign)
 
 	local data = curSheet.coords[idx] or defaultData
 	if w == nil then
@@ -306,18 +318,18 @@ function sprite.draw(idx, x, y, w, h, halign, valign)
 	end
 
 	local sx, sy, sw, sh = data[1], data[2], data[3], data[4]
-	sx = sx - 0.5
-	sy = sy - 0.5
+	--[[sx = sx - 0.5
+	sy = sy - 0.5]]
 
-	local u0, v0, u1, v1 = sx * resScaling / 1024,
-		sy * resScaling / 1024,
-		(sx + sw) * resScaling / 1024,
-		(sy + sh) * resScaling / 1024
+	local u0, v0, u1, v1 = sx / 1024,
+		sy / 1024,
+		(sx + sw) / 1024,
+		(sy + sh) / 1024
 
-	u0 = u0 * scale
-	v0 = v0 * scale
-	u1 = u1 * scale
-	v1 = v1 * scale
+	u0 = (u0-0.5) * scale + 0.5
+	v0 = (v0-0.5) * scale + 0.5
+	u1 = (u1-0.5) * scale + 0.5
+	v1 = (v1-0.5) * scale + 0.5
 
 	drawFast(x, y, w, h, u0, v0, u1, v1)
 
