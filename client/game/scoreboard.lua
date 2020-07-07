@@ -223,14 +223,6 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 
 	end)
 
-	arena.hook("lock", function()
-	
-		Scoreboard:AwardBitsFromAbsolutePos(31, Vector(256, 256, 0))
-
-	end)
-
-
-
 	arena.hook("badgeBits", function(count, sourceID)
 
 		local badges = bg.getBadgeCount(arena.badgeBits)
