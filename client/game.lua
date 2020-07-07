@@ -176,6 +176,12 @@ function createGame()
 	Field_OverMatrix:SetSize(brickSize * 10, brickSize * -20)
 	game.controls.Field_OverMatrix = Field_OverMatrix
 
+	local Scoreboard = gui.Create("Control", root)
+	local scoreboardPos = sprite.sheets[3].arena_stats
+	Scoreboard:SetPos(scoreboardPos[1], scoreboardPos[2])
+	Scoreboard:SetSize(scoreboardPos[3], scoreboardPos[4])
+	game.controls.Scoreboard = Scoreboard
+
 	br.connectToServer(function(arena)
 
 		game.arena = arena
