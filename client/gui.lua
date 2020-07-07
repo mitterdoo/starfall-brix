@@ -279,7 +279,7 @@ end
 function CTRL:SetSize(w, h)
 	self.w = w
 	self.h = h
-	local f = self.OnSizeChange
+	local f = self.OnSizeChanged
 	if type(f) == "function" then
 		f(self, w, h)
 	end
