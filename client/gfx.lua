@@ -49,7 +49,7 @@ end
 	centered
 ]]
 -- Emit a particle. Positions and sizes must be vectors
-function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, glow, centered)
+function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, glow, centered, ease)
 
 	if type(keys_Pos[1]) ~= "table" then
 		local count = #keys_Pos - 1
@@ -80,7 +80,8 @@ function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, 
 		start = t,
 		finish = t + duration,
 		callback = callback,
-		glow = glow
+		glow = glow,
+		ease = ease
 	}
 
 	local i = 1
@@ -137,6 +138,10 @@ hook.add("guiPostDraw", "emitter", function()
 
 		if t >= p.start then
 			local frac = (t - p.start) / (p.finish - p.start)
+			local ease = p.ease
+			if type(ease) == "function" then
+				frac = ease(frac)
+			end
 			local pos = keyframe(p.keys_Pos, frac)
 			local size = keyframe(p.keys_Size, frac)
 			table.insert(g_positions, {pos[1], pos[2], size[1], size[2], frac, p.callback, p.glow})
