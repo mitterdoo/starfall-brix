@@ -13,6 +13,7 @@ local trickHeight = sprite.sheets[2][offset_clears][4]
 hook.add("brConnect", "tricks", function(game, arena)
 
 	local root = game.controls.root
+	local Field_OverMatrix = game.controls.Field_OverMatrix
 	
 	local Ctrl_Tricks = gui.Create("Control", root)
 	Ctrl_Tricks:SetPos(-120, 150)
@@ -55,6 +56,17 @@ hook.add("brConnect", "tricks", function(game, arena)
 	Ctrl_B2B:SetSprite(SPR_BACKTOBACK)
 	Ctrl_B2B:SetVisible(false)
 	Ctrl_B2B:SetAlign(0, -1)
+
+	local Ctrl_Sent = gui.Create("Number", Field_OverMatrix)
+	Ctrl_Sent:SetPos(Field_OverMatrix.w / 2, 0)
+	Ctrl_Sent:SetSize(70, 60)
+	Ctrl_Sent:SetValue(2)
+	Ctrl_Sent:SetAlign(0)
+
+	local sentNumberChange = 0
+	local sentNumberDuration = 1
+	local sentNumberHoverHeight = 100
+	local sentNumberStartHeight = 0
 
 	function Ctrl_Tricks:Think()
 
@@ -100,9 +112,31 @@ hook.add("brConnect", "tricks", function(game, arena)
 
 		end
 
+		do
+
+			local frac = timeFrac(t, sentNumberChange, sentNumberChange + sentNumberDuration)
+			if frac > 1 then
+				if Ctrl_Sent.visible then
+					Ctrl_Sent:SetVisible(false)
+				end
+			elseif frac >= 0 then
+				if not Ctrl_Sent.visible then
+					Ctrl_Sent:SetVisible(true)
+				end
+				Ctrl_Sent:SetPos(Ctrl_Sent.x, sentNumberStartHeight - sentNumberHoverHeight * frac)
+
+				local alphaFrac = timeFrac(frac, 0.5, 1)
+				Ctrl_Sent.color.a = math.min(255, (1-alphaFrac)^2*255)
+
+			end
+
+		end
+
 	end
 
 	arena.hook("lock", function(tricks, combo, linesSent, linesCleared)
+
+		local brickSize = sprite.sheets[3].field_main[3]
 
 		local clearedCount = flagGet(tricks, T.SINGLE) and 1 or
 			flagGet(tricks, T.DOUBLE) and 2 or
@@ -154,6 +188,21 @@ hook.add("brConnect", "tricks", function(game, arena)
 			Ctrl_Cleared:SetColor(Color(200, 100, 255))
 
 			clearedChange = timer.realtime()
+
+		end
+
+		if linesSent > 0 then
+
+			sentNumberChange = timer.realtime()
+
+			local avg = 0
+			for _, line in pairs(linesCleared) do
+				avg = avg + line
+			end
+			avg = avg / #linesCleared
+			sentNumberStartHeight = (avg + 0.5) * -brickSize - 30
+
+			Ctrl_Sent:SetValue(linesSent)
 
 		end
 
