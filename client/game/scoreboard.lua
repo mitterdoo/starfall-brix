@@ -9,36 +9,9 @@ local function padNumber(num, padding)
 
 end
 
-local function EaseInOut( fProgress, fEaseIn, fEaseOut )
-
-	if ( fEaseIn == nil ) then fEaseIn = 0 end
-	if ( fEaseOut == nil ) then fEaseOut = 1 end
-
-	if ( fProgress == 0 or fProgress == 1 ) then return fProgress end
-
-	local fSumEase = fEaseIn + fEaseOut
-
-	if ( fSumEase == 0 ) then return fProgress end
-	if ( fSumEase > 1 ) then
-		fEaseIn = fEaseIn / fSumEase
-		fEaseOut = fEaseOut / fSumEase
-	end
-
-	local fProgressCalc = 1 / ( 2 - fEaseIn - fEaseOut )
-
-	if( fProgress < fEaseIn ) then
-		return ( fProgressCalc / fEaseIn ) * fProgress * fProgress
-	elseif( fProgress < 1 - fEaseOut ) then
-		return fProgressCalc * ( 2 * fProgress - fEaseIn )
-	else
-		fProgress = 1 - fProgress
-		return 1 - ( fProgressCalc / fEaseOut ) * fProgress * fProgress
-	end
-end
-
 local function badgeEase(frac)
 
-	return EaseInOut(frac, 0, 1)
+	return (frac - 1)^3 + 1
 
 end
 
