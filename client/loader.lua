@@ -104,7 +104,7 @@ loader.run(function()
 			local function drawPerm(x, y)
 				local w, h = 512, 512
 				render.setFont("DermaLarge")
-				render.setRGBA(0, 255, 255, 255)
+				render.setRGBA(255, 0, 0, 255)
 				render.drawText(x + w/2, y + h * 0.25, "PERMISSION REQUEST", 1)
 				render.setRGBA(255, 255, 0, 255)
 				render.drawText(x + w/2, y + h * 0.5 - 24, [[BRIX 33 requires certain settings
