@@ -146,18 +146,6 @@ createSheet(1, assets.files["skin1.png"], {
 	[55] = {320, 192 + 48*2, 128, 48}, -- controls
 	[56] = {320, 192 + 48*3, 128, 48}, -- back
 
-	clears = 57,
-	[57] = {768, 64 * 0, 256, 64}, -- single
-	[58] = {768, 64 * 1, 256, 64}, -- double
-	[59] = {768, 64 * 2, 256, 64}, -- triple
-	[60] = {768, 64 * 3, 256, 64}, -- quad
-	
-	tricks = 61,
-	[61] = {768, 64 * 4, 256, 64}, -- tspin
-	[62] = {768, 64 * 5, 256, 64}, -- mini tspin
-	[63] = {768, 64 * 6, 256, 64}, -- b2b
-	[64] = {768, 64 * 7, 256, 64}, -- combo
-
 	matchmaking = 65,
 	[65] = {512, 512 + 64*0, 512, 64}, -- matching
 	[66] = {512, 512 + 64*1, 512, 64}, -- get ready
@@ -317,11 +305,14 @@ function sprite.draw(idx, x, y, w, h, halign, valign)
 		y = y - h
 	end
 
+	local sx, sy, sw, sh = data[1], data[2], data[3], data[4]
+	sx = sx - 0.5
+	sy = sy - 0.5
 
-	local u0, v0, u1, v1 = data[1] * resScaling / 1024,
-		data[2] * resScaling / 1024,
-		(data[1] + data[3]) * resScaling / 1024,
-		(data[2] + data[4]) * resScaling / 1024
+	local u0, v0, u1, v1 = sx * resScaling / 1024,
+		sy * resScaling / 1024,
+		(sx + sw) * resScaling / 1024,
+		(sy + sh) * resScaling / 1024
 
 	u0 = u0 * scale
 	v0 = v0 * scale
