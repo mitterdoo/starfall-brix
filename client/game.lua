@@ -10,7 +10,7 @@
 		Outgoing attack with sparkles
 		Incoming/standby attacks
 		Full badge sparkles
-		Hard drop whoosh and sparkles
+$		Hard drop whoosh and sparkles
 
 $	Next piece spawnpoint outline when nearing blockout
 $	Danger indicator
@@ -20,7 +20,8 @@ $	Next pieces
 $	Hold piece
 $	Garbage meter (with effects)
 $	Countdown timer
-	Line clear messages (quad, allclear, tspin, etc.)
+$	Line clear messages (quad, allclear, tspin, etc.)
+$	Lines sent
 	Bonus multiplier
 	"x players remain!"
 	Badges
@@ -172,6 +173,7 @@ function createGame()
 
 	local Field_OverMatrix = gui.Create("Control", root) -- Draw this on top of the matrix
 	Field_OverMatrix:SetPos(x, y)
+	Field_OverMatrix:SetSize(brickSize * 10, brickSize * -20)
 	game.controls.Field_OverMatrix = Field_OverMatrix
 
 	br.connectToServer(function(arena)
