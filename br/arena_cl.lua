@@ -247,17 +247,25 @@ function br.connectToServer(callback)
 				if not arena then return end
 				local playerCount = net.readUInt(6)
 				local players = {}
+				local newPlayers = {}
 				for i = 1, playerCount do
 					local id = net.readUInt(6)
 					if id ~= arena.uniqueID then
 						players[id] = true
+
+						if arena.tempArena[id] == nil then
+							table.insert(newPlayers, id)
+						end
+
 					end
 				end
 				arena.tempArena = players
 				arena.remainingPlayers = playerCount
 				arena.playerCount = playerCount
 
-				-- TODO: hook when new players joined
+				for _, id in pairs(newPlayers) do
+					arena.hook:run("playerConnect", id)
+				end
 
 			elseif event == e.READY then
 				if not arena then return end

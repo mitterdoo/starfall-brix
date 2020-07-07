@@ -112,6 +112,9 @@ ARENA.hookNames = {
 	"changeTargetMode", 	-- Our game has changed targeting mode
 		-- number mode (see ARENA.targetModes)
 
+	"playerConnect",		-- Player connects to the server
+		-- number playerID
+
 	"arenaFinalized",
 
 	"finish"				-- Called when the match is over
