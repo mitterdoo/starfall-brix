@@ -16,25 +16,12 @@ end
 function Arena:onConnect(ply)
 end
 
-hook.add("PlayerSay", "start", function(ply, text)
+hook.add("net", "start", function(name, len, ply)
 
-    if ply == owner() and text == "$s" then
-        Arena:readyUp()
-        hook.remove("PlayerSay", "start")
-        
-        timer.create("arenaDebug", 0.1, 0, function()
-        
-            net.start("brix_debug")
-            net.writeUInt(Arena.playerCount, 6)
-            for id, game in pairs(Arena.arena) do
-                net.writeUInt(id, 6)
-                net.writeUInt(game.pendingCount, 8)
-            end
-            net.send()
-
-        end)
-
-    end
+	if ply == owner() and name == "brixBegin" then
+		hook.remove("net", "start")
+		Arena:readyUp()
+	end
 
 end)
 

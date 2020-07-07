@@ -210,6 +210,14 @@ function createGame()
 				arena:userInput(button, true)
 			end
 
+
+		end)
+
+		hook.add("xinputPressed", "", function(controller, button, when)
+			if button == 0x0010 and player() == owner() and not arena.started then -- start
+				net.start("brixBegin")
+				net.send()
+			end
 		end)
 
 		hook.add("brixReleased", "", function(button)
