@@ -14,7 +14,11 @@ local ENEMY = {}
 ENEMY.__index = ENEMY
 
 function ENEMY:garbage(gap)
-	return self.matrix:garbage(gap)
+	local retValue = self.matrix:garbage(gap)
+	if self.matrix.cellCount >= brix.dangerCapacity then
+		self.danger = self.matrix.cellCount - brix.dangerCapacity
+	end
+	return retValue
 end
 
 function ENEMY:place(piece, rot, x, y, mono)
