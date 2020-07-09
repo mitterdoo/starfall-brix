@@ -25,9 +25,7 @@ function ENEMY:place(piece, rot, x, y, mono)
 		self.matrix:clear(lines)
 	end
 	
-	if self.matrix.cellCount >= brix.dangerCapacity then
-		self.danger = math.max(0, self.matrix.cellCount - brix.dangerCapacity)
-	end
+	self.danger = math.max(0, self.matrix.cellCount - brix.dangerCapacity)
 
 end
 
