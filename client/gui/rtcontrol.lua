@@ -26,6 +26,7 @@ function PANEL:Draw()
 
 		self:Paint(self.w, self.h)
 		self:DrawChildren()
+		self:PostPaint(self.w, self.h)
 
 		gui.popMatrix()
 		popRT()
@@ -46,43 +47,17 @@ end
 gui.Register("RTControl", PANEL, "Control")
 
 
-
-local BufferRT = "DividedRTControl_Buffer"
-render.createRenderTarget(BufferRT)
-
+local BLEND_ZERO = 0
+local BLENDFUNC_MIN = 3
 -- Clears a rectangle on a RT without clearing the area around it
-local function clearRTSection(rt, x, y, w, h)
+local function clearRTSection(x, y, w, h)
 
-	pushRT(BufferRT)
-	render.clear(transparent, true)
-
-	render.setStencilWriteMask(0xFF)
-	render.setStencilTestMask(0xFF)
-	render.setStencilPassOperation(1)
-	render.setStencilFailOperation(1)
-	render.setStencilZFailOperation(1)
-	render.clearStencil()
-
-	render.setStencilEnable(true)
-	render.setStencilReferenceValue(1)
-	render.setStencilCompareFunction(6)
-	render.clearStencilBufferRectangle(x, y, x + w, y + h, 1)
-
-	render.setRGBA(255, 255, 255, 255)
-	render.setRenderTargetTexture(rt)
-	render.drawTexturedRect(0, 0, 1024, 1024)
-
-	render.setStencilEnable(false)
-
-	popRT()
-	pushRT(rt)
-
-	render.clear(transparent, true)
-	render.setRenderTargetTexture(BufferRT)
-	render.drawTexturedRect(0, 0, 1024, 1024)
-
-	popRT()
-
+	render.overrideBlend(true, 
+		BLEND_ZERO, BLEND_ZERO, BLENDFUNC_MIN,
+		BLEND_ZERO, BLEND_ZERO, BLENDFUNC_MIN)
+	render.setRGBA(0, 0, 0, 0)
+	render.drawRect(x, y, w, h) -- only works with non-fast rect
+	render.overrideBlend(false)
 
 end
 
@@ -124,7 +99,7 @@ function PANEL:GetDivisionCoordinates()
 end
 
 
-local const = 0.4 / 1024 -- cut off ugly pixels that have blended in
+local const = (7/16) / 1024 -- cut off ugly pixels that have blended in
 function PANEL:Draw()
 
 	if self.RTName == nil then
@@ -137,13 +112,14 @@ function PANEL:Draw()
 
 		local memory = gui.popAllMatrices()
 
-		clearRTSection(self.RTName, x * SmallResScale, y * SmallResScale, self.dw * SmallResScale, self.dh * SmallResScale)
 		pushRT(self.RTName)
+		clearRTSection(x * SmallResScale, y * SmallResScale, self.dw * SmallResScale, self.dh * SmallResScale)
 
 		gui.pushScissor(x * SmallResScale, y * SmallResScale, (x + self.dw) * SmallResScale, (y + self.dh) * SmallResScale)
 		gui.pushMatrix(gui.getMatrix(x * SmallResScale, y * SmallResScale, SmallResScale, SmallResScale))
 		self:Paint(self.dw, self.dh)
 		self:DrawChildren()
+		self:PostPaint(self.dw, self.dh)
 		gui.popMatrix()
 		gui.popScissor()
 
