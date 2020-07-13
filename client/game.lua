@@ -85,6 +85,9 @@ function createGame()
 	root:SetPos(1920 / 2 - 1024/2, 1080 / 2 - 1024/2)
 	game.controls.root = root
 
+	game.controls.Attacks_Below = gui.Create("Control", root)
+	game.controls.Attacks_Below:SetSize(root.w, root.h)
+
 	local x, y, brickSize = unpack(sprite.sheets[3].field_main)
 
 	local Board = gui.Create("Sprite", root) -- Board sprite
@@ -184,6 +187,12 @@ function createGame()
 	Scoreboard:SetSize(scoreboardPos[3], scoreboardPos[4])
 	game.controls.Scoreboard = Scoreboard
 
+	game.controls.Attacks_Above = gui.Create("Control", root)
+	game.controls.Attacks_Above:SetSize(root.w, root.h)
+
+	game.controls.HUD = gui.Create("Control", root)
+	game.controls.HUD:SetSize(root.w, root.h)
+
 	br.connectToServer(function(arena)
 
 		game.arena = arena
@@ -228,6 +237,7 @@ function createGame()
 			elseif button == 0x0020 and player() == owner() and not arena.started then
 				net.start("BRIX_BOT")
 				net.send()
+				hook.run("DEBUG")
 			end
 		end)
 
