@@ -22,16 +22,17 @@ $	Garbage meter (with effects)
 $	Countdown timer
 $	Line clear messages (quad, allclear, tspin, etc.)
 $	Lines sent
-	Bonus multiplier
-	"x players remain!"
-	Badges
-	Remaining players
-	KO count
-	Enemies
-	KO icons on enemies
-	Attacker lines
+$	Bonus multiplier
+$	"x players remain!"
+$	Badges
+$	Remaining players
+$	KO count
+$	Enemies
+$	KO icons on enemies
 	"Watch Out!"
+	Attacker lines
 	Outgoing attacks
+	Attacks between enemies
 	Attack strategy
 	Manual targeting
 	KO between other players shown on battlefield
