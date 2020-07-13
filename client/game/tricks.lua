@@ -12,7 +12,7 @@ local trickHeight = sprite.sheets[2][offset_clears][4]
 
 hook.add("brConnect", "tricks", function(game, arena)
 
-	local root = game.controls.root
+	local root = game.controls.HUD
 	local Field_OverMatrix = game.controls.Field_OverMatrix
 	
 	local Ctrl_Tricks = gui.Create("Control", root)
