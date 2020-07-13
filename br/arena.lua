@@ -208,6 +208,8 @@ function br.handleServerSnapshot(game, frame, snapshot)
 					end
 				end
 
+				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)
+				
 				if killer == game.uniqueID then
 					game:giveBadgeBits(badgeBits, victim)
 				else
@@ -215,8 +217,6 @@ function br.handleServerSnapshot(game, frame, snapshot)
 						game.arena[killer]:giveBadgeBits(badgeBits)
 					end
 				end
-
-				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)
 
 				if game.remainingPlayers <= 1 then
 					game:finish()
