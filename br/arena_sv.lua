@@ -341,7 +341,6 @@ function ARENA:sendSnapshot()
 	for id, game in pairs(self.arena) do
 		if not game.dead and game.bot then
 			local frame = brix.getFrame(timer.curtime() - self.startTime)
-			print("update", id, frame)
 			game:update(frame)
 		end
 	end
@@ -444,6 +443,16 @@ function ARENA:sendSnapshot()
 	net.send()
 
 	table.insert(self.snapshots, self.queue)
+
+	for id, game in pairs(self.arena) do
+		if not game.dead and game.bot then
+			local frame = brix.getFrame(timer.curtime() - self.startTime)
+			br.handleServerSnapshot(game, frame, self.queue)
+		end
+	end
+
+
+
 	self.queue = {}
 
 
