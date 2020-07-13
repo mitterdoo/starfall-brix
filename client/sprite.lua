@@ -149,8 +149,8 @@ createSheet(1, assets.files["skin1.png"], {
 
 	[57] = {365, 703, 70, 130}, -- enemy outline
 
-	[58] = {448, 353, 80, 140}, -- target outline
-	[59] = {529, 353, 64, 124}, -- target blip effect
+	[58] = {449, 353, 80, 140}, -- target outline
+	[59] = {530, 353, 64, 124}, -- target blip effect
 
 	attack = 60,
 	[60] = {480+96*4, 256, 96, 96}, -- outgoing attack raw
