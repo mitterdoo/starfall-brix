@@ -198,7 +198,7 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 
 	arena.hook("badgeBits", function(count, sourceID)
 
-		local badges = bg.getBadgeCount(arena.badgeBits)
+		local badges = br.getBadgeCount(arena.badgeBits)
 		if badges > 0 then
 			BadgeBonus:SetSprite(off_badgeBonus + badges - 1)
 			BadgeBonus:SetVisible(true)
