@@ -32,7 +32,7 @@ local function loadSheets()
 		end
 
 		local start = timer.systime()
-		local mat = material.createFromImage("data/sf_filedata/" .. path, "")
+		local mat = material.createFromImage("data/sf_filedata/" .. path, "smooth")
 		local loadTime = timer.systime() - start
 		sheets[idx] = {mat = mat, coords = coords}
 		sprite.mats[idx] = mat
@@ -254,19 +254,6 @@ createSheet(3, assets.files["playfield.png"], {
 	watchOut = {335, 976, 354, 38},
 	watchOutAttachLeft = {335, 976 + 38/2},
 	watchOutAttachRight = {335 + 354, 976 + 38/2}
-
-})
-
-createSheet(4, assets.files["test.png"], {
-	[0] = {16,  16, 64, 32},
-	[1] = {480, 16, 64, 32},
-	[2] = {944, 16, 64, 32},
-	[3] = {16,  496, 64, 32},
-	[4] = {480, 496, 64, 32},
-	[5] = {944, 496, 64, 32},
-	[6] = {16,  976, 64, 32},
-	[7] = {480, 976, 64, 32},
-	[8] = {944, 976, 64, 32},
 
 })
 
