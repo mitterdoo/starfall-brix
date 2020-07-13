@@ -162,8 +162,7 @@ end
 function ARENA:targetSanityCheck(target, game)
 	if target == 0 and #game.attackers == 0 or
 		target ~= 0 and not self.arena[target] or
-		target ~= 0 and self.arena[target].dead
-		or target == game.uniqueID
+		target == game.uniqueID
 	then
 		target = self:pickRandomTarget(game.uniqueID)
 	end
