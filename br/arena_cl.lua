@@ -52,7 +52,10 @@ function br.createEnemy(uniqueID)
 	self.uniqueID = uniqueID
 	self.badgeBits = 0
 	self.matrix = brix.makeMatrix(brix.w, brix.trueHeight)
-	self.danger = 0
+	self.danger = 0				-- If in danger, will be set to how many bricks they are over the danger threshold
+	self.dead = false
+	self.placement = 0			-- Final placement when dead
+	self.killedByUs = false
 
 	return setmetatable(self, ENEMY)
 
