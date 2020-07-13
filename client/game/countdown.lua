@@ -2,7 +2,7 @@
 hook.add("brConnect", "countdown", function(game, arena)
 
 	local textSprite, numberSprite
-	local root = game.controls.root
+	local root = game.controls.HUD
 	local center_x, center_y = root.w/2, root.h/2
 	local getReady = gui.Create("Sprite", root)
 	getReady:SetSheet(1)
@@ -101,6 +101,13 @@ hook.add("brConnect", "countdown", function(game, arena)
 		end
 
 	end
+
+	arena.hook("phaseChange", function()
+	
+		local playersLeft = arena.remainingPlayers
+		playersRemain(playersLeft)
+
+	end)
 
 
 end)
