@@ -409,10 +409,12 @@ end
 
 gui.Classes["Control"] = CTRL
 
-local ag = requiredir("brix/client/gui", {
+requiredir("brix/client/gui", {
 	"rtcontrol.lua",
 	"piece.lua",
-	"sprite.lua"
+	"sprite.lua",
+	"field.lua",
+	"enemyfield.lua"
 })
 _G.PANEL = nil
 
