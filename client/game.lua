@@ -84,8 +84,19 @@ function createGame()
 
 	local root = gui.Create("Control")
 	root:SetSize(1024, 1024)
-	root:SetScale(1, 1)
-	root:SetPos(1920 / 2 - 1024/2, 1080 / 2 - 1024/2)
+
+	do
+
+		local desiredHeight = 1024
+		local game_w, game_h = render.getGameResolution()
+		local actualHeight = math.min(desiredHeight, game_h)
+		local scale = math.min(1, actualHeight / desiredHeight)
+		root:SetScale(scale, scale)
+
+		root:SetPos(game_w / 2 - actualHeight/2, game_h / 2 - actualHeight/2)
+
+	end
+
 	game.controls.root = root
 
 	game.controls.Attacks_Below = gui.Create("Control", root)
