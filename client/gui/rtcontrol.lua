@@ -1,7 +1,6 @@
 --@client
 
 local PANEL = {}
-local SmallResScale = gui.SmallResolution and 0.5 or 1
 local pushRT = gui.pushRT
 local popRT = gui.popRT
 
@@ -22,13 +21,11 @@ function PANEL:Draw()
 
 		pushRT(self.RTName)
 		render.clear(transparent, true)
-		gui.pushMatrix(gui.getMatrix(0, 0, SmallResScale, SmallResScale))
 
 		self:Paint(self.w, self.h)
 		self:DrawChildren()
 		self:PostPaint(self.w, self.h)
 
-		gui.popMatrix()
 		popRT()
 
 		gui.pushMatrices(memory)
@@ -39,7 +36,7 @@ function PANEL:Draw()
 
 	render.setRenderTargetTexture(self.RTName)
 	render.setRGBA(255, 255, 255, 255)
-	render.drawTexturedRectUV(0, 0, self.w, self.h, 0, 0, self.w * SmallResScale / 1024, self.h * SmallResScale / 1024)
+	render.drawTexturedRectUV(0, 0, self.w, self.h, 0, 0, self.w / 1024, self.h / 1024)
 	
 
 end
@@ -113,10 +110,10 @@ function PANEL:Draw()
 		local memory = gui.popAllMatrices()
 
 		pushRT(self.RTName)
-		clearRTSection(x * SmallResScale, y * SmallResScale, self.dw * SmallResScale, self.dh * SmallResScale)
+		clearRTSection(x, y, self.dw, self.dh)
 
-		gui.pushScissor(x * SmallResScale, y * SmallResScale, (x + self.dw) * SmallResScale, (y + self.dh) * SmallResScale)
-		gui.pushMatrix(gui.getMatrix(x * SmallResScale, y * SmallResScale, SmallResScale, SmallResScale))
+		gui.pushScissor(x, y, x + self.dw, y + self.dh)
+		gui.pushMatrix(gui.getMatrix(x, y, 1, 1))
 		self:Paint(self.dw, self.dh)
 		self:DrawChildren()
 		self:PostPaint(self.dw, self.dh)
@@ -135,10 +132,14 @@ function PANEL:Draw()
 	render.setRenderTargetTexture(self.RTName)
 	render.setRGBA(255, 255, 255, 255)
 
-	local u1, v1 = x * SmallResScale / 1024, y * SmallResScale / 1024
-	local u2, v2 = (x + self.dw) * SmallResScale / 1024, (y + self.dh) * SmallResScale / 1024
+	local u1, v1 = x / 1024, y / 1024
+	local u2, v2 = (x + self.dw) / 1024, (y + self.dh) / 1024
 
 	render.drawTexturedRectUV(0, 0, self.w, self.h, u1 + const, v1 + const, u2 - const, v2 - const)
+
+	if self.PaintContinuous then
+		self:PaintContinuous(self.w, self.h)
+	end
 
 end
 
