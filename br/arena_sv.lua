@@ -177,6 +177,7 @@ function ARENA:start()
 
 		game.hook("garbageSend", function(lines)
 		
+			if game.dead then return end
 			local target = game.target
 			target = self:targetSanityCheck(target, game)
 
@@ -194,6 +195,7 @@ function ARENA:start()
 
 		game.hook("changeTarget", function(target)
 		
+			if game.dead then return end
 			local targets
 			if target == 0 then
 				targets = game.attackers
