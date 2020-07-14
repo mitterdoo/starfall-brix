@@ -14,6 +14,8 @@ hook.add("brConnect", "tricks", function(game, arena)
 
 	local root = game.controls.HUD
 	local Field_OverMatrix = game.controls.Field_OverMatrix
+	local LineClearCenter = gui.Create("Control", Field_OverMatrix)
+	game.controls.LineClearCenter = LineClearCenter
 	
 	local Ctrl_Tricks = gui.Create("Control", root)
 	Ctrl_Tricks:SetPos(-120, 150)
@@ -200,6 +202,9 @@ hook.add("brConnect", "tricks", function(game, arena)
 				avg = avg + line
 			end
 			avg = avg / #linesCleared
+
+			LineClearCenter:SetPos(brickSize*5, -brickSize * (avg + 0.5))
+
 			sentNumberStartHeight = (avg + 0.5) * -brickSize - 30
 
 			Ctrl_Sent:SetValue(linesSent)

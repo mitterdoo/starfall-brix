@@ -7,7 +7,7 @@
 
 --[[
 	Optimize Particles. Particles needed:
-		Outgoing attack with sparkles
+$		Outgoing attack with sparkles
 		Incoming/standby attacks
 		Full badge sparkles
 $		Hard drop whoosh and sparkles
@@ -29,10 +29,12 @@ $	Remaining players
 $	KO count
 $	Enemies
 $	KO icons on enemies
+$	Target reticle
 	"Watch Out!"
 	Attacker lines
-	Outgoing attacks
+$	Outgoing attacks
 	Attacks between enemies
+$	Connect particle effect
 	Attack strategy
 	Manual targeting
 	KO between other players shown on battlefield
