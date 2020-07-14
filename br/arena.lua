@@ -193,11 +193,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				end
 
 				local enemy = game.arena[victim]
-				for _, id in pairs(game:getTargets()) do
-					if id == victim then
-						game:pickTarget()
-					end
-				end
+				local curTargets = table.copy(game:getTargets())
 				if enemy then
 					enemy.dead = true
 					enemy.placement = placement
@@ -205,6 +201,12 @@ function br.handleServerSnapshot(game, frame, snapshot)
 					game.remainingPlayers = game.remainingPlayers - 1
 					if killer == game.uniqueID then
 						enemy.killedByUs = true
+					end
+				end
+
+				for _, id in pairs(curTargets) do
+					if id == victim then
+						game:pickTarget()
 					end
 				end
 
