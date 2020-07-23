@@ -1,5 +1,13 @@
 local PANEL = {}
 
+local function fx_Kill(x, y, w, h, frac, glow)
+
+	frac = (1-frac)^2
+	render.setRGBA(255, frac*255, 0, frac*255)
+	render.drawRectFast(x, y, w, h)
+
+end
+
 local enemyRT = "brix_Enemies"
 render.createRenderTarget(enemyRT)
 
@@ -99,6 +107,18 @@ function PANEL:Kill()
 		self.parent.invalid = true
 	end
 
+	if enemy.killedByUs then
+		local fxPos, scale = self:AbsolutePos(Vector(self.w/2, self.h/2, 0))
+		local fxSize = Vector(self.w, self.h, 0) * scale
+
+		gfx.EmitParticle(
+			{fxPos, fxPos},
+			{fxSize*1.5, fxSize*3},
+			0, 0.5,
+			fx_Kill,
+			true, true
+		)
+	end
 
 end
 

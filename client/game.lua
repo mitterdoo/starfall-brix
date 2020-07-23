@@ -39,8 +39,9 @@ $		Allow creation of particle group table contains open and close functions (suc
 $		When creating a particle, this table can be referenced as the group it is in.
 $		Particles in a group will first have the group open function called, then the particles drawn, finally the close function
 
-	Attacks between enemies
+$	Attacks between enemies
 $	Connect particle effect
+$	K.O. Effect when you kill an enemy
 	Attack strategy
 	Manual targeting
 	KO between other players shown on battlefield
