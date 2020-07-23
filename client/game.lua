@@ -248,10 +248,13 @@ function createGame()
 			if button == 0x0010 and player() == owner() and not arena.started then -- start
 				net.start("brixBegin")
 				net.send()
-			elseif button == 0x0020 and player() == owner() and not arena.started then
-				net.start("BRIX_BOT")
-				net.send()
-				hook.run("DEBUG")
+			elseif button == 0x0020 and player() == owner() then
+				if not arena.started then
+					net.start("BRIX_BOT")
+					net.send()
+				else
+					hook.run("DEBUG")
+				end
 			end
 		end)
 
