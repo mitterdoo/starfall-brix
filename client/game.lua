@@ -44,7 +44,7 @@ $	Connect particle effect
 $	K.O. Effect when you kill an enemy
 	Attack strategy
 	Manual targeting
-	KO between other players shown on battlefield
+$	KO between other players shown on battlefield
 
 	SFX
 
