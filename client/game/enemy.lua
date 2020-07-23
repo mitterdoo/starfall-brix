@@ -1,8 +1,15 @@
+local glowIntensity = 1.5
 local function fx_AttackTravel(x, y, w, h, frac, glow)
 
 	render.setRGBA(255, 255, 255, 255)
 	if glow then
-		render.drawRectFast(x - w/2, y - h/2, w*2, h*2)
+
+		render.drawRectFast(
+			x + w/2 - (w*glowIntensity)/2,
+			y + h/2 - (h*glowIntensity)/2,
+			w*glowIntensity,
+			h*glowIntensity
+		)
 	else
 		render.drawRectFast(x, y, w, h)
 	end
@@ -41,12 +48,12 @@ end
 local function fx_AttackLand(x, y, w, h, frac, glow)
 
 	frac = (1-frac)^2
-	render.setRGBA(255, 255, frac*255, frac*255)
-	if glow then
-		render.drawRectFast(x-w/2, y-h/2, w*2, h*2)
-	else
+	render.setRGBA(255, 128 + frac*127, frac*255, frac*255)
+	--if glow then
+	--	render.drawRectFast(x-w/2, y-h/2, w*2, h*2)
+	--else
 		render.drawRectFast(x, y, w, h)
-	end
+	--end
 
 end
 
@@ -90,11 +97,41 @@ hook.add("brConnect", "enemy", function(game, arena)
 	local TargetBlipFrequency = 0.4
 	local LastTargetBlip = 0
 
+	local WatchOutFlashDuration = 1
+	local LastWatchOutFlash = 0
+
+	local LastAttackerCount = 0
 
 	local LayerAbove = game.controls.Attacks_Above
 	local LayerBelow = game.controls.Attacks_Below
+
 	local EnemyRT = gui.Create("RTControl", LayerBelow)
 	EnemyRT:SetSize(1024, 1024)
+
+	local WatchOut = gui.Create("Sprite", LayerBelow)
+	WatchOut:SetSheet(1)
+	WatchOut:SetSprite(sprite.sheets[1].watchOut)
+	WatchOut:SetVisible(false)
+	local WatchOutFlash = gui.Create("Sprite", WatchOut)
+	WatchOutFlash:SetSheet(1)
+	WatchOutFlash:SetSprite(sprite.sheets[1].watchOut + 1)
+	WatchOutFlash:SetColor(Color(255, 255, 255, 0))
+
+	do
+		local x, y, w, h = unpack(sprite.sheets[3].watchOut)
+		WatchOut:SetPos(x, y)
+		WatchOut:SetSize(w, h)
+
+		WatchOutFlash:SetSize(w, h)
+	end
+
+	local _x, _y = unpack(sprite.sheets[3].watchOutAttachLeft)
+	local WatchOutAttachLeft = Vector(_x, _y, 0)
+	_x, _y = unpack(sprite.sheets[3].watchOutAttachRight)
+	local WatchOutAttachRight = Vector(_x, _y, 0)
+
+	local WatchOutStart
+	local WatchOutLineDuration = 4/15
 
 	function EnemyRT:Think()
 
@@ -123,17 +160,87 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 		end
 
+		if t > LastWatchOutFlash + WatchOutFlashDuration then
+			LastWatchOutFlash = t
+		end
+
+		if WatchOutStart and t >= WatchOutStart + WatchOutLineDuration and not WatchOut.visible then
+			WatchOut:SetVisible(true)
+			LastWatchOutFlash = t
+		end
+		
+		if WatchOut.visible then
+			local f = timeFrac(t, LastWatchOutFlash, LastWatchOutFlash + WatchOutFlashDuration)
+			f = (1 - math.min(1, timeFrac(f, 0, 0.2)))^2
+			WatchOutFlash.color.a = f*255
+		end
+
+	end
+
+	local AttackerStartTimes = {}
+
+
+	function LayerAbove:PostPaint(w, h)
+
+		render.setRGBA(255, 255, 0, 255)
+		local t = timer.realtime()
+		for _, Ctrl in pairs(AttackerOutlines) do
+
+			local attachPoint
+			if Ctrl.x < w/2 then
+				attachPoint = WatchOutAttachLeft
+			else
+				attachPoint = WatchOutAttachRight
+			end
+
+			local startPos = Vector(Ctrl.x, Ctrl.y, 0)
+
+			local startTime = AttackerStartTimes[Ctrl.uniqueID]
+			local frac = timeFrac(t, startTime, startTime + WatchOutLineDuration)
+			if frac >= 1 then
+				render.drawLine(Ctrl.x, Ctrl.y, attachPoint[1], attachPoint[2])
+			else
+				local delta = (attachPoint - startPos)*frac
+				render.drawLine(startPos[1], startPos[2], startPos[1] + delta[1], startPos[2] + delta[2])
+			end
+
+
+		end
+
 	end
 
 	local function setAttackers(attackers)
 
+		local keys = {} for k, v in pairs(attackers) do keys[v] = true end
+
+		for id, _ in pairs(AttackerStartTimes) do
+			if not keys[id] then
+				AttackerStartTimes[id] = nil
+			end
+		end
+
 		for _, Ctrl in pairs(AttackerOutlines) do
 			Ctrl:Remove()
 		end
+
 		AttackerOutlines = {}
+
+		if #attackers == 0 then
+			WatchOutStart = nil
+			timer.simple(WatchOutLineDuration, function()
+				if WatchOutStart == nil then
+					WatchOut:SetVisible(false)
+				end
+			end)
+		elseif not WatchOutStart then
+			WatchOutStart = timer.realtime()
+		end
 
 		for _, id in pairs(attackers) do
 
+			if not AttackerStartTimes[id] then
+				AttackerStartTimes[id] = timer.realtime()
+			end
 			local Enemy = enemies[id]
 			if Enemy then
 				local Ctrl = gui.Create("Sprite", LayerAbove)
@@ -144,6 +251,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 				Ctrl:SetSheet(1)
 				Ctrl:SetSprite(spr_attacker)
 				Ctrl:SetAlign(0, 0)
+				Ctrl.uniqueID = id
 				table.insert(AttackerOutlines, Ctrl)
 			end
 
@@ -388,38 +496,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 			garbageTravel(attackerID, damage, targetID)
 
 		end
-
-	end)
-
-	hook.add("DEBUG", "ag", function()
-	
-		local players = {}
-		local playerCount = 0
-		for id, enemy in pairs(arena.arena) do
-			if not enemy.dead then
-				table.insert(players, id)
-				playerCount = playerCount + 1
-			end
-		end
-
-
-		local shuffledPlayers = {}
-		for i = playerCount, 1, -1 do
-			local index = math.random(i)
-			local enemy = table.remove(players, index)
-			table.insert(shuffledPlayers, enemy)
-		end
-
-		local attackerID = table.remove(shuffledPlayers, 1)
-		if attackerID == arena.uniqueID then return end
-		for i = 1, 3 do
-			local targetID = table.remove(shuffledPlayers, 1)
-			if targetID then
-				garbageTravel(attackerID, 1, targetID)
-			end
-		end
-
-		garbageTravel(attackerID, 1, arena.uniqueID)
 
 	end)
 end)
