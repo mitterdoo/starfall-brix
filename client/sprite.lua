@@ -195,6 +195,9 @@ createSheet(1, assets.files["skin1.png"], {
 	blockout = 82,
 	[82] = {192, 672, 48, 48},
 
+	knockout = 83,
+	[83] = {368, 848, 64, 64},
+
 	credits = 100,
 	[100] = {0, 960, 512, 64}
 
