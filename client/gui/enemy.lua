@@ -90,9 +90,9 @@ function PANEL:Kill()
 
 	local placement = gui.Create("Number", self)
 	placement:SetValue(enemy.placement)
-	placement:SetSize(24, 24)
 	placement:SetAlign(0)
 	placement:SetPos(32, 64 + 8)
+	placement:SetSize(16, 24)
 
 	self.invalid = true
 	if self.parent then
