@@ -19,10 +19,15 @@ gfx = {}
 
 ]]
 
+local group_generic = {}
 
-
-local g_particles = {}		-- Particle information. This should only be iterated once.
-local g_positions = {}		-- Particle positions. Structure: {x, y, w, h, frac, callback, glow}
+local g_groups = {}
+--[[
+	g_groups Structure:
+	{
+		[group_reference] = {particles = {}, positions = {}}
+	}
+]]
 
 
 local function keyframe(keys, frac)
@@ -49,8 +54,9 @@ end
 	centered
 ]]
 -- Emit a particle. Positions and sizes must be vectors
-function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, glow, centered, ease)
+function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, glow, centered, ease, group)
 
+	group = group or group_generic
 	if type(keys_Pos[1]) ~= "table" then
 		local count = #keys_Pos - 1
 		for k, value in pairs(keys_Pos) do
@@ -84,11 +90,16 @@ function gfx.EmitParticle(keys_Pos, keys_Size, startOffset, duration, callback, 
 		ease = ease
 	}
 
+	if not g_groups[group] then
+		g_groups[group] = {particles = {}, positions = {}}
+	end
+	local particles = g_groups[group].particles
+
 	local i = 1
 	while true do
-		local p = g_particles[i]
+		local p = particles[i]
 		if p == nil or p.start >= t then
-			table.insert(g_particles, particle)
+			table.insert(particles, particle)
 			break
 		end
 		i = i + 1
@@ -100,14 +111,17 @@ end
 
 function gfx.KillParticles(refs) -- keys must be refs to particle
 
-	local i = 1
-	while true do
-		local p = g_particles[i]
-		if p == nil then break end
-		if refs[p] then
-			table.remove(g_particles, i)
-		else
-			i = i + 1
+	for _, group in pairs(g_groups) do
+		local particles = group.particles
+		local i = 1
+		while true do
+			local p = particles[i]
+			if p == nil then break end
+			if refs[p] then
+				table.remove(particles, i)
+			else
+				i = i + 1
+			end
 		end
 	end
 
@@ -119,53 +133,74 @@ hook.add("guiPostDraw", "emitter", function()
 	local t = timer.realtime()
 
 	-- Purge dead particles
-	local i = 1
-	while true do
+	for groupRef, group in pairs(g_groups) do
+		local particles = group.particles
+		local i = 1
+		while true do
 
-		local p = g_particles[i]
-		if p ~= nil and t > p.finish then
-			table.remove(g_particles, i)
-		elseif p == nil then
-			break
-		else
-			i = i + 1
+			local p = particles[i]
+			if p ~= nil and t > p.finish then
+				table.remove(particles, i)
+			elseif p == nil then
+				break
+			else
+				i = i + 1
+			end
+
 		end
 
+		if i == 1 and #particles == 0 then -- destroy group if no particles exist in it
+			g_groups[groupRef] = nil
+		end
 	end
 
 	-- Calculate particle positions
-	for _, p in pairs(g_particles) do
+	for groupRef, group in pairs(g_groups) do
+		local particles = group.particles
+		local positions = group.positions
+		for _, p in pairs(particles) do
 
-		if t >= p.start then
-			local frac = (t - p.start) / (p.finish - p.start)
-			local ease = p.ease
-			if type(ease) == "function" then
-				frac = ease(frac)
+			if t >= p.start then
+				local frac = (t - p.start) / (p.finish - p.start)
+				local ease = p.ease
+				if type(ease) == "function" then
+					frac = ease(frac)
+				end
+				local pos = keyframe(p.keys_Pos, frac)
+				local size = keyframe(p.keys_Size, frac)
+				table.insert(positions, {pos[1], pos[2], size[1], size[2], frac, p.callback, p.glow})
 			end
-			local pos = keyframe(p.keys_Pos, frac)
-			local size = keyframe(p.keys_Size, frac)
-			table.insert(g_positions, {pos[1], pos[2], size[1], size[2], frac, p.callback, p.glow})
-		end
 
+		end
 	end
 
 	-- Now draw
 	gui.startGlow()
-	for _, p in pairs(g_positions) do
-		if p[7] then
-			p[6](p[1], p[2], p[3], p[4], p[5], true)
+	for groupRef, group in pairs(g_groups) do
+		local positions, enter, exit = group.positions, groupRef.enter, groupRef.exit
+		if enter then enter() end
+		for _, p in pairs(positions) do
+			if p[7] then
+				p[6](p[1], p[2], p[3], p[4], p[5], true)
+			end
 		end
+		if exit then exit() end
 	end
 
 	gui.endGlow()
 
-	while true do
-		local p = table.remove(g_positions, 1)
-		if p ~= nil then
-			p[6](p[1], p[2], p[3], p[4], p[5], false)
-		else
-			break
+	for groupRef, group in pairs(g_groups) do
+		local positions, enter, exit = group.positions, groupRef.enter, groupRef.exit
+		if enter then enter() end
+		while true do
+			local p = table.remove(positions, 1)
+			if p ~= nil then
+				p[6](p[1], p[2], p[3], p[4], p[5], false)
+			else
+				break
+			end
 		end
+		if exit then exit() end
 	end
 
 end)
