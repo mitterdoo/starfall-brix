@@ -46,6 +46,8 @@ $	K.O. Effect when you kill an enemy
 	Manual targeting
 $	KO between other players shown on battlefield
 
+	Improve outgoing attack graphics
+
 	SFX
 
 	End screen with final places
