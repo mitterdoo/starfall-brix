@@ -1,17 +1,41 @@
-local glowIntensity = 1.5
+local attackGlowIntensity = 1.5
 local function fx_AttackTravel(x, y, w, h, frac, glow)
 
 	render.setRGBA(255, 255, 255, 255)
 	if glow then
 
 		render.drawRectFast(
-			x + w/2 - (w*glowIntensity)/2,
-			y + h/2 - (h*glowIntensity)/2,
-			w*glowIntensity,
-			h*glowIntensity
+			x + w/2 - (w*attackGlowIntensity)/2,
+			y + h/2 - (h*attackGlowIntensity)/2,
+			w*attackGlowIntensity,
+			h*attackGlowIntensity
 		)
 	else
 		render.drawRectFast(x, y, w, h)
+	end
+
+end
+
+local spr_knockout = sprite.sheets[1].knockout
+local koGlowIntensity = 1.5
+local function fx_KnockoutTravel(x, y, w, h, frac, glow)
+
+	if glow then
+		render.setRGBA(255, 0, 0, 255)
+	else
+		render.setRGBA(255, 200, 200, 255)
+	end
+	if glow then
+
+		render.drawRectFast(
+			x + w/2 - (w*koGlowIntensity)/2,
+			y + h/2 - (h*koGlowIntensity)/2,
+			w*koGlowIntensity,
+			h*koGlowIntensity
+		)
+	else
+		sprite.setSheet(1)
+		sprite.draw(spr_knockout, x, y, w, h)
 	end
 
 end
@@ -374,8 +398,8 @@ hook.add("brConnect", "enemy", function(game, arena)
 		local percent = lines / arena.params.maxGarbageOut
 		local center = game.controls.LineClearCenter
 		local centerX = center:AbsolutePos(0, 0)
-		local startLeft = center:AbsolutePos(Vector(-brickSize, 0, 0) * 5)
-		local startRight = center:AbsolutePos(Vector(brickSize, 0, 0) * 5)
+		local startLeft = center:AbsolutePos(Vector(-brickSize, 0, 0) * 2)
+		local startRight = center:AbsolutePos(Vector(brickSize, 0, 0) * 2)
 		local size = Vector(1, 1, 0) * (150 + percent*100)
 
 		local badges = br.getBadgeCount(arena.badgeBits)
@@ -448,6 +472,32 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 		end
 	}
+
+	local trailCount = 3
+	local function knockoutTravel(victimID, badgeBits, attackerID)
+
+		local victimCtrl = enemies[victimID]
+		local attackerCtrl = enemies[attackerID]
+		assert(victimCtrl ~= nil, "attempt to create KO particle from unknown victim " .. tostring(victimID))
+		assert(attackerCtrl ~= nil, "attempt to create KO particle to unknown attacker " .. tostring(attackerID))
+
+		local startPos, scale = victimCtrl:AbsolutePos(Vector(victimCtrl.w/2, victimCtrl.h/2, 0))
+		local endPos = attackerCtrl:AbsolutePos(Vector(attackerCtrl.w/2, attackerCtrl.h/2, 0))
+
+		local size = Vector(48, 48, 0) * scale
+
+		for i = 1, trailCount do
+			local sizeScale = 1 - (i-1)/trailCount
+			gfx.EmitParticle(
+				{startPos, endPos},
+				{size*sizeScale, size*sizeScale},
+				(i - 1)*(2/60), 0.5,
+				fx_KnockoutTravel,
+				true, true
+			)
+		end
+
+	end
 
 	local function garbageTravel(attackerID, damage, targetID)
 
