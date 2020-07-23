@@ -17,7 +17,7 @@ hook.add("brConnect", "countdown", function(game, arena)
 		end
 
 		textSprite = gui.Create("Sprite", root)
-		textSprite:SetPos(center_x, center_y/2)
+		textSprite:SetPos(center_x, center_y)
 		textSprite:SetAlign(0, 0)
 		textSprite:SetSheet(1)
 		textSprite:SetSprite(67)
@@ -25,9 +25,9 @@ hook.add("brConnect", "countdown", function(game, arena)
 
 		numberSprite = gui.Create("Number", root)
 		numberSprite:SetColor(Color(255, 255, 0))
-		numberSprite:SetSize(96, 80)
+		numberSprite:SetSize(64, 80)
 		numberSprite:SetAlign(0)
-		numberSprite:SetPos(center_x, center_y/2 - 40)
+		numberSprite:SetPos(center_x, center_y - 40)
 		numberSprite:SetVisible(false)
 
 		local counter = 0

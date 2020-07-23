@@ -178,10 +178,10 @@ createSheet(1, assets.files["skin1.png"], {
 	[73] = {0, 784, 320, 32},
 	
 	badgeBonus = 74,
-	[74] = {320, 432 + 48*0, 128, 48},
-	[75] = {320, 432 + 48*1, 128, 48},
-	[76] = {320, 432 + 48*2, 128, 48},
-	[77] = {320, 432 + 48*3, 128, 48},
+	[74] = {336, 432 + 48*0, 96, 48},
+	[75] = {336, 432 + 48*1, 96, 48},
+	[76] = {336, 432 + 48*2, 96, 48},
+	[77] = {336, 432 + 48*3, 96, 48},
 
 	particles = 78,
 	[78] = {224, 592, 80, 80}, -- star
@@ -266,7 +266,7 @@ createSheet(3, assets.files["playfield.png"], {
 
 	watchOut = {335, 976, 354, 38},
 	watchOutAttachLeft = {335, 976 + 38/2},
-	watchOutAttachRight = {335 + 354, 976 + 38/2}
+	watchOutAttachRight = {335 + 353, 976 + 38/2}
 
 })
 
@@ -287,9 +287,13 @@ local defaultData = {0, 0, 0, 0}
 
 local curSheet
 
-function sprite.setSheet(idx)
+function sprite.setSheet(idx, customMatFunc)
 	curSheet = sheets[idx]
-	render.setMaterial(curSheet.mat)
+	if customMatFunc then
+		customMatFunc(curSheet.mat)
+	else
+		render.setMaterial(curSheet.mat)
+	end
 end
 
 local drawFast = render.drawTexturedRectUVFast

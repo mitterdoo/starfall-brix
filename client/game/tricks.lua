@@ -31,7 +31,7 @@ hook.add("brConnect", "tricks", function(game, arena)
 	Ctrl_Combo:SetVisible(false)
 	local Ctrl_ComboCount = gui.Create("Number", Ctrl_Combo)
 	Ctrl_ComboCount:SetPos(0, trickHeight)
-	Ctrl_ComboCount:SetSize(96, 80)
+	Ctrl_ComboCount:SetSize(64, 80)
 	Ctrl_ComboCount:SetAlign(0)
 	Ctrl_ComboCount:SetColor(Color(255, 255, 100))
 
@@ -61,7 +61,7 @@ hook.add("brConnect", "tricks", function(game, arena)
 
 	local Ctrl_Sent = gui.Create("Number", Field_OverMatrix)
 	Ctrl_Sent:SetPos(Field_OverMatrix.w / 2, 0)
-	Ctrl_Sent:SetSize(70, 60)
+	Ctrl_Sent:SetSize(50, 60)
 	Ctrl_Sent:SetValue(2)
 	Ctrl_Sent:SetAlign(0)
 
