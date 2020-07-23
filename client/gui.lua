@@ -457,6 +457,10 @@ end
 root = gui.Create("Control", _noParent_reference)
 root:SetSize(render.getGameResolution())
 
+local blurw, blurh = 8, 8
+if gui.SmallResolution then
+	blurw, blurh = 4, 4
+end
 function gui.Draw()
 	hook.run("guiPreDraw")
 	gui.clearGlow()
@@ -470,7 +474,6 @@ function gui.Draw()
 
 	gui.pushRT(glowRT)
 
-	local blurw, blurh = 8, 8
 
 	render.drawBlurEffect(blurw * glow_scaleW, blurh * glow_scaleH, 1)
 	render.setMaterialEffectBloom(glowRT, 1, 1, 1, 10)
