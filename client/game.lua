@@ -30,9 +30,15 @@ $	KO count
 $	Enemies
 $	KO icons on enemies
 $	Target reticle
-	"Watch Out!"
-	Attacker lines
+$	"Watch Out!"
+$	Attacker lines
 $	Outgoing attacks
+
+$	Particle groups
+$		Allow creation of particle group table contains open and close functions (such as setting color or sprite)
+$		When creating a particle, this table can be referenced as the group it is in.
+$		Particles in a group will first have the group open function called, then the particles drawn, finally the close function
+
 	Attacks between enemies
 $	Connect particle effect
 	Attack strategy
@@ -41,9 +47,13 @@ $	Connect particle effect
 
 	SFX
 
+	End screen with final places
 	Title screen
 	Spectator screen
 	Controls configurator
+	Option to turn off changing background
+
+	Endless matches
 ]]
 
 require("brix/br/arena_cl.lua")
