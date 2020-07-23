@@ -347,17 +347,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	end)
 
-	arena.hook("playerDie", function(victim, killer, placement, deathFrame, badgeBits)
-	
-		if enemies[victim] then
-			local Ctrl = enemies[victim]
-
-			Ctrl:Kill()
-
-		end
-
-	end)
-
 	arena.hook("badgeBits", function(count, sourceID)
 	
 		if enemies[sourceID] then
@@ -484,7 +473,9 @@ hook.add("brConnect", "enemy", function(game, arena)
 		local startPos, scale = victimCtrl:AbsolutePos(Vector(victimCtrl.w/2, victimCtrl.h/2, 0))
 		local endPos = attackerCtrl:AbsolutePos(Vector(attackerCtrl.w/2, attackerCtrl.h/2, 0))
 
-		local size = Vector(48, 48, 0) * scale
+		local percent = badgeBits / 20
+		local size = Vector(48, 48, 0) * scale * (1 + percent)
+
 
 		for i = 1, trailCount do
 			local sizeScale = 1 - (i-1)/trailCount
@@ -548,5 +539,23 @@ hook.add("brConnect", "enemy", function(game, arena)
 		end
 
 	end)
+
+	arena.hook("playerDie", function(victim, killer, placement, deathFrame, badgeBits)
+	
+		if enemies[victim] then
+			local Ctrl = enemies[victim]
+
+			Ctrl:Kill()
+
+		end
+		
+		if victim ~= arena.uniqueID and killer ~= arena.uniqueID and killer ~= 0 then
+
+			knockoutTravel(victim, badgeBits, killer)
+
+		end
+
+	end)
+
 end)
 
