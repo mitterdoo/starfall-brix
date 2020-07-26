@@ -322,6 +322,9 @@ function sprite.draw(idx, x, y, w, h, halign, valign)
 	if w == nil then
 		w = data[3]
 		h = data[4]
+	elseif h == nil then
+		h = data[4] * w
+		w = data[3] * w
 	end
 	
 	halign = halign or -1
