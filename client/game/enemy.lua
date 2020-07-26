@@ -48,14 +48,19 @@ for i = 1, 5 do
 
 	local setSheet = sprite.setSheet
 	local sprDraw = sprite.draw
+	local attackGlowIntensity = 1.5
 	local function thisAttack(x, y, w, h, frac, glow)
 		setSheet(1)
 		if not glow then
 			render.setRGBA(255, 255, 255, 255)
 			sprDraw(spr, x, y, w, h)
 		else
-			render.setRGBA(255, 255, 255, 128)
-			sprDraw(spr, x, y, w, h)
+			render.setRGBA(255, 255, 255, 255)
+			sprDraw(spr,
+				x + w/2 - (w*attackGlowIntensity)/2,
+				y + h/2 - (h*attackGlowIntensity)/2,
+				w*attackGlowIntensity,
+				h*attackGlowIntensity)
 		end
 	end
 	fx_Attacks[i] = thisAttack
@@ -390,7 +395,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 		local centerX = center:AbsolutePos(0, 0)
 		local startLeft = center:AbsolutePos(Vector(-brickSize, 0, 0) * 2)
 		local startRight = center:AbsolutePos(Vector(brickSize, 0, 0) * 2)
-		local size = Vector(1, 1, 0) * (150 + percent*100)
+		local size = Vector(1, 1, 0) * (250 + percent*100)
 
 		local badges = br.getBadgeCount(arena.badgeBits)
 		badges = math.min(4, badges)
