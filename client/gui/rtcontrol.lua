@@ -8,7 +8,12 @@ local popRT = gui.popRT
 function PANEL:Init()
 	self.invalid = true
 	self.RTName = "gui_RT" .. math.random(1, 2^31-1)
+	self.alpha = 255
 	render.createRenderTarget(self.RTName)
+end
+
+function PANEL:SetAlpha(alpha)
+	self.alpha = alpha
 end
 
 local transparent = Color(0, 0, 0, 0)
@@ -35,7 +40,7 @@ function PANEL:Draw()
 	end
 
 	render.setRenderTargetTexture(self.RTName)
-	render.setRGBA(255, 255, 255, 255)
+	render.setRGBA(255, 255, 255, self.alpha)
 	render.drawTexturedRectUV(0, 0, self.w, self.h, 0, 0, self.w / 1024, self.h / 1024)
 	
 
