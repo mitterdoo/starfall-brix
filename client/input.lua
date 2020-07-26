@@ -3,8 +3,9 @@
 --@include brix/client/xinput_nooverlap.lua
 
 DPAD_NO_OVERLAP = false
+binput = {}
 
-local KEYBOARD_INPUT = { -- Keyboard input mappings
+KEYBOARD_INPUT = { -- Keyboard input mappings
 	[89] = brix.inputEvents.MOVELEFT,	-- leftarrow
 	[91] = brix.inputEvents.MOVERIGHT,	-- rightarrow
 
@@ -32,10 +33,32 @@ local KEYBOARD_INPUT = { -- Keyboard input mappings
 
 }
 
+KEYBOARD_INPUTMAP = {}
+
+function binput.updateMap()
+	for key, binding in pairs(KEYBOARD_INPUT) do
+
+		if not KEYBOARD_INPUTMAP[binding] then
+			KEYBOARD_INPUTMAP[binding] = {}
+		end
+		table.insert(KEYBOARD_INPUTMAP[binding], key)
+
+	end
+end
+
+binput.updateMap()
+
+function binput.isUsingController()
+
+	if xinput and xinput.getControllers()[0] then return true end
+	return false
+
+end
+
 hook.add("inputPressed", "input2brix", function(button)
 
 	if input.getCursorVisible() then return end
-	if xinput and xinput.getControllers()[0] then return end
+	if binput.isUsingController() then return end
 	local map = KEYBOARD_INPUT[button]
 	if map ~= nil then
 		hook.run("brixPressed", map)
@@ -46,7 +69,7 @@ end)
 hook.add("inputReleased", "input2brix", function(button)
 
 	if input.getCursorVisible() then return end
-	if xinput and xinput.getControllers()[0] then return end
+	if binput.isUsingController() then return end
 	local map = KEYBOARD_INPUT[button]
 	if map ~= nil then
 		hook.run("brixReleased", map)
