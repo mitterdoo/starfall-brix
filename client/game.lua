@@ -42,18 +42,24 @@ $		Particles in a group will first have the group open function called, then the
 $	Attacks between enemies
 $	Connect particle effect
 $	K.O. Effect when you kill an enemy
-	Attack strategy
+$	Attack strategy
+	Match stick anim to actual stick position
 	Manual targeting
 $	KO between other players shown on battlefield
 
 	Improve outgoing attack graphics
 
+	Loop points in music?
+	Royalty-free BGM
+		Song credit in a conspicuous but not distracting spot
 	SFX
 
 	End screen with final places
 	Title screen
 	Spectator screen
 	Controls configurator
+		Test sub-menu
+	Handling settings (are, das, etc.)
 	Option to turn off changing background
 
 	Endless matches
