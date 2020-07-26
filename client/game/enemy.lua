@@ -34,8 +34,9 @@ local function fx_KnockoutTravel(x, y, w, h, frac, glow)
 			h*koGlowIntensity
 		)
 	else
-		sprite.setSheet(1)
-		sprite.draw(spr_knockout, x, y, w, h)
+		--sprite.setSheet(1, render.setMaterialEffectAdd)
+		--sprite.draw(spr_knockout, x, y, w, h)
+		render.drawRectFast(x, y, w, h)
 	end
 
 end
@@ -484,7 +485,8 @@ hook.add("brConnect", "enemy", function(game, arena)
 				{size*sizeScale, size*sizeScale},
 				(i - 1)*(2/60), 0.5,
 				fx_KnockoutTravel,
-				true, true
+				true, true,
+				nil, group_backgroundAttacks
 			)
 		end
 
