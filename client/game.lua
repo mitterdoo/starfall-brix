@@ -258,7 +258,7 @@ function createGame()
 
 		hook.add("brixPressed", "", function(button)
 
-			if arena.started then
+			if arena.started and button < binput.stickEvents.MANUAL_DOWN then
 				arena:userInput(button, true)
 			end
 
@@ -281,7 +281,7 @@ function createGame()
 
 		hook.add("brixReleased", "", function(button)
 
-			if arena.started then
+			if arena.started and button < binput.stickEvents.MANUAL_DOWN then
 				arena:userInput(button, false)
 			end
 
