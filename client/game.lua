@@ -244,13 +244,6 @@ function createGame()
 
 		hook.run("brConnect", game, arena)
 
-
-
-
-		arena.hook("die", function(killer)
-			hook.remove("postdrawhud", "brix")
-		end)
-
 		arena.hook("levelUp", function(newLevel)
 		
 			Background:SetLevel(newLevel)
