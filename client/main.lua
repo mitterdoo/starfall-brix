@@ -12,9 +12,13 @@ function render.createRenderTarget(rt)
 	return create(rt)
 end
 
-function timeFrac(delta, from, to)
-
-	return (delta - from) / (to - from)
+function timeFrac(delta, from, to, clamp)
+	
+	if clamp then
+		return math.max(0, math.min(1, (delta - from) / (to - from)))
+	else
+		return (delta - from) / (to - from)
+	end
 
 end
 
