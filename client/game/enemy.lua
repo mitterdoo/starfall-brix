@@ -627,7 +627,69 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local function manualTarget(direction)
 
-		local plys = {}
+		local curTarget = arena.target
+		if curTarget == 0 then
+			local attackers = arena.attackers
+			if #attackers == 0 then return end
+			curTarget = attackers[math.random(1, #attackers)]
+		end
+
+		if direction >= events.MANUAL_PREV then
+
+			local i = curTarget
+			while true do
+
+				i = i + (direction == events.MANUAL_PREV and -1 or 1)
+				if i < 1 or i > 33 then
+					i = (i-1)%33+1
+				end
+				if i == curTarget then return end
+
+				local enemy = arena.arena[i]
+				if enemy and not enemy.dead then
+					arena:manualTarget(i)
+					break
+				end
+
+			end
+
+			return
+
+		end
+
+		curTarget = enemies[curTarget]
+		if not curTarget then return end
+		local list = {}
+		local x, y = curTarget.x, curTarget.y
+		for id, Ctrl in pairs(enemies) do
+
+			if not Ctrl.enemy.dead then
+				local cx, cy = Ctrl.x, Ctrl.y
+				local dx, dy = math.abs(cx - x), math.abs(cy - y)
+				if	direction == events.MANUAL_RIGHT and x < cx then
+					table.insert(list, {id, dx + dy*2000})
+				elseif direction == events.MANUAL_DOWN and y < cy then
+					table.insert(list, {id, dx*2000 + dy})
+				elseif direction == events.MANUAL_LEFT and x > cx then
+					table.insert(list, {id, dx + dy*2000})
+				elseif direction == events.MANUAL_UP and y > cy then
+					table.insert(list, {id, dx*2000 + dy})
+				end
+			end
+
+		end
+
+		table.sort(list, function(a, b) return a[2] < b[2] end)
+		arena:manualTarget(list[1][1])
+
+	end
+
+	hook.add("brixPressed", "enemy", function(button)
+		if button >= events.MANUAL_DOWN and button <= events.MANUAL_NEXT then
+			manualTarget(button)
+		end
+	end)
+
 		for id, enemy in pairs(arena.arena) do
 			if not enemy.dead then
 				table.insert(plys, id)

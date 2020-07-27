@@ -14,7 +14,10 @@ binput.stickEvents = {
 	MANUAL_DOWN = 12,
 	MANUAL_RIGHT = 13,
 	MANUAL_UP = 14,
-	MANUAL_LEFT = 15
+	MANUAL_LEFT = 15,
+
+	MANUAL_PREV = 16,
+	MANUAL_NEXT = 17
 }
 
 KEYBOARD_INPUT = { -- Keyboard input mappings
@@ -39,9 +42,10 @@ KEYBOARD_INPUT = { -- Keyboard input mappings
 	[2] = ARENA.targetModes.ATTACKER,	-- 1
 	[3] = ARENA.targetModes.BADGES,		-- 2
 	[4] = ARENA.targetModes.KO,			-- 3
-	[5] = ARENA.targetModes.RANDOM		-- 4
+	[5] = ARENA.targetModes.RANDOM,		-- 4
 
-	-- TODO: Add manual targeting
+	[28] = binput.stickEvents.MANUAL_PREV,
+	[16] = binput.stickEvents.MANUAL_NEXT
 
 }
 
