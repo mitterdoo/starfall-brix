@@ -4,10 +4,11 @@ local PANEL = {}
 local pushRT = gui.pushRT
 local popRT = gui.popRT
 
-
+local RTUniqueID = 0
 function PANEL:Init()
 	self.invalid = true
-	self.RTName = "gui_RT" .. math.random(1, 2^31-1)
+	self.RTName = "gui_RT" .. RTUniqueID
+	RTUniqueID = RTUniqueID + 1
 	self.alpha = 255
 	render.createRenderTarget(self.RTName)
 end
