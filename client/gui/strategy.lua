@@ -14,66 +14,191 @@ local spr_labels = {
 	[TARGET_RANDOM] = offset_label + 3
 }
 
+local spr_key = 7
+local spr_stick = sprite.sheets[1].strategyStick
+
 local offset_background = sprite.sheets[1].strategyIndicator
+local field_x, field_bottom, brickSize = unpack(sprite.sheets[3].field_main)
 
 local fadeOutStart = 1
 local fadeOutDuration = 0.2
+local blipDuration = 0.1
+local flickDuration = 0.15
+
+local binds = {
+	[TARGET_ATTACKER] = "?",
+	[TARGET_RANDOM] = "?",
+	[TARGET_KO] = "?",
+	[TARGET_BADGES] = "?"
+}
 
 function PANEL:Init()
 
+	self.super.Init(self)
 	self.strategy = 0
+	self.stickPos = 0
 	self.lastChange = 0
+	self.lastStickChange = 0
+	self.foreground = false
+
+	for binding, _ in pairs(binds) do
+
+		local keys = KEYBOARD_INPUTMAP[binding]
+		if keys and #keys > 0 then
+			binds[binding] = string.upper(input.getKeyName(keys[1]))
+		end
+
+	end
 
 end
 
 function PANEL:SetStrategy(strat)
-	if strat ~= self.strategy then
-		self.lastChange = timer.realtime()
-		self.strategy = strat
-	end
+	self.lastChange = timer.realtime()
+	self.lastStickChange = timer.realtime()
+	self.strategy = strat
 end
 
 local centerSpacing = 32
 local sprObj_indicator = sprite.sheets[1][offset_background]
 local indicator_w, indicator_h = sprObj_indicator[3], sprObj_indicator[4]
 
+local keyFontSize = 24
+local keyFont = render.createFont("Roboto", keyFontSize, 900)
+local stickFontSize = 36
+local stickFont = render.createFont("Roboto", stickFontSize, 100)
+
+
+function PANEL:Think()
+
+	local t = timer.realtime()
+
+	local newPos = binput.stickState[1]
+	if newPos ~= self.stickPos then
+		self.stickPos = newPos
+	end
+	if newPos ~= 0 then
+		self.lastStickChange = t
+	end
+
+
+	local frac = timeFrac(t, self.lastStickChange + fadeOutStart, self.lastStickChange + fadeOutStart + fadeOutDuration)
+	if frac <= 1 then
+		self.invalid = true
+
+		if self.foreground == false then
+			self.foreground = true
+			if self.RequestLayerChange then
+				self.RequestLayerChange(true)
+			end
+		end
+
+	end
+
+	frac = math.max(0, math.min(1, frac))
+
+
+	local alpha = 255 - frac*240
+
+	self.alpha = alpha
+
+	if frac == 1 and self.foreground then
+		self.foreground = false
+		if self.RequestLayerChange then
+			self.RequestLayerChange(false)
+		end
+	end
+
+end
+
+local keySize = 20
+
 function PANEL:Paint(w, h)
 
 	local strat = self.strategy
 
-	local t = timer.realtime()
-	local frac = timeFrac(t, self.lastChange + fadeOutStart, self.lastChange + fadeOutStart + fadeOutDuration)
-	frac = math.max(0, math.min(1, frac))
-	local alpha = 255 - frac*240
-
-	render.setRGBA(255, 255, 255, alpha)
+	render.setRGBA(255, 255, 255, 255)
 
 	sprite.setSheet(1)
 
+	local t = timer.realtime()
+	local frac = timeFrac(t, self.lastChange, self.lastChange + blipDuration)
+	frac = math.max(0, math.min(1, frac))
+
+	local cx, cy = brickSize*5, brickSize*2
+
+	if not binput.isUsingController() then
+
+
+		sprite.draw(spr_key, cx, cy - centerSpacing, keySize, keySize, 0, -1)
+		sprite.draw(spr_key, cx, cy + centerSpacing, keySize, keySize, 0, 1)
+		sprite.draw(spr_key, cx - centerSpacing, cy, keySize, keySize, -1, 0)
+		sprite.draw(spr_key, cx + centerSpacing, cy, keySize, keySize, 1, 0)
+		render.setRGBA(0, 0, 0, 255)
+
+		render.setFont(keyFont)
+		render.drawText(cx, cy - centerSpacing + keySize/2 - keyFontSize/2, binds[TARGET_KO], 1)
+		render.drawText(cx, cy + centerSpacing - keySize/2 - keyFontSize/2, binds[TARGET_ATTACKER], 1)
+		render.drawText(cx - centerSpacing + keySize/2, cy - keyFontSize/2, binds[TARGET_RANDOM], 1)
+		render.drawText(cx + centerSpacing - keySize/2, cy - keyFontSize/2, binds[TARGET_BADGES], 1)
+		render.setRGBA(255, 255, 255, 255)
+
+		sprite.setSheet(1)
+
+	else
+
+		render.setFont(stickFont)
+
+		sprite.draw(spr_stick, cx, cy, 64, 64, 0, 0)
+
+		local stick_x, stick_y = cx, cy
+		local stickDistance = (64 - 36)* 0.5
+
+
+		if self.stickPos == TARGET_RANDOM then
+			stick_x, stick_y = cx - stickDistance, cy
+		elseif self.stickPos == TARGET_BADGES then
+			stick_x, stick_y = cx + stickDistance, cy
+		elseif self.stickPos == TARGET_KO then
+			stick_x, stick_y = cx, cy - stickDistance
+		elseif self.stickPos == TARGET_ATTACKER then
+			stick_x, stick_y = cx, cy + stickDistance
+		end
+
+		sprite.draw(spr_stick, stick_x, stick_y, 36, 36, 0, 0)
+		render.drawText(stick_x, stick_y - stickFontSize/2, "R", 1)
+		sprite.setSheet(1)
+
+	end
+
 	-- Random
-	local x, y = -centerSpacing - indicator_w/2, 0
+	local x, y = cx - centerSpacing - indicator_w/2 - 1, cy
 	local spr = offset_background + (strat == TARGET_RANDOM and 1 or 0)
-	sprite.draw(spr, x, y, nil, nil, 0, 0)
-	sprite.draw(spr_labels[TARGET_RANDOM], x, y, nil, nil, 0, 0)
+	local scale = strat == TARGET_RANDOM and (2 - frac) or 1
+	sprite.draw(spr, x, y, scale, nil, 0, 0)
+	sprite.draw(spr_labels[TARGET_RANDOM], x, y, scale, nil, 0, 0)
 
 	-- Badges
-	x, y = centerSpacing + indicator_w/2, 0
+	x, y = cx + centerSpacing + indicator_w/2 + 1, cy
 	spr = offset_background + (strat == TARGET_BADGES and 1 or 0)
-	sprite.draw(spr, x, y, nil, nil, 0, 0)
-	sprite.draw(spr_labels[TARGET_BADGES], x, y, nil, nil, 0, 0)
+	scale = strat == TARGET_BADGES and (2 - frac) or 1
+	sprite.draw(spr, x, y, scale, nil, 0, 0)
+	sprite.draw(spr_labels[TARGET_BADGES], x, y, scale, nil, 0, 0)
 
 	-- KO's
-	x, y = 0, -centerSpacing - indicator_h/2
+	x, y = cx, cy - centerSpacing - indicator_h/2 - 1
 	spr = offset_background + (strat == TARGET_KO and 1 or 0)
-	sprite.draw(spr, x, y, nil, nil, 0, 0)
-	sprite.draw(spr_labels[TARGET_KO], x, y, nil, nil, 0, 0)
+	scale = strat == TARGET_KO and (2 - frac) or 1
+	sprite.draw(spr, x, y, scale, nil, 0, 0)
+	sprite.draw(spr_labels[TARGET_KO], x, y, scale, nil, 0, 0)
 
 	-- Attackers
-	x, y = 0, centerSpacing + indicator_h/2
+	x, y = cx, cy + centerSpacing + indicator_h/2 + 1
 	spr = offset_background + (strat == TARGET_ATTACKER and 1 or 0)
-	sprite.draw(spr, x, y, nil, nil, 0, 0)
-	sprite.draw(spr_labels[TARGET_ATTACKER], x, y, nil, nil, 0, 0)
+	scale = strat == TARGET_ATTACKER and (2 - frac) or 1
+	sprite.draw(spr, x, y, scale, nil, 0, 0)
+	sprite.draw(spr_labels[TARGET_ATTACKER], x, y, scale, nil, 0, 0)
+
 
 end
 
-gui.Register("Strategy", PANEL, "Control")
+gui.Register("Strategy", PANEL, "RTControl")
