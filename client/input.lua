@@ -115,7 +115,7 @@ hook.add("xinputStick", "xinput2brix", function(controller, x, y, stick, when)
 	if controller == 0 then
 		local eventOffset = stick == 1 and binput.stickEvents.MODE_DOWN or binput.stickEvents.MANUAL_DOWN
 		local radius = math.sqrt(x^2 + y^2)
-		local angle = math.deg(-math.atan(y/x))
+		local angle = math.deg(math.atan(y/x))
 		if x > 0 then
 			angle = angle + 90
 		else
