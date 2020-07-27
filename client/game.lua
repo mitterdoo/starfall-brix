@@ -45,9 +45,9 @@ $	K.O. Effect when you kill an enemy
 $	Attack strategy
 $	Match stick anim to actual stick position
 
-	Reticle flash:
-		When changing targets (should be big, short, and easy to spot)
-		Every half-second (much smaller and less distracting)
+$	Reticle flash:
+$		When changing targets (should be big, short, and easy to spot)
+$		Every half-second (much smaller and less distracting)
 
 $	Manual targeting
 $	KO between other players shown on battlefield
