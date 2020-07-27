@@ -149,8 +149,10 @@ createSheet(1, assets.files["skin1.png"], {
 
 	[57] = {97, 513, 70, 130}, -- enemy outline
 
-	[58] = {449, 353, 80, 140}, -- target outline
-	[59] = {530, 353, 64, 124}, -- target blip effect
+	targetReticule = 58,
+	[58] = {193, 289, 64, 64}, -- target outline
+	targetBlip = 59,
+	[59] = {193, 354, 144, 144}, -- target blip effect
 
 	attack = 60,
 	[60] = {480+96*4, 256, 96, 96}, -- outgoing attack raw
@@ -164,10 +166,10 @@ createSheet(1, assets.files["skin1.png"], {
 	[66] = {767, 608 + 64*1, 256, 64}, -- get ready
 
 	phase = 67,
-	[67] = {767, 608 + 96*0, 256, 96}, -- ready
-	[68] = {767, 608 + 96*1, 256, 96}, -- go
+	[67] = {767, 736 + 96*0, 256, 96}, -- ready
+	[68] = {767, 736 + 96*1, 256, 96}, -- go
 	[69] = {320, 0, 318, 32}, -- players remaining
-	[70] = {767, 608 + 96*2, 256, 96}, -- victory
+	[70] = {767, 736 + 96*2, 256, 96}, -- victory
 
 	killCount = 71,
 	[71] = {0, 704, 144, 32},
@@ -210,6 +212,9 @@ createSheet(1, assets.files["skin1.png"], {
 
 	strategyStick = 90,
 	[90] = {768, 352, 64, 64},
+
+	targetBigBlip = 91,
+	[91] = {193, 498, 144, 144},
 
 	credits = 100,
 	[100] = {0, 960, 512, 64}
