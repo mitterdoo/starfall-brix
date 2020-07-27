@@ -17,6 +17,18 @@ local function fx_AttackTravel(x, y, w, h, frac, glow)
 end
 
 local spr_knockout = sprite.sheets[1].knockout
+local spr_targetHit = sprite.sheets[1].targetHit
+
+local function fx_TargetHit(x, y, w, h, frac)
+
+	local frac_b = math.max(0, 1-frac*2)^2*255
+	local frac_g = math.max(0, 1-frac)^2
+	render.setRGBA(255, 120 + 135 * frac_g, frac_b, frac_g*255)
+	sprite.setSheet(1)
+	sprite.draw(spr_targetHit, x, y, w, h)
+
+end
+
 local koGlowIntensity = 1.5
 local function fx_KnockoutTravel(x, y, w, h, frac, glow)
 
@@ -423,6 +435,14 @@ hook.add("brConnect", "enemy", function(game, arena)
 					{enemySize*scale, enemySize*scale*1.2},
 					0.5, 0.1,
 					fx_AttackLand,
+					true, true
+				)
+				local hitSize = Vector(enemy.w, enemy.w, 0)*scale
+				gfx.EmitParticle(
+					{endPos, endPos},
+					{hitSize, hitSize*8},
+					0.5 + 1/6, 1/6,
+					fx_TargetHit,
 					true, true
 				)
 			end
