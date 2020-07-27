@@ -108,6 +108,7 @@ local GAMEPAD_INPUT = {
 }
 
 local lastStick = {[0] = 0, [1] = 0}
+binput.stickState = lastStick
 
 hook.add("xinputStick", "xinput2brix", function(controller, x, y, stick, when)
 
