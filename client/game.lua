@@ -44,14 +44,22 @@ $	Connect particle effect
 $	K.O. Effect when you kill an enemy
 $	Attack strategy
 	Match stick anim to actual stick position
+
+	Reticle flash:
+		When changing targets (should be big, short, and easy to spot)
+		Every half-second (much smaller and less distracting)
+
 	Manual targeting
 $	KO between other players shown on battlefield
 
 	Improve outgoing attack graphics
 
+	On death, all badges are depleted and fed to the killer in an animation
+
 X	Loop points in music?
 		(Cannot do without having sounds playable by Source engine)
 	Royalty-free BGM
+		(Going to use some tracks that tetr.io uses as well)
 		Song credit in a conspicuous but not distracting spot
 	SFX
 
