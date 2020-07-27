@@ -39,6 +39,7 @@ function ENEMY:giveBadgeBits(badgeBits)
 end
 
 ARENA.targetModes = {
+	MANUAL = 0,
 	ATTACKER = 8,
 	BADGES = 9,
 	KO = 10,
@@ -101,9 +102,13 @@ end
 
 function ARENA:changeTargetMode(mode)
 
+	self.manuallyAdjusting = true
+
 	self.targetMode = mode
 	self.hook:run("changeTargetMode", mode)
 	self:pickTarget()
+
+	self.manuallyAdjusting = false
 
 end
 
@@ -118,6 +123,19 @@ end
 function ARENA:_setTarget(target)
 
 	self:userInput(br.inputEvents.CHANGE_TARGET, target)
+
+end
+
+function ARENA:manualTarget(who)
+
+	self.manuallyAdjusting = true
+
+	self.targetMode = ARENA.targetModes.MANUAL
+	self.hook:run("changeTargetMode", ARENA.targetModes.MANUAL)
+	self.desiredTarget = who
+	self:pickTarget()
+
+	self.manuallyAdjusting = false
 
 end
 
@@ -172,6 +190,15 @@ function ARENA:pickTarget()
 		self:_setTarget(players[1].uniqueID)
 	elseif mode == ARENA.targetModes.RANDOM then
 		self:_setTarget( players[math.random(#players)].uniqueID )
+	elseif mode == ARENA.targetModes.MANUAL then
+		local found = self.arena[self.desiredTarget]
+		if found and not found.dead then
+			self:_setTarget(found.uniqueID)
+		else
+			found = players[math.random(#players)]
+			self.desiredTarget = found.uniqueID
+			self:_setTarget(self.desiredTarget)
+		end
 	else
 		error("Invalid target mode " .. tostring(mode))
 	end
@@ -187,6 +214,7 @@ function br.createArena(seed, uniqueID)
 	self.queue = {}
 	self.arena = {}
 	self.targetMode = ARENA.targetModes.RANDOM
+	self.desiredTarget = 0
 
 	self.currentInstant = {} -- List of indices in queue that were set this frame
 	self.currentInstant_Time = -1
