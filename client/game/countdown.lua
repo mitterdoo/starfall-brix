@@ -68,7 +68,7 @@ hook.add("brConnect", "countdown", function(game, arena)
 		ctrl:SetScale(0, 0)
 
 		local Ctrl_Count = gui.Create("Number", ctrl)
-		Ctrl_Count:SetSize(96, 80)
+		Ctrl_Count:SetSize(64, 80)
 		Ctrl_Count:SetColor(Color(200, 200, 200))
 		Ctrl_Count:SetAlign(0)
 		Ctrl_Count:SetValue(num)
