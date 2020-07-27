@@ -5,6 +5,18 @@
 DPAD_NO_OVERLAP = false
 binput = {}
 
+binput.stickEvents = {
+	MODE_DOWN = ARENA.targetModes.ATTACKER,
+	MODE_RIGHT = ARENA.targetModes.BADGES,
+	MODE_UP = ARENA.targetModes.KO,
+	MODE_LEFT = ARENA.targetModes.RANDOM,
+
+	MANUAL_DOWN = 12,
+	MANUAL_RIGHT = 13,
+	MANUAL_UP = 14,
+	MANUAL_LEFT = 15
+}
+
 KEYBOARD_INPUT = { -- Keyboard input mappings
 	[89] = brix.inputEvents.MOVELEFT,	-- leftarrow
 	[91] = brix.inputEvents.MOVERIGHT,	-- rightarrow
@@ -95,11 +107,12 @@ local GAMEPAD_INPUT = {
 	
 }
 
-local lastTargetMode = 0
+local lastStick = {[0] = 0, [1] = 0}
 
 hook.add("xinputStick", "xinput2brix", function(controller, x, y, stick, when)
 
-	if controller == 0 and stick == 1 then
+	if controller == 0 then
+		local eventOffset = stick == 1 and binput.stickEvents.MODE_DOWN or binput.stickEvents.MANUAL_DOWN
 		local radius = math.sqrt(x^2 + y^2)
 		local angle = math.deg(-math.atan(y/x))
 		if x > 0 then
@@ -111,18 +124,18 @@ hook.add("xinputStick", "xinput2brix", function(controller, x, y, stick, when)
 		angle = (angle + 45) % 360
 		if radius >= 16384 then
 
-			local mode = math.floor(angle / 90) + ARENA.targetModes.ATTACKER
-			if mode ~= lastTargetMode then
+			local mode = math.floor(angle / 90) + eventOffset
+			if mode ~= lastStick[stick] then
 				hook.run("brixPressed", mode)
-				lastTargetMode = mode
+				lastStick[stick] = mode
 			end
 
 		else
-			lastTargetMode = 0
+			lastStick[stick] = 0
 		end
 
 	else
-		lastTargetMode = 0
+		lastStick[stick] = 0
 	end
 
 end)
