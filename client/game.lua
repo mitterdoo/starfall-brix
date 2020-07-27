@@ -49,7 +49,8 @@ $	KO between other players shown on battlefield
 
 	Improve outgoing attack graphics
 
-	Loop points in music?
+X	Loop points in music?
+		(Cannot do without having sounds playable by Source engine)
 	Royalty-free BGM
 		Song credit in a conspicuous but not distracting spot
 	SFX
