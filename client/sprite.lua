@@ -149,7 +149,7 @@ createSheet(1, assets.files["skin1.png"], {
 
 	[57] = {97, 513, 70, 130}, -- enemy outline
 
-	targetReticule = 58,
+	targetReticle = 58,
 	[58] = {193, 289, 64, 64}, -- target outline
 	targetBlip = 59,
 	[59] = {193, 354, 144, 144}, -- target blip effect
