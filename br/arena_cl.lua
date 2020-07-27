@@ -214,6 +214,8 @@ function br.createArena(seed, uniqueID)
 		local oldCount = #self.currentInstant
 		self:pickTarget()
 		local newCount = #self.currentInstant
+
+		-- Reorders the event queue, placing any retargets before any other event that occurred in this instant
 		for i = newCount, oldCount + 1, -1 do
 			local key = self.currentInstant[i]
 			if self.queue[key][1] == self.clientEvents.TARGET then
