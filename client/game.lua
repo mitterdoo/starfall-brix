@@ -43,15 +43,16 @@ $	Attacks between enemies
 $	Connect particle effect
 $	K.O. Effect when you kill an enemy
 $	Attack strategy
-	Match stick anim to actual stick position
+$	Match stick anim to actual stick position
 
 	Reticle flash:
 		When changing targets (should be big, short, and easy to spot)
 		Every half-second (much smaller and less distracting)
 
-	Manual targeting
+$	Manual targeting
 $	KO between other players shown on battlefield
 
+	End screen with final places
 	Improve outgoing attack graphics
 
 	On death, all badges are depleted and fed to the killer in an animation
@@ -63,7 +64,6 @@ X	Loop points in music?
 		Song credit in a conspicuous but not distracting spot
 	SFX
 
-	End screen with final places
 	Title screen
 	Spectator screen
 	Controls configurator
@@ -270,6 +270,20 @@ function createGame()
 				net.start("brixBegin")
 				net.send()
 			elseif button == 0x0020 and player() == owner() then
+				if not arena.started then
+					net.start("BRIX_BOT")
+					net.send()
+				else
+					hook.run("DEBUG")
+				end
+			end
+		end)
+
+		hook.add("inputPressed", "debug", function(button)
+			if button == 50 and player() == owner() and not arena.started then
+				net.start("brixBegin")
+				net.send()
+			elseif button == 51 and player() == owner() then
 				if not arena.started then
 					net.start("BRIX_BOT")
 					net.send()
