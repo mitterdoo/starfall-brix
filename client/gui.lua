@@ -14,10 +14,12 @@ gui.SmallResolution = ({render.getGameResolution()})[2] < 1024
 local protected = {
 	"DrawChildren",
 	"Remove",
+	"RemoveFromParent",
 	"Add",
 	"SetSize",
 	"SetPos",
 	"SetScale",
+	"SetParent",
 	"ReconstructMatrix",
 	"_matrix",
 	"SetWide",
@@ -245,11 +247,7 @@ function CTRL:PostPaint(w, h)
 
 end
 
-
-
-function CTRL:Remove()
-
-	self:OnRemove()
+function CTRL:RemoveFromParent()
 
 	if self.parent then
 	
@@ -261,6 +259,13 @@ function CTRL:Remove()
 		end
 	
 	end
+
+end
+
+function CTRL:Remove()
+
+	self:OnRemove()
+	self:RemoveFromParent()
 	
 	local children = {}
 	for k, v in pairs(self.children) do table.insert(children, v) end
@@ -346,6 +351,17 @@ end
 function CTRL:Add(child)
 	child.parent = self
 	table.insert(self.children, child)
+end
+
+function CTRL:SetParent(newParent)
+
+	if self.parent == nil then
+		error("Cannot set parent of root Control")
+	end
+
+	self:RemoveFromParent()
+	newParent:Add(self)
+
 end
 
 function CTRL:DrawChildren()
