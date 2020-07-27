@@ -100,19 +100,6 @@ local function fx_AttackLand(x, y, w, h, frac, glow)
 end
 
 local spr_attacker = sprite.sheets[1].enemy_outline
-local spr_target = 58
-local spr_targetBlip = 59
-
-local blip_w, blip_h = sprite.sheets[1][spr_targetBlip][3], sprite.sheets[1][spr_targetBlip][4]
-
-local function fx_TargetBlip(x, y, w, h, frac)
-
-	local f = (1-frac)^2
-	render.setRGBA(255, 255, 255, f*255)
-	sprite.setSheet(1)
-	sprite.draw(spr_targetBlip, x, y, w, h)
-
-end
 
 local lookup = sprite.sheets[3]
 local function getEnemyPos(id, ourID)
@@ -135,9 +122,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 	game.controls.Enemies = enemies
 
 	local AttackerOutlines = {}
-	local TargetOutlines = {}
-	local TargetBlipFrequency = 0.4
-	local LastTargetBlip = 0
+	local TargetReticles = {}
 
 	local WatchOutFlashDuration = 1
 	local LastWatchOutFlash = 0
@@ -184,23 +169,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 		end
 
 		local t = timer.realtime()
-		if t > LastTargetBlip + TargetBlipFrequency then
-
-			LastTargetBlip = t
-			for _, Ctrl in pairs(TargetOutlines) do
-
-				local pos, scale = Ctrl:AbsolutePos(Vector(0, 0, 0))
-				gfx.EmitParticle(
-					{pos, pos},
-					{Vector(blip_w, blip_h, 0) * scale, Vector(blip_w, blip_h, 0)*scale*2},
-					0, 0.5,
-					fx_TargetBlip,
-					false, true
-				)
-
-			end
-
-		end
 
 		if t > LastWatchOutFlash + WatchOutFlashDuration then
 			LastWatchOutFlash = t
@@ -301,26 +269,97 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	end
 
-	local function setTargets(targets)
+	local function createReticle(enemyID, flash)
 
-		for _, Ctrl in pairs(TargetOutlines) do
-			Ctrl:Remove()
+		local Enemy = enemies[enemyID]
+		if Enemy then
+			local Ctrl = gui.Create("Reticle", LayerAbove)
+			Ctrl:SetPos(LayerBelow.w/2, LayerAbove.h/2)
+			local x, y = Enemy:GetPos()
+			local sw, sh = Enemy.scale_w, Enemy.scale_h
+			Ctrl:MoveTo(x + Enemy.w*sw/2, y + Enemy.h*sh/2)
+			Ctrl.uniqueID = enemyID
+			if flash then
+				Ctrl:Flash()
+			end
+			table.insert(TargetReticles, Ctrl)
 		end
-		TargetOutlines = {}
 
-		for _, id in pairs(targets) do
+	end
 
-			local Enemy = enemies[id]
-			if Enemy then
-				local Ctrl = gui.Create("Sprite", LayerBelow)
-				local x, y = Enemy:GetPos()
-				local sw, sh = Enemy.scale_w, Enemy.scale_h
-				Ctrl:SetPos(x + Enemy.w*sw/2, y + Enemy.h*sh/2)
-				Ctrl:SetScale(sw, sh)
-				Ctrl:SetSheet(1)
-				Ctrl:SetSprite(spr_target)
-				Ctrl:SetAlign(0, 0)
-				table.insert(TargetOutlines, Ctrl)
+	local function moveReticle(Ctrl, enemyID, flash)
+
+		local Enemy = enemies[enemyID]
+		if Enemy then
+			local x, y = Enemy:GetPos()
+			local sw, sh = Enemy.scale_w, Enemy.scale_h
+			Ctrl:MoveTo(x + Enemy.w*sw/2, y + Enemy.h*sh/2)
+			if flash and enemyID ~= Ctrl.uniqueID then -- don't flash if nothing happened
+				Ctrl:Flash()
+			end
+			Ctrl.uniqueID = enemyID
+		end
+
+	end
+
+	local function setTargets(targets, causedByInput)
+
+		local lastCount, curCount = #TargetReticles, #targets
+
+		if curCount == 1 then
+			if lastCount ~= 1 then
+				for _, Ctrl in pairs(TargetReticles) do
+					Ctrl:Remove()
+				end
+				TargetReticles = {}
+				
+				createReticle(targets[1], causedByInput)
+			else
+
+				moveReticle(TargetReticles[1], targets[1], causedByInput)
+			end
+		else
+
+			if lastCount == 1 then
+				for _, Ctrl in pairs(TargetReticles) do
+					Ctrl:Remove()
+				end
+				TargetReticles = {}
+
+				for _, id in pairs(targets) do
+					createReticle(id, causedByInput)
+				end
+			else
+				-- Find already targeted enemies and keep them
+
+				local reticleKeys = {}
+				for _, Ctrl in pairs(TargetReticles) do
+					reticleKeys[Ctrl.uniqueID] = true
+				end
+
+				local targetKeys = {}
+				for _, id in pairs(targets) do
+
+					targetKeys[id] = true
+					if not reticleKeys[id] then -- new target
+						createReticle(id, causedByInput)
+					end
+
+				end
+
+				-- Removed targets
+				local i = 1
+				while true do
+
+					local Ctrl = TargetReticles[i]
+					if not Ctrl then break end
+					if not targetKeys[Ctrl.uniqueID] then
+						table.remove(TargetReticles, i)
+					else
+						i = i + 1
+					end
+
+				end
 			end
 
 		end
@@ -385,7 +424,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 	arena.hook("changeTarget", function(target)
 	
 		local targets = target == 0 and arena.attackers or {target}
-		setTargets(targets)
+		setTargets(targets, arena.manuallyAdjusting)
 
 	end)
 
@@ -583,6 +622,21 @@ hook.add("brConnect", "enemy", function(game, arena)
 		end
 
 	end)
+
+	local events = binput.stickEvents
+
+	local function manualTarget(direction)
+
+		local plys = {}
+		for id, enemy in pairs(arena.arena) do
+			if not enemy.dead then
+				table.insert(plys, id)
+			end
+		end
+
+		arena:manualTarget(plys[math.random(1, #plys)])
+
+	end
 
 end)
 
