@@ -215,6 +215,8 @@ createSheet(1, assets.files["skin1.png"], {
 
 	targetBigBlip = 91,
 	[91] = {193, 498, 144, 144},
+	targetHit = 92,
+	[92] = {193 + 144, 498, 144, 144},
 
 	credits = 100,
 	[100] = {0, 960, 512, 64}
