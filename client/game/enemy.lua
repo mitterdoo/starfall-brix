@@ -60,7 +60,7 @@ for i = 1, 5 do
 
 	local setSheet = sprite.setSheet
 	local sprDraw = sprite.draw
-	local attackGlowIntensity = 1.5
+	local attackGlowIntensity = 1.2
 	local function thisAttack(x, y, w, h, frac, glow)
 		setSheet(1)
 		if not glow then
