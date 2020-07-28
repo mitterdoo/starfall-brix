@@ -49,6 +49,19 @@ STENCIL_INVERT = 6
 STENCIL_INCR = 7
 STENCIL_DECR = 8
 
+function render.resetStencil()
+
+	render.setStencilWriteMask(0xFF)
+	render.setStencilTestMask(0xFF)
+	render.setStencilReferenceValue(0)
+	render.setStencilCompareFunction(STENCIL_ALWAYS)
+	render.setStencilPassOperation(STENCIL_KEEP)
+	render.setStencilFailOperation(STENCIL_KEEP)
+	render.setStencilZFailOperation(STENCIL_KEEP)
+	render.clearStencil()
+
+end
+
 require("brix/client/loader.lua")
 
 hook.add("load", "", function()
