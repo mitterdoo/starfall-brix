@@ -64,6 +64,7 @@ end
 
 function ARENA:enqueue(...)
 
+	if self.radioSilence then return end
 	table.insert(self.queue, {...})
 	local i = #self.queue -- TODO: when SF fixes table.insert's return value, use that instead
 
@@ -218,6 +219,8 @@ function br.createArena(seed, uniqueID)
 
 	self.currentInstant = {} -- List of indices in queue that were set this frame
 	self.currentInstant_Time = -1
+
+	self.radioSilence = false
 
 	self.hook("preInput", function(when, input, pressed)
 
@@ -417,6 +420,7 @@ function ARENA:sendSnapshot()
 
 		elseif event == e.DIE then
 			hook.remove("think", self.hookName)
+			self.radioSilence = true
 		else
 			error("Unknown event type " .. tostring(event) .. " when encoding")
 		end
