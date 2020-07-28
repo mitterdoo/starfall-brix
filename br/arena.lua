@@ -119,6 +119,9 @@ ARENA.hookNames = {
 
 	"arenaFinalized",
 
+	"finalPlace",			-- Server has given us our final placement
+		-- number placement
+
 	"win",
 
 	"disconnect"			-- Called when the match is over
@@ -197,6 +200,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 						error("Kicked by server.")
 					else
 						game.placement = placement
+						game.hook:run("finalPlace", placement)
 					end
 				else
 					local enemy = game.arena[victim]
