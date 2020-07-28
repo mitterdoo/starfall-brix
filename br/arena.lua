@@ -195,6 +195,8 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				if victim == game.uniqueID then
 					if not game.dead then
 						error("Kicked by server.")
+					else
+						game.placement = placement
 					end
 				else
 					local enemy = game.arena[victim]
