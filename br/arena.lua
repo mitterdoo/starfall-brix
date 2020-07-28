@@ -232,6 +232,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 					if game.remainingPlayers <= 1 then
 						if not game.dead then
 							game.hook:run("win")
+							game.hook:run("finalPlace", 1)
 							game.hook:run("gameover", "win")
 						end
 						game:disconnect()
