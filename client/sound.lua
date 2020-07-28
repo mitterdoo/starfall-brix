@@ -14,6 +14,10 @@ sound.soundNames = {
 	se_game_badge = "data/sf_filedata/brix/se_game_badge.wav.dat",
 	se_game_badgebit = "data/sf_filedata/brix/se_game_badgebit.wav.dat",
 	se_game_clear = "data/sf_filedata/brix/se_game_clear.wav.dat",
+	se_game_clear1 = "data/sf_filedata/brix/se_game_clear1.wav.dat",
+	se_game_clear2 = "data/sf_filedata/brix/se_game_clear2.wav.dat",
+	se_game_clear3 = "data/sf_filedata/brix/se_game_clear3.wav.dat",
+	se_game_clear4 = "data/sf_filedata/brix/se_game_clear4.wav.dat",
 	se_game_damage1 = "data/sf_filedata/brix/se_game_damage1.wav.dat",
 	se_game_damage2 = "data/sf_filedata/brix/se_game_damage2.wav.dat",
 	se_game_danger = "data/sf_filedata/brix/se_game_danger.wav.dat",
@@ -42,16 +46,36 @@ sound.soundNames = {
 	se_target_warn = "data/sf_filedata/brix/se_target_warn.wav.dat"
 }
 
+
+sound.soundGroups = { -- Even groups = new sounds stop current ones, odd groups = new sounds don't play when current ones are playing
+	se_game_badge = 0,
+	se_game_ko1 = 2,
+	se_game_ko2 = 2,
+	se_target_adjust = 4,
+	se_target_found = 6,
+	se_target_warn = 8
+}
+local activeGroups = {}
+
 hook.add("think", "soundEngine", function()
 
 	local toRemove = {}
 	local time = timer.realtime()
 	for id, info in pairs(playingSounds) do
 		if time >= info.finish then
+
+			for k, v in pairs(activeGroups) do
+				if v == info then
+					activeGroups[k] = nil
+					break
+				end
+			end
+
 			info.obj:destroy()
 			toRemove[id] = true
 		elseif info.start then
-			local percent = 1 - (timer.realtime() - info.start) / (info.finish - info.start)
+			local percent = timeFrac(timer.realtime(), info.start, info.finish)
+			percent = 1 - percent
 			info.obj:setVolume(percent)
 
 		end
@@ -62,7 +86,24 @@ hook.add("think", "soundEngine", function()
 
 end)
 
-function sound.checkLimit()
+function sound.allocate(soundName)
+
+	local groupID = sound.soundGroups[soundName]
+	if groupID then
+		local curSound = activeGroups[groupID]
+		if curSound then
+			if curSound == -1 then return false end
+			if groupID % 2 == 0 then
+				local id = curSound.id
+				curSound.obj:destroy()
+				activeGroups[groupID] = nil
+				playingSounds[id] = nil
+			else
+				return false
+			end
+		end
+
+	end
 
 	if bass.soundsLeft() == 0 then
 		local soonestID, soonestTime = 0, math.huge
@@ -78,6 +119,8 @@ function sound.checkLimit()
 		playingSounds[soonestID] = nil
 	end
 
+	return true
+
 end
 
 function sound.play(soundName)
@@ -90,7 +133,11 @@ function sound.play(soundName)
 		error("Invalid soundname: " .. tostring(soundName))
 	end
 
-	sound.checkLimit()
+	if not sound.allocate(soundName) then return end
+	local groupID = sound.soundGroups[soundName]
+	if groupID then
+		activeGroups[groupID] = -1 -- put this on hold
+	end
 
 	bass.loadFile(path, "", function(obj, errCode, errStr)
 
@@ -100,8 +147,12 @@ function sound.play(soundName)
 
 		playingSounds[soundID] = {
 			obj = obj,
-			finish = timer.realtime() + obj:getLength()
+			finish = timer.realtime() + obj:getLength(),
+			id = soundID
 		}
+		if groupID then
+			activeGroups[groupID] = playingSounds[soundID]
+		end
 		soundID = soundID + 1
 
 	end)
@@ -118,7 +169,7 @@ function sound.playLooped(soundName)
 		error("Invalid soundname: " .. tostring(soundName))
 	end
 
-	sound.checkLimit()
+	sound.allocate()
 	if loopingSounds[path] then
 		loopingSounds[path]:destroy()
 	end
@@ -168,8 +219,10 @@ function sound.fadeLooped(soundName, duration)
 		playingSounds[soundID] = {
 			obj = obj,
 			start = timer.realtime(),
-			finish = timer.realtime() + duration
+			finish = timer.realtime() + duration,
+			id = soundID
 		}
+		soundID = soundID + 1
 		loopingSounds[path] = nil
 
 	end
