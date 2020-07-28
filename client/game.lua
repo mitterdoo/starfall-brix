@@ -72,6 +72,8 @@ X	Loop points in music?
 	Option to turn off changing background
 
 	Endless matches
+
+	Bots
 ]]
 
 require("brix/br/arena_cl.lua")
