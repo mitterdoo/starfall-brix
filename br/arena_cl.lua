@@ -372,10 +372,12 @@ function ARENA:onReady()
 end
 
 -- Disconnects from the server
-function ARENA:finish()
+function ARENA:disconnect()
 
 	self.dead = true -- don't allow any more inputs
-	self.hook:run("finish")
+	self.currentPiece.piece = nil
+	self.currentPiece.type = -1
+	self.hook:run("disconnect")
 	if not self.hookName then return end
 	hook.remove("think", self.hookName)
 	hook.remove("net", self.hookName)

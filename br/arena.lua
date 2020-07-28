@@ -117,7 +117,9 @@ ARENA.hookNames = {
 
 	"arenaFinalized",
 
-	"finish"				-- Called when the match is over
+	"win",
+
+	"disconnect"			-- Called when the match is over
 }
 
 for _, name in pairs(BR.hookNames) do

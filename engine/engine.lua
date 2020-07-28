@@ -143,6 +143,8 @@ BRIX.hookNames = { -- These are legal hooks in the game
 	"pieceQueueUpdate",		-- When the piece queue has been modified
 	"die",					-- When local player dies.
 		-- number killerUniqueID (0 when suicide)
+	"gameover",				-- When the game has ended. Does not have to be a death condition
+		-- string reason
 
 	"completion",			-- Completion phase entered. Called before level up. Add instant solid garbage here
 	"levelUp",				-- When the game has leveled up

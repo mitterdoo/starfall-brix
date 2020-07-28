@@ -15,6 +15,15 @@ hook.add("brConnect", "piece", function(game, arena)
 
 	local _, _, brickSize = unpack(sprite.sheets[3].field_main)
 
+	arena.hook("gameover", function(reason)
+	
+		piece:Remove()
+		pieceGhost:Remove()
+		blockoutPiece:Remove()
+		game.controls.RT.invalid = true
+
+	end)
+
 	arena.hook("pieceSpawn", function(p, rot, x, y)
 
 		local type = arena.currentPiece.type

@@ -29,6 +29,7 @@ hook.add("brConnect", "strategy", function(game, arena)
 
 	arena.hook("changeTargetMode", function(newMode)
 	
+		if arena.dead then return end
 		Strategy:SetStrategy(newMode)
 
 	end)

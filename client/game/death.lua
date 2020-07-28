@@ -12,8 +12,15 @@ hook.add("brConnect", "death", function(game, arena)
 		render.drawTexturedRectUV(x, y, w, h, 0, 0, field_w/1024, field_h/1024)
 
 	end
-	arena.hook("die", function(killerID)
-	
+	local function fx_Win(x, y, w, h, frac, glow)
+
+		render.setRGBA(100, 255, 100, 255*(1-frac)^2)
+		render.setRenderTargetTexture(dieRT)
+		render.drawTexturedRectUV(x, y, w, h, 0, 0, field_w/1024, field_h/1024)
+
+	end
+
+	local function clearMatrixEffect(fxFunc)
 		if not render.renderTargetExists(dieRT) then
 			render.createRenderTarget(dieRT)
 		end
@@ -45,7 +52,7 @@ hook.add("brConnect", "death", function(game, arena)
 				{pos, pos},
 				{Vector(field_w, field_h, 0)*scale, Vector(field_w, field_h, 0)*Vector(2, 1, 0)},
 				0, 0.3,
-				fx_Death,
+				fxFunc,
 				true, true
 			)
 
@@ -57,6 +64,14 @@ hook.add("brConnect", "death", function(game, arena)
 
 
 		end)
+	end
 
+	arena.hook("die", function(killerID)
+		clearMatrixEffect(fx_Death)
 	end)
+
+	arena.hook("win", function()
+		clearMatrixEffect(fx_Win)
+	end)
+
 end)

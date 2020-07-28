@@ -160,6 +160,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 	local WatchOutStart
 	local WatchOutLineDuration = 4/15
 
+
 	function EnemyRT:Think()
 
 		if not self.invalid then
@@ -221,6 +222,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local function setAttackers(attackers)
 
+		if arena.dead then return end
 		local keys = {} for k, v in pairs(attackers) do keys[v] = true end
 
 		for id, _ in pairs(AttackerStartTimes) do
@@ -304,6 +306,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local function setTargets(targets, causedByInput)
 
+		if arena.dead then return end
 		local lastCount, curCount = #TargetReticles, #targets
 
 		if curCount == 1 then
@@ -365,6 +368,24 @@ hook.add("brConnect", "enemy", function(game, arena)
 		end
 
 	end
+
+	arena.hook("gameover", function(reason)
+	
+		WatchOutStart = nil
+		WatchOut:SetVisible(false)
+
+		for _, Ctrl in pairs(TargetReticles) do
+			Ctrl:Remove()
+		end
+		TargetReticles = {}
+
+		for _, Ctrl in pairs(AttackerOutlines) do
+			Ctrl:Remove()
+		end
+
+		AttackerOutlines = {}
+
+	end)
 
 	arena.hook("playerConnect", function(who)
 	
@@ -689,6 +710,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 			manualTarget(button)
 		end
 	end)
-	
+
 end)
 

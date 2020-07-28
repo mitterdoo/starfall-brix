@@ -308,7 +308,7 @@ function createGame()
 			local perc = quotaAverage() / quotaMax()
 			perc = math.ceil(perc * 1000) / 10
 
-			if arena.started then
+			if arena.started and not arena.dead then
 				local frame = brix.getFrame(timer.realtime() - arena.startTime)
 				arena:update(frame)
 			end
