@@ -19,6 +19,12 @@ end
 
 local transparent = Color(0, 0, 0, 0)
 
+function PANEL:OnRemove()
+
+	render.destroyRenderTarget(self.RTName)
+
+end
+
 function PANEL:Draw()
 
 	if self.invalid then
