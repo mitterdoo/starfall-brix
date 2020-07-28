@@ -110,6 +110,7 @@ hook.add("brConnect", "sound", function(game, arena)
 	local lastAttackers = 0
 	arena.hook("attackersChanged", function(attackers)
 
+		if arena.dead then return end
 		local c = #attackers
 		if c ~= lastAttackers then
 			if c > 0 then
@@ -121,10 +122,12 @@ hook.add("brConnect", "sound", function(game, arena)
 	end)
 
 	arena.hook("changeTarget", function()
+		if arena.dead then return end
 		sound.play("se_target_found")
 	end)
 	
 	arena.hook("changeTargetMode", function(mode)
+		if arena.dead then return end
 		sound.play("se_target_adjust")
 	end)
 

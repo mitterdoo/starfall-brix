@@ -193,7 +193,7 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 
 	arena.hook("playerDie", function(victim, killer)
 	
-		if victim == arena.uniqueID then return end
+		if victim == arena.uniqueID or arena.dead then return end
 
 		if killer == arena.uniqueID then
 			KOCount = KOCount + 1

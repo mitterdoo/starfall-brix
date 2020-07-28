@@ -427,6 +427,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	arena.hook("badgeBits", function(count, sourceID)
 	
+		if arena.dead then return end
 		if enemies[sourceID] then
 			local enemy = enemies[sourceID]
 			local w, h = enemy:GetSize()
@@ -579,6 +580,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local function garbageTravel(attackerID, damage, targetID)
 
+		if targetID == arena.uniqueID and arena.dead then return end
 		local attackerCtrl = enemies[attackerID]
 		local targetCtrl = enemies[targetID]
 
