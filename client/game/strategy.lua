@@ -9,6 +9,7 @@ hook.add("brConnect", "strategy", function(game, arena)
 	local Strategy = gui.Create("Strategy", Background)
 	Strategy:SetPos(0, -brickSize*20)
 	Strategy.foreground = false
+	game.controls.Strategy = Strategy
 
 	-- Define functions to call when this HUD element switches between foreground and background
 	local function requestLayerChange(foreground)
@@ -25,7 +26,7 @@ hook.add("brConnect", "strategy", function(game, arena)
 
 	Strategy:SetSize(brickSize*10, brickSize*4)
 	Strategy.RequestLayerChange = requestLayerChange
-	--Strategy:SetVisible(false)
+	Strategy:SetVisible(false)
 
 	arena.hook("changeTargetMode", function(newMode)
 	

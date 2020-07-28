@@ -52,7 +52,7 @@ $		Every half-second (much smaller and less distracting)
 $	Manual targeting
 $	KO between other players shown on battlefield
 
-	End screen with final places
+$	End screen with final places
 	Improve outgoing attack graphics
 
 	On death, all badges are depleted and fed to the killer in an animation
@@ -190,6 +190,7 @@ function createGame()
 		end
 	game.controls.NextPieces = {}
 	local NextPieceRT = gui.Create("RTControl", root)
+	game.controls.NextPieceRT = NextPieceRT
 	do
 		local x, y, brickSize = unpack(sprite.sheets[3].field_next)
 

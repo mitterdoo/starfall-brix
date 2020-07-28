@@ -3,10 +3,13 @@ local PANEL = {}
 local spr_finalPlaces = sprite.sheets[1].finalPlaces
 local spr_ko = sprite.sheets[1].ko_us
 
-local cardHeight = 32
+local cardNick_Size = 36
+local cardPlace_Size = 48
+
+local cardHeight = 52
 local cardSpacing = 2
-local font_cardNick = render.createFont("Roboto", 24, 100)
-local font_cardPlace = render.createFont("Roboto", 30, 900)
+local font_cardNick = render.createFont("Roboto", cardNick_Size, 100)
+local font_cardPlace = render.createFont("Roboto", cardPlace_Size, 900)
 local headerBaseline = 80
 local cardsBegin = 120
 
@@ -16,6 +19,8 @@ local placeColors = {
 	[3] = {192, 144, 69, 255}
 }
 
+local scrollStart = 0.5
+local scrollRepeat = 0.075
 function PANEL:Init()
 
 	self.super.Init(self)
@@ -30,15 +35,47 @@ function PANEL:Init()
 
 	self.scroll = 1
 
-	hook.add("inputPressed", "tet", function(button)
-	
-		if button == 88 then
-			self:Scroll(-1)
-		elseif button == 90 then
-			self:Scroll(1)
+	local function buttonEvent(button, pressed)
+
+		if not self.visible then return end
+		local down = button == brix.inputEvents.SOFTDROP
+		
+		local up = button == brix.inputEvents.HARDDROP
+		
+		if up or down then
+			local name = up and "scrollUp" or "scrollDown"
+			if pressed then
+				self:Scroll(up and -1 or 1)
+				timer.create(name, scrollStart, 1, function()
+					self:Scroll(up and -1 or 1)
+					timer.create(name, scrollRepeat, 0, function()
+						self:Scroll(up and -1 or 1)
+					end)
+
+				end)
+			else
+				timer.remove(name)
+			end
+
 		end
 
+	end
+
+	hook.add("brixPressed", "finalPlacements", function(button)
+		buttonEvent(button, true)
 	end)
+
+	hook.add("brixReleased", "finalPlacements", function(button)
+		buttonEvent(button, false)
+	end)
+
+end
+
+function PANEL:OnRemove()
+
+	self.super.OnRemove(self)
+	hook.remove("brixPressed", "finalPlacements")
+	hook.remove("brixReleased", "finalPlacements")
 
 end
 
@@ -79,6 +116,7 @@ end
 
 function PANEL:SetMaxPlacement(place)
 	self.max = place
+	self.maxVisibleCards = math.min(self.max, math.floor((self.h - cardsBegin) / (cardHeight + cardSpacing)))
 	self.invalid = true
 end
 
@@ -122,16 +160,16 @@ function PANEL:Paint(w, h)
 			render.setRGBA(255, 255, 255, 255)
 		end
 		render.setFont(font_cardPlace)
-		render.drawText(8, yPos + cardHeight/2 - 30/2, place .. ".")
+		render.drawText(8, yPos + cardHeight/2 - cardPlace_Size/2, place .. ".")
 		if info then
 
 			render.setRGBA(255, 255, 255, 255)
 			render.setFont(font_cardNick)
-			render.drawText(64, yPos + cardHeight/2 - 24/2, info[1])
+			render.drawText(8 + cardPlace_Size*1.6, yPos + cardHeight/2 - cardNick_Size/2, info[1])
 
 			if info[2] == "ko" then
 				sprite.setSheet(1)
-				sprite.draw(spr_ko, w - 8, yPos + cardHeight/2, 30, 30, 1, 0)
+				sprite.draw(spr_ko, w - 8, yPos + cardHeight/2, cardPlace_Size, cardPlace_Size, 1, 0)
 			end
 
 		end
