@@ -92,6 +92,8 @@ ARENA.hookNames = {
 		-- number placement
 		-- number deathFrame
 		-- number badgeBits
+		-- number playerEntIndex
+		-- string playerNickname
 
 	"playerMatrixPlace",	-- Player places piece down
 		-- number player
@@ -188,44 +190,49 @@ function br.handleServerSnapshot(game, frame, snapshot)
 		else
 
 			if event == e.DIE then -- useless on server
-				local victim, killer, placement, deathFrame, badgeBits = data[2], data[3], data[4], data[5], data[6]
+				local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = data[2], data[3], data[4], data[5], data[6], data[7], data[8]
 
 				if victim == game.uniqueID then
-					error("Kicked by server.")
-				end
-
-				local enemy = game.arena[victim]
-				local curTargets = table.copy(game:getTargets())
-				if enemy then
-					enemy.dead = true
-					enemy.placement = placement
-					game:removeAttacker(victim)
-					game.remainingPlayers = game.remainingPlayers - 1
-					if killer == game.uniqueID then
-						enemy.killedByUs = true
-					end
-				end
-
-				for _, id in pairs(curTargets) do
-					if id == victim then
-						game:pickTarget()
-					end
-				end
-
-				game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits)
-				
-				if killer == game.uniqueID then
-					game:giveBadgeBits(badgeBits, victim)
-				else
-					if game.arena[killer] then 
-						game.arena[killer]:giveBadgeBits(badgeBits)
-					end
-				end
-
-				if game.remainingPlayers <= 1 then
-					game:finish()
 					if not game.dead then
-						game.hook:run("win")
+						error("Kicked by server.")
+					end
+				else
+					local enemy = game.arena[victim]
+					local curTargets = table.copy(game:getTargets())
+					if enemy then
+						enemy.dead = true
+						enemy.placement = placement
+						game:removeAttacker(victim)
+						game.remainingPlayers = game.remainingPlayers - 1
+						if killer == game.uniqueID then
+							enemy.killedByUs = true
+						end
+					end
+
+					for _, id in pairs(curTargets) do
+						if id == victim then
+							game:pickTarget()
+						end
+					end
+
+					game.hook:run("playerDie", victim, killer, placement, deathFrame, badgeBits, entIndex, nick)
+					
+					if killer == game.uniqueID then
+						game:giveBadgeBits(badgeBits, victim)
+					else
+						if game.arena[killer] then 
+					if game.arena[killer] then 
+						if game.arena[killer] then 
+							game.arena[killer]:giveBadgeBits(badgeBits)
+						end
+					end
+
+					if game.remainingPlayers <= 1 then
+						if not game.dead then
+							game.hook:run("win")
+							game.hook:run("gameover", "win")
+						end
+						game:disconnect()
 					end
 				end
 

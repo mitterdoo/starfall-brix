@@ -210,8 +210,11 @@ function ARENA:start()
 		game.hook("die", function(killer)
 
 			local placement, deathFrame, badgeBits = self.remainingPlayers, game.diedAt, game.badgeBits + 1
+			local ply = game.player
+			local entIndex = ply and ply:entIndex() or 0
+			local nick = ply and ply:getName() or ("BOT " .. game.uniqueID)
 
-			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits)
+			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits, entIndex, nick)
 
 			self.remainingPlayers = self.remainingPlayers - 1
 
@@ -397,13 +400,15 @@ function ARENA:sendSnapshot()
 			end
 
 		elseif event == e.DIE then
-			local victim, killer, placement, deathFrame, badgeBits = data[2], data[3], data[4], data[5], data[6]
+			local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = data[2], data[3], data[4], data[5], data[6], data[7], data[8]
 
 			net.writeUInt(victim, 6)
 			net.writeUInt(killer, 6)
 			net.writeUInt(placement, 6)
 			net.writeUInt(deathFrame, 32)
 			net.writeUInt(badgeBits, 6)
+			net.writeUInt(entIndex, 8)
+			net.writeString(nick)
 
 		elseif event == e.MATRIX_PLACE then
 			local player, piece, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6], data[7]

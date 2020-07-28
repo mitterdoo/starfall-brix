@@ -340,11 +340,6 @@ function ARENA:onReady()
 	self.tempArena = nil
 
 	self.hookName = "brixNet" .. math.random(2^31-1)
-	self.hook("die", function()
-
-		hook.remove("net", self.hookName)
-
-	end)
 
 	hook.add("net", self.hookName, function(name)
 		if name == ARENA.netTag and timer.realtime() >= self.startTime then
@@ -462,9 +457,9 @@ function ARENA:handleServerSnapshot()
 			data = {event, attacker, victims}
 
 		elseif event == e.DIE then
-			local victim, killer, placement, deathFrame, badgeBits = net.readUInt(6), net.readUInt(6), net.readUInt(6), net.readUInt(32), net.readUInt(6)
+			local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = net.readUInt(6), net.readUInt(6), net.readUInt(6), net.readUInt(32), net.readUInt(6), net.readUInt(8), net.readString()
 
-			data = {event, victim, killer, placement, deathFrame, badgeBits}
+			data = {event, victim, killer, placement, deathFrame, badgeBits, entIndex, nick}
 		
 		elseif event == e.MATRIX_PLACE then
 			local player, piece, rot, x, y, mono = net.readUInt(6), net.readUInt(3), net.readUInt(2), net.readInt(5), net.readInt(6), net.readBit() == 1
