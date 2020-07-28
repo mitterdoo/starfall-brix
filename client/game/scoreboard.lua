@@ -19,6 +19,11 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 
 	local Scoreboard = game.controls.Scoreboard
 
+	if not game.badgeBitsUpdate then
+		function game.badgeBitsUpdate(new, old)
+
+		end
+	end
 
 	local w, h = Scoreboard.w, Scoreboard.h
 	local RemainingHeight = 24
@@ -119,7 +124,9 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 			BadgeBonus:SetVisible(false)
 		end
 
+		game.badgeBitsUpdate(totalBits, curBadgeBits)
 		curBadgeBits = totalBits
+
 
 	end
 

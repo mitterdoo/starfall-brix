@@ -30,9 +30,13 @@ hook.add("brConnect", "countdown", function(game, arena)
 		numberSprite:SetPos(center_x, center_y - 40)
 		numberSprite:SetVisible(false)
 
+		sound.play("se_start_1")
 		local counter = 0
 		timer.create("brCountdown" .. math.random(), 1, 6, function()
 			counter = counter + 1
+			if counter >= 2 and counter <= 4 then
+				sound.play("se_start_2")
+			end
 			if counter == 2 then
 				textSprite:SetVisible(false)
 				numberSprite:SetVisible(true)
@@ -45,6 +49,7 @@ hook.add("brConnect", "countdown", function(game, arena)
 				numberSprite:SetVisible(false)
 				textSprite:SetVisible(true)
 				textSprite:SetSprite(68)
+				sound.play("se_start_3")
 			elseif counter == 6 then
 				numberSprite:Remove()
 				textSprite:Remove()

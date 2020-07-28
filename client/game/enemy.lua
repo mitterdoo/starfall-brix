@@ -689,16 +689,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 			manualTarget(button)
 		end
 	end)
-
-		for id, enemy in pairs(arena.arena) do
-			if not enemy.dead then
-				table.insert(plys, id)
-			end
-		end
-
-		arena:manualTarget(plys[math.random(1, #plys)])
-
-	end
-
+	
 end)
 
