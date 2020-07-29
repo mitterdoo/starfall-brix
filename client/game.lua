@@ -53,12 +53,11 @@ $	Manual targeting
 $	KO between other players shown on battlefield
 
 $	End screen with final places
-	Improve outgoing attack graphics
+$	Improve outgoing attack graphics
 
 	On death, all badges are depleted and fed to the killer in an animation
 
-X	Loop points in music?
-		(Cannot do without having sounds playable by Source engine)
+	Tracker OST
 	Royalty-free BGM
 		(Going to use some tracks that tetr.io uses as well)
 		Song credit in a conspicuous but not distracting spot
