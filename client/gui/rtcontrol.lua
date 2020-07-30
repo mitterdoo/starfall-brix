@@ -4,6 +4,8 @@ local PANEL = {}
 local pushRT = gui.pushRT
 local popRT = gui.popRT
 
+local nativeWidth, nativeHeight = render.getGameResolution()
+
 local RTUniqueID = 0
 function PANEL:Init()
 	self.invalid = true
@@ -86,7 +88,7 @@ end
 function PANEL:SetDivisionSize(w, h)
 	self.dw = w
 	self.dh = h
-	self.divisionCount = math.floor(1024 / w) * math.floor(1024 / h)
+	self.divisionCount = math.floor(nativeWidth / w) * math.floor(nativeHeight / h)
 end
 
 function PANEL:SetDivision(div)
@@ -95,7 +97,7 @@ end
 
 function PANEL:GetDivisionCoordinates()
 
-	local w, h = math.floor(1024 / self.dw), math.floor(1024 / self.dh)
+	local w, h = math.floor(nativeWidth / self.dw), math.floor(nativeHeight / self.dh)
 	if self.division < 1 or self.division > self.divisionCount then
 		error("DividedRTControl: division out of range: " .. tostring(self.division))
 	end

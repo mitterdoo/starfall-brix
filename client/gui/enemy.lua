@@ -21,6 +21,10 @@ function PANEL:Init()
 	self:SetDivisionSize(64, 128)
 	self:SetSize(64, 128)
 
+	if self.divisionCount < 32 then
+		error("Your current game resolution is too low to play BRIX: Stack To The Death")
+	end
+
 end
 
 function PANEL:SetEnemy(enemy)
