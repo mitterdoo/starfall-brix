@@ -50,7 +50,7 @@ hook.add("brConnect", "death", function(game, arena)
 			local pos = fieldPos
 			gfx.EmitParticle(
 				{pos, pos},
-				{Vector(field_w, field_h, 0)*scale, Vector(field_w, field_h, 0)*Vector(2, 1, 0)},
+				{Vector(field_w, field_h, 0)*scale, Vector(field_w, field_h, 0)*Vector(2, 1, 0) * scale},
 				0, 0.3,
 				fxFunc,
 				true, true

@@ -468,7 +468,8 @@ hook.add("brConnect", "enemy", function(game, arena)
 		local centerX = center:AbsolutePos(0, 0)
 		local startLeft = center:AbsolutePos(Vector(-brickSize, 0, 0) * 2)
 		local startRight = center:AbsolutePos(Vector(brickSize, 0, 0) * 2)
-		local size = Vector(1, 1, 0) * (250 + percent*100)
+		local _, gameScale = EnemyRT:AbsolutePos(Vector(0, 0, 0))
+		local size = Vector(1, 1, 0) * (250 + percent*100) * gameScale
 
 		local badges = br.getBadgeCount(arena.badgeBits)
 		badges = math.min(4, badges)
