@@ -187,7 +187,6 @@ function ARENA:start()
 			else
 				targets = {target}
 			end
-			lines = math.ceil(lines / #targets)
 
 			self:enqueue(e.DAMAGE, game.uniqueID, lines, targets)
 

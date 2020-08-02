@@ -462,7 +462,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 			targets = {arena.target}
 		end
 
-		lines = math.ceil(lines / #targets)
 		local percent = lines / arena.params.maxGarbageOut
 		local center = game.controls.LineClearCenter
 		local centerX = center:AbsolutePos(0, 0)
