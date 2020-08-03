@@ -702,6 +702,8 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 		end
 
+		if #list == 0 then return end
+
 		table.sort(list, function(a, b) return a[2] < b[2] end)
 		arena:manualTarget(list[1][1])
 
