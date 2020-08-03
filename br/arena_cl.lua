@@ -92,8 +92,10 @@ end
 
 function ARENA:userInput(input, down)
 
-	if input >= ARENA.targetModes.ATTACKER and down then
-		self:changeTargetMode(input)
+	if input >= ARENA.targetModes.ATTACKER then
+		if down then
+			self:changeTargetMode(input)
+		end
 		return
 	end
 	local frame = brix.getFrame(timer.realtime() - self.startTime)
