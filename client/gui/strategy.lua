@@ -26,10 +26,10 @@ local blipDuration = 0.1
 local flickDuration = 0.15
 
 local binds = {
-	[TARGET_ATTACKER] = "?",
-	[TARGET_RANDOM] = "?",
-	[TARGET_KO] = "?",
-	[TARGET_BADGES] = "?"
+	target_attacker = "?",
+	target_random = "?",
+	target_ko = "?",
+	target_badges = "?"
 }
 
 function PANEL:Init()
@@ -41,14 +41,10 @@ function PANEL:Init()
 	self.lastStickChange = 0
 	self.foreground = false
 
-	for binding, _ in pairs(binds) do
-
-		local keys = KEYBOARD_INPUTMAP[binding]
-		if keys and #keys > 0 then
-			binds[binding] = string.upper(input.getKeyName(keys[1]))
-		end
-
-	end
+	binds.target_attacker = binput.getFirstBinding("target_attacker", binput.keyboardMap)
+	binds.target_random = binput.getFirstBinding("target_random", binput.keyboardMap)
+	binds.target_ko = binput.getFirstBinding("target_ko", binput.keyboardMap)
+	binds.target_badges = binput.getFirstBinding("target_badges", binput.keyboardMap)
 
 end
 
@@ -72,11 +68,12 @@ function PANEL:Think()
 
 	local t = timer.realtime()
 
-	local newPos = binput.stickState[1]
-	if newPos ~= self.stickPos then
-		self.stickPos = newPos
-	end
-	if newPos ~= 0 then
+	local isActive = binput.isPressed("target_attacker") or
+		binput.isPressed("target_random") or
+		binput.isPressed("target_ko") or
+		binput.isPressed("target_badges")
+
+	if isActive then
 		self.lastStickChange = t
 	end
 
@@ -136,10 +133,10 @@ function PANEL:Paint(w, h)
 		render.setRGBA(0, 0, 0, 255)
 
 		render.setFont(keyFont)
-		render.drawText(cx, cy - centerSpacing + keySize/2 - keyFontSize/2, binds[TARGET_KO], 1)
-		render.drawText(cx, cy + centerSpacing - keySize/2 - keyFontSize/2, binds[TARGET_ATTACKER], 1)
-		render.drawText(cx - centerSpacing + keySize/2, cy - keyFontSize/2, binds[TARGET_RANDOM], 1)
-		render.drawText(cx + centerSpacing - keySize/2, cy - keyFontSize/2, binds[TARGET_BADGES], 1)
+		render.drawText(cx, cy - centerSpacing + keySize/2 - keyFontSize/2, binds.target_ko, 1)
+		render.drawText(cx, cy + centerSpacing - keySize/2 - keyFontSize/2, binds.target_attacker, 1)
+		render.drawText(cx - centerSpacing + keySize/2, cy - keyFontSize/2, binds.target_random, 1)
+		render.drawText(cx + centerSpacing - keySize/2, cy - keyFontSize/2, binds.target_badges, 1)
 		render.setRGBA(255, 255, 255, 255)
 
 		sprite.setSheet(1)
@@ -153,14 +150,13 @@ function PANEL:Paint(w, h)
 		local stick_x, stick_y = cx, cy
 		local stickDistance = (64 - 36)* 0.5
 
-
-		if self.stickPos == TARGET_RANDOM then
+		if binput.isPressed("target_random") then
 			stick_x, stick_y = cx - stickDistance, cy
-		elseif self.stickPos == TARGET_BADGES then
+		elseif binput.isPressed("target_badges")  then
 			stick_x, stick_y = cx + stickDistance, cy
-		elseif self.stickPos == TARGET_KO then
+		elseif binput.isPressed("target_ko")  then
 			stick_x, stick_y = cx, cy - stickDistance
-		elseif self.stickPos == TARGET_ATTACKER then
+		elseif binput.isPressed("target_attacker")  then
 			stick_x, stick_y = cx, cy + stickDistance
 		end
 
