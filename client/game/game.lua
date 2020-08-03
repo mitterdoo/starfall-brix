@@ -82,26 +82,6 @@ require("brix/client/input.lua")
 requiredir("brix/client/game", {
 	"scoreboard.lua"
 })
---[[
-
-	Background
-	root
-		Board
-		Field_UnderMatrix
-			fieldDanger
-		RT
-			FieldPos
-				fieldCtrl
-				pieceGhost
-				piece
-				blockoutPiece
-			HoldPiece
-		NextPieceRT
-			{nextPieces}
-		Field_OverMatrix
-
-
-]]
 
 function createGame()
 	local game = {}
@@ -111,7 +91,13 @@ function createGame()
 	Background:SetSize(render.getGameResolution())
 	game.controls.Background = Background
 
-	local root = gui.Create("Control")
+	local Container = gui.Create("Control")
+	Container:SetVisible(false)
+	Container:SetSize(render.getGameResolution())
+	game.controls.Container = Container
+
+
+	local root = gui.Create("Control", Container)
 	root:SetSize(1024, 1024)
 
 	do
@@ -258,17 +244,30 @@ function createGame()
 
 		end)
 
-		hook.add("brixPressed", "", function(button)
+		local actionMap = {
+			game_moveleft = brix.inputEvents.MOVELEFT,
+			game_moveright = brix.inputEvents.MOVERIGHT,
+			game_softdrop = brix.inputEvents.SOFTDROP,
+			game_harddrop = brix.inputEvents.HARDDROP,
+			game_hold = brix.inputEvents.HOLD,
+			game_rot_cw = brix.inputEvents.ROT_CW,
+			game_rot_ccw = brix.inputEvents.ROT_CCW,
+			target_attacker = ARENA.targetModes.ATTACKER,
+			target_badges = ARENA.targetModes.BADGES,
+			target_ko = ARENA.targetModes.KO,
+			target_random = ARENA.targetModes.RANDOM
+		}
+		hook.add("action", "brix", function(action, pressed)
 
-			if arena.dead then return end
-			if arena.started and button < binput.stickEvents.MANUAL_DOWN then
-				arena:userInput(button, true)
+			if arena.dead or not arena.started then return end
+			local button = actionMap[action]
+			if button then
+				arena:userInput(button, pressed)
 			end
-
 
 		end)
 
-		hook.add("xinputPressed", "", function(controller, button, when)
+		hook.add("xinputPressed", "debug", function(controller, button, when)
 			if button == 0x0010 and player() == owner() and not arena.started then -- start
 				net.start("brixBegin")
 				net.send()
@@ -283,10 +282,10 @@ function createGame()
 		end)
 
 		hook.add("inputPressed", "debug", function(button)
-			if button == 50 and player() == owner() and not arena.started then
+			if button == 51 and player() == owner() and not arena.started then
 				net.start("brixBegin")
 				net.send()
-			elseif button == 51 and player() == owner() then
+			elseif button == 50 and player() == owner() then
 				if not arena.started then
 					net.start("BRIX_BOT")
 					net.send()
@@ -296,21 +295,7 @@ function createGame()
 			end
 		end)
 
-		hook.add("brixReleased", "", function(button)
-
-			if arena.dead then return end
-			if arena.started and button < binput.stickEvents.MANUAL_DOWN then
-				arena:userInput(button, false)
-			end
-
-		end)
-
-		hook.add("postdrawhud", "brix", function()
-
-			local w, h = render.getGameResolution()
-
-			local perc = quotaAverage() / quotaMax()
-			perc = math.ceil(perc * 1000) / 10
+		hook.add("guiPreDraw", "brix", function()
 
 			if arena.started and not arena.dead then
 				local frame = brix.getFrame(timer.realtime() - arena.startTime)
@@ -328,28 +313,26 @@ function createGame()
 				lastFrame = arena.frame
 			end
 
-			gui.Draw()
-			render.setRGBA(255, 0, 255, 255)
-			render.drawText(64, 500, perc .. "%", 1)
-
 		end)
-
-		hook.add("calcview", "fps", function(pos, ang, fov, znear, zfar)
-
-			if not arena.dead then
-				return {
-					origin = Vector(0, 0, -60000),
-					angles = Angle(90, 0, 0),
-					znear = 1,
-					zfar = 2
-				}
-			end
-
-		end)
+		Container:SetVisible(true)
 
 
 	end)
 
-end
+	function game.cleanup()
 
-createGame()
+		hook.remove("brixPressed", "brix")
+		hook.remove("brixReleased", "brix")
+		hook.remove("xinputPressed", "debug")
+		hook.remove("xinputReleased", "debug")
+		hook.remove("guiPreDraw", "brix")
+
+		Container:Remove()
+		game.controls = nil
+
+
+	end
+
+	return game
+
+end

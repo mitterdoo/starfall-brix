@@ -1,6 +1,7 @@
---@clinet
+--@name BRIX: Stack To The Death
+--@client
 --@include brix/client/loader.lua
---@include brix/client/game.lua
+--@include brix/client/_entry.lua
 --[[
 	Runs the loader asynchronously, and then initializes the main game once everything has finished loading.
 ]]
@@ -66,7 +67,7 @@ require("brix/client/loader.lua")
 
 hook.add("load", "", function()
 
-	require("brix/client/game.lua")
+	require("brix/client/_entry.lua")
 
 
 end)
