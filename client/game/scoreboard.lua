@@ -45,7 +45,7 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 	KOLabel:SetSheet(1)
 	KOLabel:SetSprite(spr_killCount)
 	KOLabel:SetPos(4, KOHeight)
-	KOLabel:SetSize(64, 24)
+	KOLabel:SetSize(100, 24)
 
 	local KO = gui.Create("Number", Scoreboard)
 	KO:SetAlign(1)
