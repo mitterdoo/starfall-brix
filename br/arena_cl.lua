@@ -219,6 +219,8 @@ function br.createArena(seed, uniqueID)
 	self.targetMode = ARENA.targetModes.RANDOM
 	self.desiredTarget = 0
 
+	self.connected = false
+
 	self.currentInstant = {} -- List of indices in queue that were set this frame
 	self.currentInstant_Time = -1
 
@@ -281,6 +283,7 @@ function br.connectToServer(callback)
 				local seed, uniqueID = net.readUInt(32), net.readUInt(6)
 				arena = br.createArena(seed, uniqueID)
 				arena.tempArena = {} -- Dict of uniqueIDs on the server
+				arena.connected = true
 				callback(arena)
 
 			elseif event == e.UPDATE then
@@ -374,13 +377,15 @@ end
 -- Disconnects from the server
 function ARENA:disconnect()
 
+	self.connected = false
 	self.dead = true -- don't allow any more inputs
 	self.currentPiece.piece = nil
 	self.currentPiece.type = -1
+	if self.hookName then
+		hook.remove("think", self.hookName)
+		hook.remove("net", self.hookName)
+	end
 	self.hook:run("disconnect")
-	if not self.hookName then return end
-	hook.remove("think", self.hookName)
-	hook.remove("net", self.hookName)
 
 end
 
