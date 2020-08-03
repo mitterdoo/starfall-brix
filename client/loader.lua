@@ -88,18 +88,18 @@ loader.run(function()
     local perms = {
         "http.get",
         "input",
-        "material.datacreate",
         "material.create",
-        "render.renderView",
+        "render.calcview",
 		"bass.loadFile",
 		"bass.play2D",
 		"file.read",
 		"file.write",
-		"file.exists"
+		"file.exists",
+		"render.hud"
     }
 	for _, name in pairs(perms) do
 		if not hasPermission(name, chip()) then
-			setupPermissionRequest(perms, "BRIX 33 needs permission to download sounds and sprites online, save them locally, and load them from disk. Additionally, this game uses input for controls.", true)
+			setupPermissionRequest(perms, "BRIX needs permission to download sounds and sprites online, save them locally, and load them from disk. Additionally, this game uses input for controls.", true)
 			
 			local function drawPerm(x, y)
 				local w, h = 512, 512
@@ -107,7 +107,7 @@ loader.run(function()
 				render.setRGBA(255, 0, 0, 255)
 				render.drawText(x + w/2, y + h * 0.25, "PERMISSION REQUEST", 1)
 				render.setRGBA(255, 255, 0, 255)
-				render.drawText(x + w/2, y + h * 0.5 - 24, [[BRIX 33 requires certain settings
+				render.drawText(x + w/2, y + h * 0.5 - 24, [[BRIX requires certain settings
 to be enabled in order to run.
 Please press USE on the chip
 to temporarily change them.]], 1)
@@ -153,7 +153,7 @@ to temporarily change them.]], 1)
 		local w, h = 512, 512
 		render.setFont(title)
 		render.setRGBA(255, 255, 255, 255)
-		render.drawText(w/2, h * 0.15, "BRIX 33", 1)
+		render.drawText(w/2, h * 0.15, "BRIX", 1)
 		render.setFont(subtitle)
 		render.setRGBA(255, 130, 0, 255)
 		render.drawText(w/2, h * 0.15 + 64, "STACK TO THE DEATH", 1)
