@@ -1,23 +1,9 @@
 --[[
-
-	Graphical effects for Brix 33
-
+	gfx Library. Contains main code for creating/rendering particles.
 ]]
 
 gfx = {}
 
-
---[[
-
-	Particles rewrite
-
-	Paint:
-		Calculate position of each particle
-		Create list of particle positions and sizes
-		For each position entry, run their callbacks with (x, y, w, h, frac, isGlow)
-
-
-]]
 
 local group_generic = {}
 

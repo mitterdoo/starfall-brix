@@ -33,6 +33,7 @@ local SPRITE_LOOKUP = {
 
 function PANEL:Paint(w, h)
 
+	if not self.field then return end
 	local BRICK_SIZE = self.brickSize
 	local sky = self.allowSkyline
 	sprite.setSheet(1)
