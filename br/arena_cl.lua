@@ -92,7 +92,7 @@ end
 
 function ARENA:userInput(input, down)
 
-	if input >= ARENA.targetModes.ATTACKER then
+	if input >= ARENA.targetModes.ATTACKER and down then
 		self:changeTargetMode(input)
 		return
 	end
