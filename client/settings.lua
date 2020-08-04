@@ -20,17 +20,17 @@ local function saveSettings()
 end
 
 local function checkType(v)
-	return type(v) == "string" or type(v) == "number" or type(v) == "bool"
+	return type(v) == "string" or type(v) == "number" or type(v) == "boolean"
 end
 
 settings = setmetatable({}, {
-	__newindex = function(k, v)
+	__newindex = function(self, k, v)
 		if checkType(k) and checkType(v) then
 			_data[k] = v
 			saveSettings()
 		end
 	end,
-	__index = function(k)
+	__index = function(self, k)
 		return _data[k]
 	end
 })
