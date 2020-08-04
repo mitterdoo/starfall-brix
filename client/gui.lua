@@ -436,7 +436,8 @@ requiredir("brix/client/gui", {
 	"sprite.lua",
 	"field.lua",
 	"enemyfield.lua",
-	"inputicon.lua"
+	"inputicon.lua",
+	"button.lua"
 })
 _G.PANEL = nil
 
