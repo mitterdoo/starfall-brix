@@ -51,6 +51,9 @@ function SCENE.Open(from)
 	b_options:SetPos(w/2 - 298, h - 128 - 80)
 	b_options:SetAlign(0, 0)
 	b_options:SetBGColor(Color(190, 92, 255))
+	function b_options:DoPress()
+		scene.Open("Options", 1)
+	end
 	
 	b_options:SetRight(b_play)
 	b_play:SetLeft(b_options)
