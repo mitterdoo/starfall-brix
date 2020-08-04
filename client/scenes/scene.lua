@@ -15,13 +15,32 @@ if not scene.Entry then
 	error("Entry scene not found! Did you set SCENE.Entry to true on one scene?")
 end
 
+local function closeActiveScene()
+
+	local name = scene.ActiveName
+	scene.Active()
+	scene.Active = nil
+	scene.ActiveName = nil
+	hook.run("sceneClose", name)
+
+end
+
+local function setActiveScene(name)
+
+	scene.ActiveName = name
+	scene.Active = scene.Registry[name]
+	scene.Active = scene.Active.Open()
+	hook.run("sceneOpen", name)
+
+end
+
 hook.add("think", "sceneTransitions", function()
 
 	local t = timer.realtime()
 	local s = scene.NextScene
 	if s and t >= s.finish then
-		scene.Active = scene.Registry[s.name]
-		scene.Active = scene.Active.Open()
+		closeActiveScene()
+		setActiveScene(s.name)
 		gui.fadeIn(s.transition)
 		scene.NextScene = nil
 	end
@@ -42,12 +61,11 @@ function scene.Open(name, transition)
 				gui.fadeOut(transition)
 			end
 		else
-			scene.Active()
+			closeActiveScene()
 		end
 	end
 	
-	scene.Active = scene.Registry[name]
-	scene.Active = scene.Active.Open()
+	setActiveScene(name)
 	if isFirst and transition then
 		gui.fadeIn(transition)
 	end
