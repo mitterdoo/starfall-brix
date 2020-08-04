@@ -501,6 +501,7 @@ end
 
 root = gui.Create("Control", _noParent_reference)
 root:SetSize(render.getGameResolution())
+root:SetPos(-1, -1)
 
 local blurw, blurh = 8, 8
 if gui.SmallResolution then
@@ -541,11 +542,11 @@ function gui.Draw()
 			end
 			fade.col.a = alpha
 			render.setColor(fade.col)
-			render.drawRect(0, 0, game_w, game_h)
+			render.drawRect(-1, -1, game_w, game_h)
 		elseif fade.active then
 			fade.col.a = 255
 			render.setColor(fade.col)
-			render.drawRect(0, 0, game_w, game_h)
+			render.drawRect(-1, -1, game_w, game_h)
 		end
 	end
 
