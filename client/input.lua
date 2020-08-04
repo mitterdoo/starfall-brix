@@ -150,6 +150,7 @@ local function processInput(iname, map, pressed)
 end
 
 hook.add("inputPressed", "binput", function(key)
+	if not render.isHUDActive() then return end
 	if input.getCursorVisible() then return end
 	key = binput.getKeyName(key)
 	processInput(key, keymap_UI, true)
@@ -158,6 +159,7 @@ hook.add("inputPressed", "binput", function(key)
 end)
 
 hook.add("inputReleased", "binput", function(key)
+	if not render.isHUDActive() then return end
 	if input.getCursorVisible() then return end
 	key = binput.getKeyName(key)
 	processInput(key, keymap_UI, false)
@@ -282,6 +284,7 @@ local lastStick = {[0] = 0, [1] = 0}
 
 hook.add("xinputStick", "xinput2brix", function(controller, x, y, stick, when)
 
+	if not render.isHUDActive() then return end
 	if controller == 0 then
 		local radius = math.sqrt(x^2 + y^2)
 		local angle = math.deg(math.atan(y/x))
@@ -343,6 +346,7 @@ end
 
 hook.add("xinputPressed", "xinput2brix", function(controller, button, when)
 
+	if not render.isHUDActive() then return end
 	if controller == 0 then
 		xinputPressed(button, false)
 	end
@@ -351,6 +355,7 @@ end)
 
 hook.add("xinputPressedNoOverlap", "xinput2brix", function(controller, button, when)
 
+	if not render.isHUDActive() then return end
 	if controller == 0 then
 		xinputPressed(button, true)
 	end
@@ -360,6 +365,7 @@ end)
 
 hook.add("xinputReleased", "xinput2brix", function(controller, button, when)
 
+	if not render.isHUDActive() then return end
 	if controller == 0 then
 		xinputReleased(button, false)
 	end
@@ -368,6 +374,7 @@ end)
 
 hook.add("xinputReleasedNoOverlap", "xinput2brix", function(controller, button, when)
 
+	if not render.isHUDActive() then return end
 	if controller == 0 then
 		xinputReleased(button, true)
 	end
