@@ -43,6 +43,11 @@ function gui.getMatrix(x, y, sw, sh)
 
 end
 
+function gui.getFitScale(w, h, bound_w, bound_h)
+	local scale = math.min(bound_w / w, bound_h / h)
+	return scale
+end
+
 local function round( num, idp )
 
 	local mult = 10 ^ ( idp or 0 )
