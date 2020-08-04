@@ -22,24 +22,42 @@ local function loadSheets()
 	loader.stepCount = count
 	for i = 1, count do
 
-		local idx, path, coords = unpack(sheetsToLoad[i])
-
 		loader.curStep = i
-		loader.status = "Loading spritesheet\n" .. path
+		local sheet = sheetsToLoad[i]
+		if sheet.isMat then
+			local path, name = sheet[1], sheet.name
 
-		if not file.exists(path) then
-			error("Attempt to create spritesheet from unknown path: " .. tostring(path))
+			loader.status = "Loading material\n" .. path
+			if not file.exists(path) then
+				error("Attempt to create spritesheet from unknown path: " .. tostring(path))
+			end
+			local start = timer.systime()
+			local mat = material.createFromImage("data/sf_filedata/" .. path, "smooth")
+			local loadTime = timer.systime() - start
+
+			sprite.mats[name] = mat
+
+			loader.sleep(loadTime * 8)
+
+		else
+			local idx, path, coords = unpack(sheet)
+
+			loader.status = "Loading spritesheet\n" .. path
+
+			if not file.exists(path) then
+				error("Attempt to create spritesheet from unknown path: " .. tostring(path))
+			end
+
+			local start = timer.systime()
+			local mat = material.createFromImage("data/sf_filedata/" .. path, "smooth")
+			local loadTime = timer.systime() - start
+			sheets[idx] = {mat = mat, coords = coords}
+			sprite.mats[idx] = mat
+			allCoords[idx] = coords
+
+
+			loader.sleep(loadTime * 8)
 		end
-
-		local start = timer.systime()
-		local mat = material.createFromImage("data/sf_filedata/" .. path, "smooth")
-		local loadTime = timer.systime() - start
-		sheets[idx] = {mat = mat, coords = coords}
-		sprite.mats[idx] = mat
-		allCoords[idx] = coords
-
-
-		loader.sleep(loadTime * 8)
 	end
 
 	loader.curStep = 0
@@ -53,9 +71,15 @@ local function createSheet(idx, path, coords)
 
 end
 
+local function createMaterial(path, name)
+	table.insert(sheetsToLoad, {path, name = name, isMat = true})
+end
+
 sprite = {}
 sprite.sheets = allCoords
 sprite.mats = {}
+
+createMaterial(assets.files["brix_logo.png"], "logo")
 
 createSheet(1, assets.files["skin1.png"], {
 
