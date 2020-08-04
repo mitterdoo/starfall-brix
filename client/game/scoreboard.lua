@@ -155,7 +155,7 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 			local scale = Vector(bsw, bsh, 0)
 
 			gfx.EmitParticle(
-				{startPos + Vector(math.random()-0.5, math.random(0.5), 0) * 2 * 48 * scale, badgePos},
+				{startPos + Vector(math.random()-0.5, math.random(0.5), 0) * 2 * 20 * scale, badgePos},
 				{Vector(48, 48, 0) * scale},
 				badgeDelay * (i-1), badgeTravelTime,
 				fx_Badge, false, true, badgeEase
