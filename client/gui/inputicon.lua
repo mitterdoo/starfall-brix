@@ -19,6 +19,8 @@ local gp_lookup = {
 	dpadright = sheet.gp_directional + 1,
 	dpaddown = sheet.gp_directional + 2,
 	dpadleft = sheet.gp_directional + 3,
+	ls = sheet.gp_sticks + 0,
+	rs = sheet.gp_sticks + 1
 }
 
 local kb_RT = "inputicons"
@@ -135,7 +137,9 @@ local rtIndices = {
 	gp_a = 			112,
 	gp_b = 			113,
 	gp_x = 			114,
-	gp_y = 			115
+	gp_y = 			115,
+	rs =			117,
+	ls =			118,
 }
 
 local kb_special = {
