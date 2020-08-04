@@ -40,7 +40,7 @@ function SCENE.Open()
 
 	local b_about = gui.Create("BlockButton", root)
 	b_about:SetLabel(sprite.sheets[2].b_about)
-	b_about:SetPos(w/2 + 300, h - 128 - 80)
+	b_about:SetPos(w/2 + 298, h - 128 - 80)
 	b_about:SetAlign(0, 0)
 	b_about:SetBGColor(Color(255, 255, 100))
 	function b_about:DoPress()
@@ -49,7 +49,7 @@ function SCENE.Open()
 
 	local b_options = gui.Create("BlockButton", root)
 	b_options:SetLabel(sprite.sheets[2].b_options)
-	b_options:SetPos(w/2 - 300, h - 128 - 80)
+	b_options:SetPos(w/2 - 298, h - 128 - 80)
 	b_options:SetAlign(0, 0)
 	b_options:SetBGColor(Color(190, 92, 255))
 	
