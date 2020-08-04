@@ -435,7 +435,8 @@ requiredir("brix/client/gui", {
 	"piece.lua",
 	"sprite.lua",
 	"field.lua",
-	"enemyfield.lua"
+	"enemyfield.lua",
+	"inputicon.lua"
 })
 _G.PANEL = nil
 
@@ -475,6 +476,29 @@ function gui.Create(className, parent)
 
 end
 
+local fade = {
+	start = 0,
+	finish = 1,
+	col = Color(0, 0, 0),
+	active = false
+}
+function gui.fadeOut(duration, col)
+	duration = duration or 1
+	
+	fade.start = timer.realtime()
+	fade.finish = timer.realtime() + duration
+	fade.col = col or fade.col
+	fade.active = true
+end
+function gui.fadeIn(duration, col)
+	duration = duration or 1
+	
+	fade.start = timer.realtime()
+	fade.finish = timer.realtime() + duration
+	fade.col = col or fade.col
+	fade.active = false
+end
+
 root = gui.Create("Control", _noParent_reference)
 root:SetSize(render.getGameResolution())
 
@@ -505,5 +529,31 @@ function gui.Draw()
 	for i = 1, 2 do
 		render.drawTexturedRect(0, 0, game_w, game_h)
 	end
+
+	do
+		local frac = timeFrac(timer.realtime(), fade.start, fade.finish, true)
+		if frac < 1 then
+			local alpha
+			if fade.active then
+				alpha = frac^2*255
+			else
+				alpha = (1-frac)^2*255
+			end
+			fade.col.a = alpha
+			render.setColor(fade.col)
+			render.drawRect(0, 0, game_w, game_h)
+		elseif fade.active then
+			fade.col.a = 255
+			render.setColor(fade.col)
+			render.drawRect(0, 0, game_w, game_h)
+		end
+	end
+
+	render.setRGBA(128, 128, 128, 128)
+	render.drawRect(32, game_h - 64 - 32, 128, 64)
+	render.setRGBA(255, 255, 255, 255)
+	render.setFont("DermaLarge")
+	local perc = math.ceil(quotaAverage() / quotaMax() * 1000)/10
+	render.drawText(32 + 128/2, game_h - 64 - 16, perc .. "%", 1)
 
 end
