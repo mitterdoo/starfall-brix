@@ -9,7 +9,7 @@ function PANEL:Init()
 end
 
 function PANEL:SetValue(value)
-	self.value = tostring(value):gsub("[^%d/]", "")
+	self.value = tostring(value):gsub("[^%d/:]", "")
 end
 
 function PANEL:SetAlign(alignment)
@@ -44,7 +44,7 @@ function PANEL:Paint(w, h)
 	for i = 1, length do
 
 		local char = self.value:byte(i)
-		if 47 <= char and char < 58 then
+		if 47 <= char and char <= 58 then
 			sprite.draw(spr_digit + char - 48, origin_x + (i - 1) * w, 0, w, h)
 		else
 			error("Number: malformed value (" .. tostring(self.value) .. ")")
