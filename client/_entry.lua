@@ -22,11 +22,54 @@ hook.add("calcview", "fps", function()
 		}
 	end
 end)
-hook.add("postdrawhud", "brix", function()
+hook.add("predrawhud", "brix", function()
 
+	local info = {
+		x = 0,
+		y = 0,
+		w = 1920,
+		h = 1080,
+		type = "2D"
+	}
+	render.pushViewMatrix(info)
 	render.setRGBA(0, 0, 0, 255)
 	render.drawRectFast(0, 0, 1920, 1080)
 	lastHudDraw = timer.realtime()
 	gui.Draw()
+	render.popViewMatrix()
+
+end)
+
+local disallow = {
+	CHudGMod = true,
+	CHudAmmo = true,
+	CHudBattery = true,
+	CHudChat = true,
+	CHudCrosshair = true,
+	CHudCloseCaption = true,
+	CHudDamageIndicator = true,
+	CHudDeathNotice = true,
+	CHudGeiger = true,
+	CHudHealth = true,
+	CHudHintDisplay = true,
+	CHudMessage = true,
+	CHudPoisonDamageIndicator = true,
+	CHudSecondaryAmmo = true,
+	CHudSquadStatus = true,
+	CHudTrain = true,
+	CHudWeapon = true,
+	CHudVehicle = true,
+	CHudWeaponSelection = true,
+	CHudZoom = true,
+	CHUDQuickInfo = true,
+	CHudSuitPower = true
+}
+
+hook.add("hudshoulddraw", "brix", function(name)
+
+	if disallow[name] and render.isHUDActive() then return false end
+
+end)
+
 
 end)
