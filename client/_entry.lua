@@ -5,11 +5,11 @@
 --@include brix/client/settings.lua
 --@include brix/client/input.lua
 
+require("brix/client/settings.lua")
 require("brix/br/arena_cl.lua")
 require("brix/client/gui.lua")
 require("brix/client/gfx.lua")
 require("brix/client/input.lua")
-require("brix/client/settings.lua")
 require("brix/client/scenes/scene.lua")
 
 local lastHudDraw = 0
