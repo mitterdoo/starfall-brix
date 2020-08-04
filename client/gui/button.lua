@@ -73,6 +73,9 @@ hook.add("action", "ButtonControl", function(action, pressed)
 		if branch then
 			if not branch.nofocus then branch:Focus() end
 		elseif action == "ui_accept" then
+			if focusedButton.className == "Tickbox" then
+				focusedButton:SetValue(not focusedButton.value)
+			end
 			focusedButton:InternalDoPress()
 			focusedButton:DoPress()
 		end
@@ -80,6 +83,9 @@ hook.add("action", "ButtonControl", function(action, pressed)
 	local hot = hotButtons[action]
 	if hot then
 		if not hot.nofocus then hot:Focus() end
+		if hot.className == "Tickbox" then
+			hot:SetValue(not hot.value)
+		end
 		hot:InternalDoPress()
 		hot:DoPress()
 	end
