@@ -7,7 +7,12 @@ function PANEL:Init()
 
 	self.branches = {}
 	self.focused = false
+	self.nofocus = false
 
+end
+
+function PANEL:SetDisallowFocus(disallow)
+	self.nofocus = disallow
 end
 
 function PANEL:SetBranch(iname, button)
@@ -17,9 +22,25 @@ function PANEL:SetBranch(iname, button)
 	self.branches[iname] = button
 end
 
+function PANEL:SetUp(button)
+	self.branches.ui_up = button
+end
+function PANEL:SetDown(button)
+	self.branches.ui_down = button
+end
+function PANEL:SetLeft(button)
+	self.branches.ui_left = button
+end
+function PANEL:SetRight(button)
+	self.branches.ui_right = button
+end
+
 function PANEL:Focus()
 	self.focused = true
 	if focusedButton ~= self then
+		if focusedButton then
+			focusedButton.focused = false
+		end
 		focusedButton = self
 		hook.run("buttonFocus", self)
 	end
@@ -37,20 +58,25 @@ end
 function PANEL:DoPress()
 end
 
+function PANEL:InternalDoPress() -- To be handled by any subclasses
+end
+
 hook.add("action", "ButtonControl", function(action, pressed)
 
 	if not pressed then return end
 	if focusedButton then
 		local branch = focusedButton.branches[action]
 		if branch then
-			branch:Focus()
+			if not branch.nofocus then branch:Focus() end
 		elseif action == "ui_accept" then
+			focusedButton:InternalDoPress()
 			focusedButton:DoPress()
 		end
 	end
 	local hot = hotButtons[action]
 	if hot then
-		hot:Focus()
+		if not hot.nofocus then hot:Focus() end
+		hot:InternalDoPress()
 		hot:DoPress()
 	end
 
@@ -61,10 +87,10 @@ hook.add("sceneClosing", "ButtonControl", function(sceneName)
 		focusedButton.focused = false
 		focusedButton = nil
 	end
+	hotButtons = {}
 end)
 
 hook.add("sceneClose", "ButtonControl", function(sceneName)
-	hotButtons = {}
 end)
 
 gui.Register("Button", PANEL, "Control")
