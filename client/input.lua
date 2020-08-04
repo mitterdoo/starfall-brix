@@ -172,14 +172,14 @@ local gpmap_UI = {
 	ui_down = {"dpaddown", "lsdown"},
 	ui_left = {"dpadleft", "lsleft"},
 	ui_right = {"dpadright", "lsright"},
-	ui_accept = {"start", "a"},
-	ui_cancel = {"back", "b"}
+	ui_accept = {"start", "gp_a"},
+	ui_cancel = {"back", "gp_b"}
 }
 local gpmap_Guideline = {
 	game_moveleft =		"dpadleft",
 	game_moveright =	"dpadright",
-	game_rot_ccw =		{"a", "y"},
-	game_rot_cw =		{"b", "x"},
+	game_rot_ccw =		{"gp_a", "gp_y"},
+	game_rot_cw =		{"gp_b", "gp_x"},
 	game_softdrop =		"dpaddown",
 	game_harddrop =		"dpadup",
 	game_hold =			{"lb", "rb"},
@@ -248,10 +248,10 @@ local GAMEPAD_INPUT = {
 	[XINPUT_GAMEPAD_RIGHT_THUMB] =		"rsclick",
 	[XINPUT_GAMEPAD_LEFT_SHOULDER] =	"lb",
 	[XINPUT_GAMEPAD_RIGHT_SHOULDER] =	"rb",
-	[XINPUT_GAMEPAD_A] =				"a",
-	[XINPUT_GAMEPAD_B] =				"b",
-	[XINPUT_GAMEPAD_X] =				"x",
-	[XINPUT_GAMEPAD_Y] =				"y"
+	[XINPUT_GAMEPAD_A] =				"gp_a",
+	[XINPUT_GAMEPAD_B] =				"gp_b",
+	[XINPUT_GAMEPAD_X] =				"gp_x",
+	[XINPUT_GAMEPAD_Y] =				"gp_y"
 }
 
 local function gamepadInput(name, pressed)
