@@ -38,4 +38,10 @@ hook.add("brConnect", "placements", function(game, arena)
 
 	end)
 
+	arena.hook("winnerDeclared", function(player, entIndex, nick)
+
+		Placements:AddPlacement(1, nick)
+
+	end)
+
 end)

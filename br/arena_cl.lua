@@ -489,6 +489,8 @@ function ARENA:handleServerSnapshot()
 		
 		elseif event == e.CHANGEPHASE then
 			data = {event, net.readUInt(2), net.readUInt(32)}
+		elseif event == e.WINNER then
+			data = {event, net.readUInt(6), net.readUInt(8), net.readString()}
 		else
 			error("Unknown event type " .. tostring(event) .. " when decoding")
 		end

@@ -229,6 +229,17 @@ function ARENA:start()
 
 			if self.remainingPlayers <= 1 then
 				self.dead = true
+
+				for _, g in pairs(self.arena) do
+					if not g.dead then
+						local ply = g.player
+						local entIndex = ply and ply:entIndex() or 0
+						local nick = ply and ply:getName() or ("BOT " .. g.uniqueID)
+						self:enqueue(e.WINNER, g.uniqueID, entIndex, nick)
+						break
+					end
+				end
+
 			end
 
 		end)
@@ -439,6 +450,12 @@ function ARENA:sendSnapshot()
 			local phase, statedFrame = data[2], data[3]
 			net.writeUInt(phase, 2)
 			net.writeUInt(statedFrame, 32)
+		
+		elseif event == e.WINNER then
+			local player, entIndex, nick = data[2], data[3], data[4]
+			net.writeUInt(player, 6)
+			net.writeUInt(entIndex, 8)
+			net.writeString(nick)
 		
 		else
 			error("Unknown event type " .. tostring(event) )

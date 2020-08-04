@@ -57,8 +57,11 @@ ARENA.serverEvents = {
 	MATRIX_GARBAGE = 4, -- {UInt6 player, UInt5 lineCount, UInt4 gap1, UInt4 gap2, ...}
 	MATRIX_SOLID = 5,	-- {UInt6 player, UInt5 lineCount}
 
-	CHANGEPHASE = 6		-- {UInt2 Phase, UInt32 frame}
+	CHANGEPHASE = 6,	-- {UInt2 Phase, UInt32 frame}
 						-- When the server changes phase. 0 for normal, 1 for speedup begin, 2 for final showdown
+
+	WINNER = 7,			-- {UInt6 player, UInt8 playerEntIndex, string playerNick}
+						-- The winner of the match
 
 }
 
@@ -123,6 +126,11 @@ ARENA.hookNames = {
 		-- number placement
 
 	"win",
+
+	"winnerDeclared",		-- Winner has been declared
+		-- number playerID
+		-- number playerEntIndex
+		-- string playerNick
 
 	"disconnect"			-- Called when the match is over
 }
@@ -274,6 +282,11 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				end
 
 				game.hook:run("playerMatrixSolid", player, lines)
+
+			elseif event == e.WINNER then
+				local player, entIndex, nick = data[2], data[3], data[4]
+
+				game.hook:run("winnerDeclared", player, entIndex, nick)
 
 			end
 
