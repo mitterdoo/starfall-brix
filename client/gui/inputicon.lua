@@ -278,23 +278,26 @@ hook.add("renderoffscreen", "inputicon", function()
 end)
 
 local const = (7/16) / 1024 -- cut off ugly pixels that have blended in
-
-function PANEL:Paint(w, h)
-	local found = rtIndices[self.input]
+function drawBinding(x, y, w, h, inp)
+	local found = rtIndices[inp]
 	found = found or 116
 
 	render.setRGBA(255, 255, 255, 255)
 
-	local x, y = getKeyPos(found)
+	local ox, oy = getKeyPos(found)
 	local sw, sh = keySize, keySize
 	render.setRenderTargetTexture(kb_RT)
 	render.setRGBA(255, 255, 255, 255)
 
-	local u1, v1 = x / 1024, y / 1024
-	local u2, v2 = (x + sw) / 1024, (y + sh) / 1024
+	local u1, v1 = ox / 1024, oy / 1024
+	local u2, v2 = (ox + sw) / 1024, (oy + sh) / 1024
 
-	render.drawTexturedRectUV(0, 0, w, h, u1 + const, v1 + const, u2 - const, v2 - const)
+	render.drawTexturedRectUV(x, y, w, h, u1 + const, v1 + const, u2 - const, v2 - const)
+end
 
+
+function PANEL:Paint(w, h)
+	drawBinding(0, 0, w, h, self.input)
 end
 
 gui.Register("InputIcon", PANEL, "Control")
