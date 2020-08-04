@@ -535,9 +535,9 @@ function gui.Draw()
 		if frac < 1 then
 			local alpha
 			if fade.active then
-				alpha = frac^2*255
+				alpha = frac^0.5*255
 			else
-				alpha = (1-frac)^2*255
+				alpha = (1-frac)^0.5*255
 			end
 			fade.col.a = alpha
 			render.setColor(fade.col)
@@ -553,7 +553,7 @@ function gui.Draw()
 	render.drawRect(32, game_h - 64 - 32, 128, 64)
 	render.setRGBA(255, 255, 255, 255)
 	render.setFont("DermaLarge")
-	local perc = math.ceil(quotaAverage() / quotaMax() * 1000)/10
+	local perc = math.ceil(quotaAverage() / quotaMax() * 100)
 	render.drawText(32 + 128/2, game_h - 64 - 16, perc .. "%", 1)
 
 end
