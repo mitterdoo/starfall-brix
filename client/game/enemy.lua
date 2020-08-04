@@ -502,7 +502,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 				gfx.EmitParticle(
 					{endPos, endPos},
 					{hitSize, hitSize*8},
-					0.5 + 1/6, 1/6,
+					0.5, 1/6,
 					fx_TargetHit,
 					true, true
 				)
