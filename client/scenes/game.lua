@@ -71,11 +71,13 @@ $	Improve outgoing attack graphics
 	Bots
 ]]
 
+
 requiredir("brix/client/game", {
 	"scoreboard.lua"
 })
 
-function createGame()
+local SCENE = {}
+function SCENE.Open()
 	local game = {}
 	game.controls = {}
 
@@ -311,12 +313,11 @@ function createGame()
 
 	end)
 
-	function game.cleanup()
+	return function()
 
-		hook.remove("brixPressed", "brix")
-		hook.remove("brixReleased", "brix")
+		hook.remove("action", "brix")
 		hook.remove("xinputPressed", "debug")
-		hook.remove("xinputReleased", "debug")
+		hook.remove("inputPressed", "debug")
 		hook.remove("guiPreDraw", "brix")
 
 		Container:Remove()
@@ -325,6 +326,6 @@ function createGame()
 
 	end
 
-	return game
-
 end
+
+scene.Register("Game", SCENE)
