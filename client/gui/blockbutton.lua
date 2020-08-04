@@ -61,12 +61,17 @@ function PANEL:Paint(w, h)
 		render.drawRectFast(bx + bw - glowSize, by + glowSize, glowSize, bh - glowSize*2)
 		gui.endGlow()
 	end
+	self:DrawButtonSprite(offset_x, offset_y, w, h)
+end
+
+function PANEL:DrawButtonSprite(x, y, w, h)
+
 	sprite.setSheet(2)
 	render.setColor(self.bgcol)
-	sprite.draw(spr_button, offset_x, offset_y, w, h)
+	sprite.draw(spr_button, x, y, w, h)
 	local labelHeight = h / 80 * 64
 	render.setColor(self.fgcol)
-	sprite.draw(self.label, offset_x, offset_y + h/2 - labelHeight/2, w, labelHeight)
+	sprite.draw(self.label, x, y + h/2 - labelHeight/2, w, labelHeight)
 
 end
 
