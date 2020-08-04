@@ -67,7 +67,6 @@ function PANEL:Tokenize()
 			w = self.size
 			info.actions[curW] = entry
 			local binding = binput.getBinding(entry, true)
-			print("token", entry, binding)
 		else
 			w = render.getTextSize(entry)
 			info.text[curW] = entry
