@@ -1,7 +1,7 @@
 
 
-	Title Screen
-	About screen
+$	Title Screen
+$	About screen
 	Options
 		Option to have constant background
 		Option to test controls
