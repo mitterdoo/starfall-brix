@@ -38,9 +38,9 @@ function PANEL:Init()
 	local function buttonEvent(button, pressed)
 
 		if not self.visible then return end
-		local down = button == brix.inputEvents.SOFTDROP
+		local down = button == "ui_down"
 		
-		local up = button == brix.inputEvents.HARDDROP
+		local up = button == "ui_up"
 		
 		if up or down then
 			local name = up and "scrollUp" or "scrollDown"
@@ -61,12 +61,8 @@ function PANEL:Init()
 
 	end
 
-	hook.add("brixPressed", "finalPlacements", function(button)
-		buttonEvent(button, true)
-	end)
-
-	hook.add("brixReleased", "finalPlacements", function(button)
-		buttonEvent(button, false)
+	hook.add("action", "finalPlacements", function(button, pressed)
+		buttonEvent(button, pressed)
 	end)
 
 end
@@ -74,8 +70,7 @@ end
 function PANEL:OnRemove()
 
 	self.super.OnRemove(self)
-	hook.remove("brixPressed", "finalPlacements")
-	hook.remove("brixReleased", "finalPlacements")
+	hook.remove("action", "finalPlacements")
 
 end
 

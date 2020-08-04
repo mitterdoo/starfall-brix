@@ -41,10 +41,10 @@ function PANEL:Init()
 	self.lastStickChange = 0
 	self.foreground = false
 
-	binds.target_attacker = binput.getFirstBinding("target_attacker", binput.keyboardMap)
-	binds.target_random = binput.getFirstBinding("target_random", binput.keyboardMap)
-	binds.target_ko = binput.getFirstBinding("target_ko", binput.keyboardMap)
-	binds.target_badges = binput.getFirstBinding("target_badges", binput.keyboardMap)
+	binds.target_attacker = binput.getBinding("target_attacker", false)
+	binds.target_random = binput.getBinding("target_random", false)
+	binds.target_ko = binput.getBinding("target_ko", false)
+	binds.target_badges = binput.getBinding("target_badges", false)
 
 end
 
@@ -123,7 +123,7 @@ function PANEL:Paint(w, h)
 
 	local cx, cy = brickSize*5, brickSize*2
 
-	if not binput.isUsingController() then
+	if not binput.isController then
 
 
 		sprite.draw(spr_key, cx, cy - centerSpacing, keySize, keySize, 0, -1)
