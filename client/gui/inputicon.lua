@@ -171,7 +171,9 @@ local kb_special = {
 	pgup = "PAGE\nUP",
 	pgdn = "PAGE\nDOWN",
 	shift = {spr=sheet.kb_labels + 1, wide=true},
-	rshift = {"RSHIFT", wide=true},
+	rshift = {"RIGHT\nSHIFT", wide=true},
+	ralt = "RIGHT\nALT",
+	rctrl = "RIGHT\nCTRL",
 	uparrow = {spr=sheet.kb_labels + 2},
 	leftarrow = {spr=sheet.kb_labels + 5},
 	downarrow = {spr=sheet.kb_labels + 4},
@@ -229,6 +231,7 @@ hook.add("renderoffscreen", "inputicon", function()
 			sprite.draw(gp, x, y, w, h)
 		else -- this is a key
 			local spr, wide, isKP, label
+			local fitH = h
 			label = iname:upper()
 			if kb then -- there is info on this key
 				if type(kb) == "string" then
@@ -237,7 +240,7 @@ hook.add("renderoffscreen", "inputicon", function()
 					spr, wide, isKP, label = kb.spr, kb.wide, kb.kp, kb[1] or label
 				end
 			end
-
+			if wide then fitH = h/2 end
 			sprite.draw(wide and kb_wide or kb_normal, x, y, w, h)
 			if isKP then
 				sprite.draw(kb_kp, x, y, w, h)
@@ -248,7 +251,7 @@ hook.add("renderoffscreen", "inputicon", function()
 			else
 				render.setFont(keyFont)
 				local tw, th = render.getTextSize(label)
-				local scale = gui.getFitScale(tw + padding*2, th + padding*2, w, h)
+				local scale = gui.getFitScale(tw + padding*2, th + padding*2, w, fitH)
 				local mat
 				if isKP then
 					mat = gui.getMatrix(x + w, y + h, scale, scale)
