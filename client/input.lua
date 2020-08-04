@@ -64,10 +64,28 @@ local keymap_wasd = {
 
 }
 
-binput.keyboardMap = keymap_wasd
 
+binput.keymaps = {
+	guideline = keymap_Guideline,
+	wasd = keymap_wasd
+}
 
+function binput.setKeyboardMap(map)
+	local cur = binput.keyboardMap
+	if binput.keymaps[map] then
+		binput.keyboardMap = binput.keymaps[map]
+	else
+		binput.keyboardMap = map
+	end
 
+	if binput.keyboardMap ~= cur then
+		settings.keyboardMap = map
+		hook.run("keyboardMapChanged", binput.keyboardMap)
+	end
+end
+
+local loadedMap = settings.keyboardMap or "guideline"
+binput.setKeyboardMap(loadedMap)
 
 local KEYS = {
 	[37]	= "kp_0",
