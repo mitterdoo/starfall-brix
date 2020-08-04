@@ -15,6 +15,22 @@ function PANEL:Init()
 	self:Tokenize()
 end
 
+function PANEL:SetMap(map)
+	self.map = map
+end
+
+function PANEL:AutoMap()
+	self.map = nil
+end
+
+function PANEL:SetController(is)
+	self.isController = is
+end
+
+function PANEL:AutoController()
+	self.isController = nil
+end
+
 function PANEL:Update()
 	render.setFont(self.font)
 	local _, th = render.getTextSize(" ")
@@ -108,8 +124,15 @@ function PANEL:Paint(w, h)
 	for x, text in pairs(self.info.text) do
 		render.drawText(offset_x + x, offset_y, text)
 	end
+	local map = self.map ~= nil and self.map
+	local controller
+	if self.isController ~= nil then
+		controller = self.isController
+	else
+		controller = binput.isController
+	end
 	for x, action in pairs(self.info.actions) do
-		local binding = binput.getBinding(action, binput.isController)
+		local binding = binput.getBinding(action, controller, map)
 		drawBinding(offset_x + x, offset_y, self.size, self.size, binding)
 	end
 end
