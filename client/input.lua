@@ -162,7 +162,6 @@ hook.add("inputReleased", "binput", function(key)
 	key = binput.getKeyName(key)
 	processInput(key, keymap_UI, false)
 	processInput(key, binput.keyboardMap, false)
-	binput.isController = false
 end)
 
 local gpmap_UI = {
@@ -243,7 +242,7 @@ end
 hook.add("gamepadButton", "binput", function(button, pressed)
 	processInput(button, gpmap_UI, pressed)
 	processInput(button, binput.gamepadMap, pressed)
-	binput.isController = true
+	if pressed then binput.isController = true end
 end)
 
 
