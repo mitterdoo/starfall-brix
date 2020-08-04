@@ -210,6 +210,7 @@ function gui.Register(className, panelTable, baseName)
 			error("cannot inherit gui element from itself")
 		end
 		panelTable.super = baseTable
+		panelTable.className = className
 		setmetatable(panelTable, {__index = baseTable})
 	end
 	panelTable.__index = panelTable
