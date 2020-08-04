@@ -53,23 +53,25 @@ function scene.Open(name, transition)
 		error("Attempt to open nil scene \"" .. tostring(name) .. "\"")
 	end
 
-	local isFirst = not scene.Active
 	if scene.Active then
 		if transition then
 			if not scene.NextScene then
+				hook.run("sceneClosing", scene.ActiveName)
 				scene.NextScene = {name = name, start = timer.realtime(), finish = timer.realtime() + transition, transition = transition}
 				gui.fadeOut(transition)
 			end
 		else
+			hook.run("sceneClosing", scene.ActiveName)
 			closeActiveScene()
+			setActiveScene(name)
 		end
-	end
-	
-	setActiveScene(name)
-	if isFirst and transition then
-		gui.fadeIn(transition)
+	else
+		setActiveScene(name)
+		if transition then
+			gui.fadeIn(transition)
+		end
 	end
 
 end
 
-scene.Open(scene.Entry)
+scene.Open(scene.Entry, 1)
