@@ -66,7 +66,6 @@ function PANEL:Tokenize()
 		if isAction then
 			w = self.size
 			info.actions[curW] = entry
-			local binding = binput.getBinding(entry, true)
 		else
 			w = render.getTextSize(entry)
 			info.text[curW] = entry
