@@ -42,6 +42,7 @@ function PANEL:Focus()
 			focusedButton.focused = false
 		end
 		focusedButton = self
+		self:OnFocus()
 		hook.run("buttonFocus", self)
 	end
 end
@@ -53,6 +54,9 @@ end
 function PANEL:Paint(w, h)
 	render.setRGBA(255, 0, 255, 255)
 	render.drawRectFast(0, 0, w, h)
+end
+
+function PANEL:OnFocus()
 end
 
 function PANEL:DoPress()
