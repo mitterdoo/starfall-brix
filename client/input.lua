@@ -27,7 +27,7 @@ local keymap_UI = {
 	ui_left = "leftarrow",
 	ui_right = "rightarrow",
 	ui_accept = "enter",
-	ui_cancel = {"escape", "backspace"}
+	ui_cancel = "backspace"
 }
 
 local keymap_Guideline = { -- Keyboard input mappings
@@ -152,19 +152,17 @@ end
 hook.add("inputPressed", "binput", function(key)
 	if input.getCursorVisible() then return end
 	key = binput.getKeyName(key)
-	if processInput(key, keymap_UI, true) or
-		processInput(key, binput.keyboardMap, true) then
-		binput.isController = false
-	end
+	processInput(key, keymap_UI, true)
+	processInput(key, binput.keyboardMap, true)
+	binput.isController = false
 end)
 
 hook.add("inputReleased", "binput", function(key)
 	if input.getCursorVisible() then return end
 	key = binput.getKeyName(key)
-	if processInput(key, keymap_UI, false) or 
-		processInput(key, binput.keyboardMap, false) then
-		binput.isController = false
-	end
+	processInput(key, keymap_UI, false)
+	processInput(key, binput.keyboardMap, false)
+	binput.isController = false
 end)
 
 local gpmap_UI = {
@@ -172,8 +170,8 @@ local gpmap_UI = {
 	ui_down = {"dpaddown", "lsdown"},
 	ui_left = {"dpadleft", "lsleft"},
 	ui_right = {"dpadright", "lsright"},
-	ui_accept = {"start", "gp_a"},
-	ui_cancel = {"back", "gp_b"}
+	ui_accept = {"gp_a", "start"},
+	ui_cancel = {"gp_b", "back"}
 }
 local gpmap_Guideline = {
 	game_moveleft =		"dpadleft",
@@ -243,10 +241,9 @@ end
 
 
 hook.add("gamepadButton", "binput", function(button, pressed)
-	if processInput(button, gpmap_UI, pressed) or
-		processInput(button, binput.gamepadMap, pressed) then		
-		binput.isController = true
-	end
+	processInput(button, gpmap_UI, pressed)
+	processInput(button, binput.gamepadMap, pressed)
+	binput.isController = true
 end)
 
 
