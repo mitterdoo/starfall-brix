@@ -25,11 +25,11 @@ local function closeActiveScene()
 
 end
 
-local function setActiveScene(name)
+local function setActiveScene(name, from)
 
 	scene.ActiveName = name
 	scene.Active = scene.Registry[name]
-	scene.Active = scene.Active.Open()
+	scene.Active = scene.Active.Open(from)
 	hook.run("sceneOpen", name)
 
 end
@@ -39,8 +39,9 @@ hook.add("think", "sceneTransitions", function()
 	local t = timer.realtime()
 	local s = scene.NextScene
 	if s and t >= s.finish then
+		local curName = scene.ActiveName
 		closeActiveScene()
-		setActiveScene(s.name)
+		setActiveScene(s.name, curName)
 		gui.fadeIn(s.transition)
 		scene.NextScene = nil
 	end
@@ -61,9 +62,10 @@ function scene.Open(name, transition)
 				gui.fadeOut(transition)
 			end
 		else
-			hook.run("sceneClosing", scene.ActiveName)
+			local curName = scene.ActiveName
+			hook.run("sceneClosing", curName)
 			closeActiveScene()
-			setActiveScene(name)
+			setActiveScene(name, curName)
 		end
 	else
 		setActiveScene(name)
