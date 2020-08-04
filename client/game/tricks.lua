@@ -64,6 +64,7 @@ hook.add("brConnect", "tricks", function(game, arena)
 	Ctrl_Sent:SetSize(50, 60)
 	Ctrl_Sent:SetValue(2)
 	Ctrl_Sent:SetAlign(0)
+	Ctrl_Sent:SetVisible(false)
 
 	local sentNumberChange = 0
 	local sentNumberDuration = 1
