@@ -3,7 +3,7 @@ SCENE.Entry = true
 
 local uiFont = render.createFont("Roboto", 36, 200)
 
-function SCENE.Open()
+function SCENE.Open(from)
 
 	local w, h = render.getGameResolution()
 	local logo_w, logo_h = 1920, 1080
@@ -32,7 +32,6 @@ function SCENE.Open()
 	b_play:SetLabel(sprite.sheets[2].b_play)
 	b_play:SetPos(w/2, h - 128 - 80)
 	b_play:SetAlign(0, 0)
-	b_play:Focus()
 	b_play:SetBGColor(Color(100, 255, 100))
 	function b_play:DoPress()
 		scene.Open("Game", 1)
@@ -58,6 +57,13 @@ function SCENE.Open()
 	b_play:SetRight(b_about)
 	b_about:SetLeft(b_play)
 
+	if from == "Options" then
+		b_options:Focus()
+	elseif from == "About" then
+		b_about:Focus()
+	else
+		b_play:Focus()
+	end
 
 	local CreatorInfoShadow = gui.Create("Sprite", root)
 	CreatorInfoShadow:SetAlign(0, 1)
