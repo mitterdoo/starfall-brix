@@ -266,6 +266,13 @@ hook.add("renderoffscreen", "inputicon", function()
 		end
 
 	end
+
+	do
+		local x, y = getKeyPos(116)
+		render.setRGBA(255, 0, 0, 255)
+		render.drawRectFast(x, y, keySize, keySize)
+	end
+
 	gui.popRT()
 
 end)
@@ -274,21 +281,19 @@ local const = (7/16) / 1024 -- cut off ugly pixels that have blended in
 
 function PANEL:Paint(w, h)
 	local found = rtIndices[self.input]
-	if found then
-		render.setRGBA(255, 255, 255, 255)
+	found = found or 116
 
-		local x, y = getKeyPos(found)
-		local sw, sh = keySize, keySize
-		render.setRenderTargetTexture(kb_RT)
-		render.setRGBA(255, 255, 255, 255)
+	render.setRGBA(255, 255, 255, 255)
 
-		local u1, v1 = x / 1024, y / 1024
-		local u2, v2 = (x + sw) / 1024, (y + sh) / 1024
+	local x, y = getKeyPos(found)
+	local sw, sh = keySize, keySize
+	render.setRenderTargetTexture(kb_RT)
+	render.setRGBA(255, 255, 255, 255)
 
-		render.drawTexturedRectUV(0, 0, w, h, u1 + const, v1 + const, u2 - const, v2 - const)
+	local u1, v1 = x / 1024, y / 1024
+	local u2, v2 = (x + sw) / 1024, (y + sh) / 1024
 
-	end
-	
+	render.drawTexturedRectUV(0, 0, w, h, u1 + const, v1 + const, u2 - const, v2 - const)
 
 end
 
