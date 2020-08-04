@@ -1,0 +1,18 @@
+On death, all badges are depleted and fed to the killer in an animation
+
+Tracker OST
+Royalty-free BGM
+	(Going to use some tracks that tetr.io uses as well)
+	Song credit in a conspicuous but not distracting spot
+SFX
+
+Title screen
+Spectator screen
+Controls configurator
+	Test sub-menu
+Handling settings (are, das, etc.)
+Option to turn off changing background
+
+Endless matches
+
+Bots
