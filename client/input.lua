@@ -222,13 +222,13 @@ binput.gamepadMap = gpmap_Guideline
 	rtdown
 ]]
 
-function binput.getBinding(action, isGamepad)
+function binput.getBinding(action, isGamepad, customMap)
 
 	local found
 	if isGamepad then
-		found = binput.gamepadMap[action] or gpmap_UI[action]
+		found = (customMap and customMap[action]) or binput.gamepadMap[action] or gpmap_UI[action]
 	else
-		found = binput.keyboardMap[action] or keymap_UI[action]
+		found = (customMap and customMap[action]) or binput.keyboardMap[action] or keymap_UI[action]
 	end
 	if found then
 		if type(found) == "table" then
