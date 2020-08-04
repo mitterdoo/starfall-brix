@@ -50,7 +50,10 @@ function PANEL:Paint(w, h)
 	if self.focused then
 		render.setRGBA(255, 128, 0, 255)
 		local bx, by, bw, bh = offset_x - outlineSize, offset_y - outlineSize, w + outlineSize*2, h + outlineSize*2
-		render.drawRectFast(bx, by, bw, bh)
+		render.drawRectFast(bx, by, bw, outlineSize)
+		render.drawRectFast(bx, by + bh - outlineSize, bw, outlineSize)
+		render.drawRectFast(bx, by + outlineSize, outlineSize, bh - outlineSize*2)
+		render.drawRectFast(bx + bw - outlineSize, by + outlineSize, outlineSize, bh - outlineSize*2)
 		gui.startGlow()
 		render.drawRectFast(bx, by, bw, glowSize)
 		render.drawRectFast(bx, by + bh - glowSize, bw, glowSize)
