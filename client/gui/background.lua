@@ -16,6 +16,10 @@ end
 function PANEL:SetLevel(lvl)
 	lvl = getBGFromLevel(lvl)
 	if lvl == self.bg then return end
+	local dyn = settings.dynamicBackground
+	if dyn == nil then dyn = true end
+	if not dyn then return end
+	
 	self.lastBg = self.bg
 	self.bg = lvl
 	self.lerpEnd = timer.realtime() + fadeTime
