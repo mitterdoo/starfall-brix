@@ -399,6 +399,19 @@ createSheet(4, assets.files["controlicons.png"], {
 	[27] = {16 + 112 * 2,		16 + 112 * 3,		96, 96}, -- 8 tab
 })
 
+createSheet(5, assets.files["about1.png"], {
+	[0] = {1, 1, 510, 510},
+	[1] = {513, 1, 510, 510},
+	[2] = {1, 513, 510, 510},
+	[3] = {513, 513, 510, 510}
+})
+
+createSheet(6, assets.files["about2.png"], {
+	[0] = {1, 1, 510, 510},
+	[1] = {513, 1, 510, 510},
+	[2] = {1, 513, 510, 510}
+})
+
 for i = 1, 11 do
 
 	createSheet(19 + i, assets.files["level_" .. i .. "_bg.png"], {
