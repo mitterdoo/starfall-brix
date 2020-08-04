@@ -23,7 +23,7 @@ local scrollStart = 0.5
 local scrollRepeat = 0.075
 function PANEL:Init()
 
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self.placements = {} -- [place] = {nick, attribute}
 	self.max = 1
 
@@ -69,7 +69,7 @@ end
 
 function PANEL:OnRemove()
 
-	self.super.OnRemove(self)
+	PANEL.super.OnRemove(self)
 	hook.remove("action", "finalPlacements")
 
 end
@@ -93,7 +93,7 @@ function PANEL:ScrollTo(where)
 end
 
 function PANEL:OnSizeChanged(w, h)
-	self.super.OnSizeChanged(self, w, h)
+	PANEL.super.OnSizeChanged(self, w, h)
 	self.place:SetPos(w, headerBaseline - self.place.h)
 	self.maxVisibleCards = math.min(self.max, math.floor((h - cardsBegin) / (cardHeight + cardSpacing)))
 	self.invalid = true

@@ -34,7 +34,7 @@ local binds = {
 
 function PANEL:Init()
 
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self.strategy = 0
 	self.stickPos = 0
 	self.lastChange = 0

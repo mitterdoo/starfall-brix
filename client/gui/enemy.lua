@@ -16,7 +16,7 @@ local badgeSpacing = (60 - 4*badgeSize)/5
 
 function PANEL:Init()
 
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self.RTName = enemyRT
 	self:SetDivisionSize(64, 128)
 	self:SetSize(64, 128)
@@ -139,7 +139,7 @@ function PANEL:Think()
 
 	end
 
-	self.super.Think(self)
+	PANEL.super.Think(self)
 
 end
 

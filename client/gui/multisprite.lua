@@ -2,7 +2,7 @@ local PANEL = {}
 
 function PANEL:Init()
 
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self.refSprite = 0
 
 end

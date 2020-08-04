@@ -1,7 +1,7 @@
 local PANEL = {}
 
 function PANEL:Init()
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self.action = "ui_accept"
 end
 

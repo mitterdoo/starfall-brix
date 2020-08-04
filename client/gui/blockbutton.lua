@@ -1,6 +1,6 @@
 local PANEL = {}
 function PANEL:Init()
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self.halign = 0
 	self.valign = 0
 	self.label = 11

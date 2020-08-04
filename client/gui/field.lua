@@ -3,7 +3,7 @@ local PANEL = {}
 
 function PANEL:Init()
 
-	self.super.Init(self)
+	PANEL.super.Init(self)
 	self:SetSize(1022, 1022)
 	self.allowSkyline = true
 	self.brickSize = 48
