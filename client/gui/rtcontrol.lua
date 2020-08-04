@@ -5,6 +5,8 @@ local pushRT = gui.pushRT
 local popRT = gui.popRT
 
 local nativeWidth, nativeHeight = render.getGameResolution()
+nativeWidth = math.min(1024, nativeWidth)
+nativeHeight = math.min(1024, nativeHeight)
 
 local RTUniqueID = 0
 function PANEL:Init()
