@@ -43,9 +43,12 @@ function gui.getMatrix(x, y, sw, sh)
 
 end
 
-function gui.getFitScale(w, h, bound_w, bound_h)
-	local scale = math.min(bound_w / w, bound_h / h)
-	return scale
+function gui.getFitScale(w, h, bound_w, bound_h, allowOversize)
+	if allowOversize then
+		return math.max(bound_w / w, bound_h / h)
+	else
+		return math.min(bound_w / w, bound_h / h)
+	end
 end
 
 local function round( num, idp )
