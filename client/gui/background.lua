@@ -32,7 +32,10 @@ function PANEL:Paint(w, h)
 	if t > self.lerpEnd then
 		render.setRGBA(255, 255, 255, 255)
 		sprite.setSheet(sheet)
-		sprite.draw(0, 0, 0, w, h) -- todo: aspect ratio
+		local scale = gui.getFitScale(1920, 1080, w, h)
+
+		local nw, nh = w * scale, h*scale
+		sprite.draw(0, w/2 - nw/2, h/2 - nh/2, nw, nh)
 		return
 	end
 
