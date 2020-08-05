@@ -260,22 +260,27 @@ function brix.makeMatrix(w, h)
 		end
 			
 
-		
+		-- Anything below here is a single line of garbage only. No more
 		if not self:isRowClear(h - 1) then
 			return false
 		end
 		
-		local data = self.data:sub(1, w * (h-1))
 		local newLine
 		if gap then
 			local char = mono and "[" or "!"
 			newLine = string.rep(char, gap - 1) .. " " .. string.rep(char, w - gap)
+
+			local solidCells = self.data:sub(1, w*self.solidHeight)
+			local restOfData = self.data:sub(w*self.solidHeight + 1, w * (h-1))
+			self.data = solidCells .. newLine .. restOfData
+
 		else
+			local data = self.data:sub(1, w * (h-1))
 			newLine = string.rep("=", w)
 			self.solidHeight = self.solidHeight + 1
+			data = newLine .. data
+			self.data = data
 		end
-		data = newLine .. data
-		self.data = data
 		self.invalid = true
 		self:updateCount()
 		
