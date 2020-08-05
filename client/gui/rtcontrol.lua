@@ -159,4 +159,6 @@ function PANEL:Draw()
 
 end
 
+function PANEL:OnRemove() end
+
 gui.Register("DividedRTControl", PANEL, "RTControl")
