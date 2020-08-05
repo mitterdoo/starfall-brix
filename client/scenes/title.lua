@@ -67,13 +67,6 @@ function SCENE.Open(from)
 	else
 		b_play:Focus()
 	end
-
-	local CreatorInfoShadow = gui.Create("Sprite", root)
-	CreatorInfoShadow:SetAlign(0, 1)
-	CreatorInfoShadow:SetPos(w/2 + 2, h + 2)
-	CreatorInfoShadow:SetSheet(2)
-	CreatorInfoShadow:SetSprite(sprite.sheets[2].credit)
-	CreatorInfoShadow:SetColor(Color(0, 0, 0))
 	local CreatorInfo = gui.Create("Sprite", root)
 	CreatorInfo:SetAlign(0, 1)
 	CreatorInfo:SetPos(w/2, h)
