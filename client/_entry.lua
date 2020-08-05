@@ -90,4 +90,9 @@ hook.add("hudshoulddraw", "brix", function(name)
 end)
 
 
+hook.add("inputPressed", "debug", function(button)
+	if button == 50 and player() == owner() then
+		net.start("BRIX_BOT")
+		net.send()
+	end
 end)
