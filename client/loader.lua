@@ -92,6 +92,7 @@ loader.run(function()
         "render.calcview",
 		"bass.loadFile",
 		"bass.play2D",
+		"sound.modify",
 		"file.read",
 		"file.write",
 		"file.exists",
