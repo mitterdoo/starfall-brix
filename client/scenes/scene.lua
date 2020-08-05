@@ -4,16 +4,10 @@ scene = {}
 scene.Registry = {}
 function scene.Register(name, tab)
 	scene.Registry[name] = tab
-	if tab.Entry then
-		scene.Entry = name
-	end
 end
 
 requiredir("brix/client/scenes")
-
-if not scene.Entry then
-	error("Entry scene not found! Did you set SCENE.Entry to true on one scene?")
-end
+scene.Entry = "Spectate"
 
 local function closeActiveScene()
 

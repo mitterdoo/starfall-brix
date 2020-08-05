@@ -1,5 +1,4 @@
 local SCENE = {}
-SCENE.Entry = true
 
 local uiFont = render.createFont("Roboto", 36, 200)
 
