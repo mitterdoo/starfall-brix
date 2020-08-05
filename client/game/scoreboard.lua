@@ -180,11 +180,13 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 
 	end
 	arena.hook("playerConnect", function(playerID)
-	
 		setPlayerCount(arena.playerCount)
-
-
 	end)
+
+	arena.hook("playerDisconnect", function(playerID)
+		setPlayerCount(arena.playerCount)
+	end)
+
 	arena.hook("arenaFinalized", function()
 	
 		setPlayerCount(arena.remainingPlayers, arena.playerCount)

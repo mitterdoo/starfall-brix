@@ -120,6 +120,9 @@ ARENA.hookNames = {
 	"playerConnect",		-- Player connects to the server
 		-- number playerID
 
+	"playerDisconnect",
+		-- number playerID
+
 	"arenaFinalized",
 
 	"finalPlace",			-- Server has given us our final placement

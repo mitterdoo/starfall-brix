@@ -244,12 +244,17 @@ function SCENE.Open()
 
 	return function()
 
+		if game.arena and game.arena.connected then
+			game.arena:disconnect()
+		end
+		hook.run("brDisconnect", game, game.arena)
 		hook.remove("action", "brix")
 		hook.remove("xinputPressed", "debug")
 		hook.remove("inputPressed", "debug")
 		hook.remove("guiPreDraw", "brix")
 
 		Container:Remove()
+		Background:Remove()
 		game.controls = nil
 
 

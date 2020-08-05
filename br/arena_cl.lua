@@ -269,6 +269,7 @@ end
 function br.connectToServer(callback)
 
 	net.start(ARENA.netConnectTag)
+	net.writeBit(1)
 	net.send()
 
 	local hookName = tostring(math.random(2^31-1))
@@ -284,6 +285,7 @@ function br.connectToServer(callback)
 				arena = br.createArena(seed, uniqueID)
 				arena.tempArena = {} -- Dict of uniqueIDs on the server
 				arena.connected = true
+				arena.connectHookName = hookName
 				callback(arena)
 
 			elseif event == e.UPDATE then
@@ -302,12 +304,23 @@ function br.connectToServer(callback)
 
 					end
 				end
+
+				local disconnected = {}
+				for id, _ in pairs(arena.tempArena) do
+					if not players[id] then
+						table.insert(disconnected, id)
+					end
+				end
+
 				arena.tempArena = players
 				arena.remainingPlayers = playerCount
 				arena.playerCount = playerCount
 
 				for _, id in pairs(newPlayers) do
 					arena.hook:run("playerConnect", id)
+				end
+				for _, id in pairs(disconnected) do
+					arena.hook:run("playerDisconnect", id)
 				end
 
 			elseif event == e.READY then
@@ -322,6 +335,7 @@ function br.connectToServer(callback)
 				arena:onReady()
 
 				hook.remove("net", hookName)
+				arena.connectHookName = nil
 			end
 		end
 	end)
@@ -385,7 +399,14 @@ function ARENA:disconnect()
 		hook.remove("think", self.hookName)
 		hook.remove("net", self.hookName)
 	end
+	if self.connectHookName then
+		hook.remove("net", self.connectHookName)
+	end
 	self.hook:run("disconnect")
+	
+	net.start(ARENA.netConnectTag)
+	net.writeBit(0)
+	net.send()
 
 end
 

@@ -10,6 +10,7 @@
 require("brix/br/arena.lua")
 
 local openServers = {}
+local arenas = {}
 
 -- Opens the server for connections
 function ARENA:open()
@@ -80,6 +81,53 @@ function ARENA:connectPlayer(ply)
 
 end
 
+function ARENA:disconnectPlayer(ply)
+	
+	local id = self.players[ply]
+	if not id then return end
+
+	print("Disconnecting player", ply)
+	if self.finalized then
+		if not self.started then
+			table.insert(self.playersToKick, id)
+		else
+			local game = self.arena[id]
+			if game and not game.dead then
+				game:killGame()
+				game.kickReason = "Player disconnected manually"
+			end
+		end
+	else
+
+		local game = self.arena[id]
+		if not game then error("Attempt to disconnect player " .. tostring(ply) .. " without a game object!") end
+
+		-- First, restore the unique ID
+		table.insert(self.uniqueIDs, id)
+
+		-- Remove player from connected players
+		table.removeByValue(self.connectedPlayers, ply)
+
+		self.arena[id] = nil
+		self.players[ply] = nil
+
+		self.playerCount = self.playerCount - 1
+		self.remainingPlayers = self.remainingPlayers - 1
+
+		net.start(ARENA.netConnectTag)
+		net.writeUInt(ARENA.connectEvents.UPDATE, 2)
+		net.writeUInt(self.playerCount, 6)
+
+		for plyID, _ in pairs(self.arena) do
+			net.writeUInt(plyID, 6)
+		end
+
+		net.send()
+
+	end
+
+end
+
 function ARENA:connectBot()
 
 	if self.playerCount == self.maxPlayers then
@@ -115,6 +163,7 @@ end
 function ARENA:readyUp()
 
 	openServers[self] = nil -- Close the server
+	self.finalized = true
 	self.startTime = timer.curtime() + ARENA.readyUpTime
 
 	--[[
@@ -171,6 +220,7 @@ end
 
 function ARENA:start()
 
+	self.started = true
 	local e = ARENA.serverEvents
 	-- Setup each game object
 	for id, game in pairs(self.arena) do
@@ -270,9 +320,6 @@ function ARENA:start()
 				self.nextSnapshot = self.nextSnapshot + self.refreshRate
 			end
 			self:sendSnapshot()
-			if self.dead then
-				hook.remove("think", self.hookName)
-			end
 		end
 
 	end)
@@ -384,6 +431,7 @@ function ARENA:sendSnapshot()
 	net.start(ARENA.netTag)
 	net.writeUInt(snapshotID, 32) -- snapshotID
 	net.writeUInt(#self.queue, 32) -- size of queue
+	local gameOver = false
 	for _, data in pairs(self.queue) do
 	
 		local event = data[1]
@@ -456,6 +504,7 @@ function ARENA:sendSnapshot()
 			net.writeUInt(player, 6)
 			net.writeUInt(entIndex, 8)
 			net.writeString(nick)
+			gameOver = true
 		
 		else
 			error("Unknown event type " .. tostring(event) )
@@ -477,6 +526,16 @@ function ARENA:sendSnapshot()
 
 	self.queue = {}
 
+	if gameOver then
+		self:finish()
+	end
+
+end
+
+function ARENA:finish()
+
+	hook.remove("think", self.hookName)
+	arenas[self] = nil
 
 end
 
@@ -487,6 +546,8 @@ function br.createArena()
 	self.arena = {} -- dict of players' BR objects
 	self.players = {} -- lookup table of a player's ID
 	self.connectedPlayers = {} -- list of players
+	self.finalized = false
+	self.playersToKick = {} -- List of IDs of players who disconnected during ready-up. These will be KO'd at start
 
 	self.snapshots = {}		-- Lookup table of past snapshots sent to clients.
 	self.snapshotCount = 0
@@ -501,6 +562,8 @@ function br.createArena()
 		self.uniqueIDs[i] = i
 	end
 
+	arenas[self] = true
+
 	return setmetatable(self, ARENA)
 
 end
@@ -509,9 +572,19 @@ hook.add("net", "brixConnect", function(name, len, ply)
 
 	if name == ARENA.netConnectTag then
 
-		for arena, _ in pairs(openServers) do
-			arena:connectPlayer(ply)
+		local joining = net.readBit() == 1
+		if joining then
+			for arena, _ in pairs(openServers) do
+				arena:connectPlayer(ply)
+			end
+		else
+			for arena, _ in pairs(arenas) do
+				if arena.players[ply] then
+					arena:disconnectPlayer(ply)
+				end
+			end
 		end
+
 
 	elseif name == "BRIX_BOT" and ply == owner() then
 

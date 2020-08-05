@@ -412,6 +412,15 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	end)
 
+	arena.hook("playerDisconnect", function(who)
+		if who == arena.uniqueID then return end
+		if enemies[who] then
+			enemies[who]:Remove()
+			enemies[who] = nil
+			EnemyRT.invalid = true
+		end
+	end)
+
 	arena.hook("arenaFinalized", function()
 	
 		for id, enemy in pairs(arena.arena) do
