@@ -1,7 +1,7 @@
 -- Countdown timer
-hook.add("brConnect", "countdown", function(game, arena)
 
-	local textSprite, numberSprite
+hook.add("brCreateGame", "countdown", function(game)
+
 	local root = game.controls.HUD
 	local center_x, center_y = root.w/2, root.h/2
 	local getReady = gui.Create("Sprite", root)
@@ -9,6 +9,19 @@ hook.add("brConnect", "countdown", function(game, arena)
 	getReady:SetSprite(65)
 	getReady:SetAlign(0, 0)
 	getReady:SetPos(center_x, center_y / 2 * 3)
+	game.controls.getReady = getReady
+
+end)
+hook.add("brConnect", "countdown", function(game, arena)
+
+	local textSprite, numberSprite
+	local root = game.controls.HUD
+	local center_x, center_y = root.w/2, root.h/2
+	local getReady = game.controls.getReady
+
+	arena.hook("arenaFinalized", function()
+		game.controls.BackLabel:SetVisible(false)
+	end)
 
 	arena.hook("init", function()
 	

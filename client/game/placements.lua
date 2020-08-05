@@ -20,6 +20,7 @@ hook.add("brConnect", "placements", function(game, arena)
 			game.controls.Scoreboard:Remove()
 			game.controls.Strategy:Remove()
 			Placements:SetVisible(true)
+			game.controls.BackLabel:SetVisible(true)
 		end)
 
 	end)

@@ -5,6 +5,8 @@ requiredir("brix/client/game", {
 	"scoreboard.lua"
 })
 
+local backFont = render.createFont("Roboto", 36, 100)
+
 local SCENE = {}
 function SCENE.Open()
 	local game = {}
@@ -15,7 +17,6 @@ function SCENE.Open()
 	game.controls.Background = Background
 
 	local Container = gui.Create("Control")
-	Container:SetVisible(false)
 	Container:SetSize(render.getGameResolution())
 	game.controls.Container = Container
 
@@ -145,6 +146,27 @@ function SCENE.Open()
 
 	game.controls.HUD = gui.Create("Control", root)
 	game.controls.HUD:SetSize(root.w, root.h)
+
+	local BackLabel = gui.Create("ActionLabel", game.controls.HUD)
+	game.controls.BackLabel = BackLabel
+	BackLabel:SetPos(8, root.h - 8)
+	BackLabel:SetAlign(-1, 1)
+	BackLabel:SetFont(backFont)
+	BackLabel:SetText("{ui_cancel} Main Menu")
+
+	local BackButton = gui.Create("Button", Container)
+	BackButton:SetVisible(false)
+	BackButton:SetHotAction("ui_cancel")
+	function BackButton:DoPress()
+		if BackLabel.visible then
+			if game.arena then
+				game.arena:disconnect()
+			end
+			scene.Open("Title", 1)
+		end
+	end
+
+	hook.run("brCreateGame", game)
 
 	br.connectToServer(function(arena)
 
