@@ -16,7 +16,6 @@ local function fx_AttackTravel(x, y, w, h, frac, glow)
 
 end
 
-local spr_knockout = sprite.sheets[1].knockout
 local spr_targetHit = sprite.sheets[1].targetHit
 
 local function fx_TargetHit(x, y, w, h, frac)
