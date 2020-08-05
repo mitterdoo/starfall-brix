@@ -31,13 +31,12 @@ local function loadSheets()
 			if not file.exists(path) then
 				error("Attempt to create spritesheet from unknown path: " .. tostring(path))
 			end
-			local start = timer.systime()
 			local mat = material.createFromImage("data/sf_filedata/" .. path, "smooth")
-			local loadTime = timer.systime() - start
-
 			sprite.mats[name] = mat
 
-			loader.sleep(loadTime * 8)
+			while quotaAverage() / quotaMax() >= 0.1 do
+				loader.sleep(0.5)
+			end
 
 		else
 			local idx, path, coords = unpack(sheet)
