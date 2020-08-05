@@ -7,7 +7,7 @@ function scene.Register(name, tab)
 end
 
 requiredir("brix/client/scenes")
-scene.Entry = "Spectate"
+scene.Entry = "Title"
 
 local function closeActiveScene()
 
