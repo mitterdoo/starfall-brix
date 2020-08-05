@@ -174,7 +174,11 @@ function ARENA:readyUp()
 	net.start(ARENA.netConnectTag)
 	net.writeUInt(ARENA.connectEvents.READY, 2)
 	net.writeFloat(self.startTime)
-	net.send(self.connectedPlayers)
+	if #self.connectedPlayers > 0 then
+		net.send(self.connectedPlayers)
+	else
+		net.send()
+	end
 
 	self.phaseStartHalfway = math.max(2, math.ceil(self.playerCount / 2))		-- Playercount at which the game speeds up
 	self.phaseStartShowdown = math.max(2, math.ceil(self.playerCount * 0.24))	-- Playercount at which garbage delay is quick
@@ -192,6 +196,30 @@ function ARENA:readyUp()
 	timer.simple(ARENA.readyUpTime, function()
 		self:start()
 	end)
+
+end
+
+function ARENA:enqueueMatrices()
+
+	local stream = bit.stringstream()
+	for id, game in pairs(self.arena) do
+		stream:writeInt8(id)
+		if game.dead then
+			stream:writeInt8(1) -- died
+			stream:writeInt8(game.placement) -- place
+		else
+			stream:writeInt8(0) -- not dead
+			stream:writeInt8(game.badgeBits) -- bits
+			stream:writeInt8(game.matrix.solidHeight)
+			local data = game.matrix.data
+			local count = #data
+			stream:writeInt16(count) -- data length
+			stream:write(data) -- data
+		end
+	end
+	local data = fastlz.compress(stream:getString())
+	local count = #data
+	self:enqueue(ARENA.serverEvents.UPDATE, count, data)
 
 end
 
@@ -263,6 +291,7 @@ function ARENA:start()
 			local entIndex = ply and ply:entIndex() or 0
 			local nick = ply and ply:getName() or ("BOT " .. game.uniqueID)
 
+			game.placement = placement
 			self:enqueue(e.DIE, game.uniqueID, killer, placement, deathFrame, badgeBits, entIndex, nick)
 
 			self.remainingPlayers = self.remainingPlayers - 1
@@ -298,7 +327,7 @@ function ARENA:start()
 		
 			self:enqueue(e.MATRIX_PLACE, game.uniqueID, piece.type, rot, x, y, mono)
 			if game.bot then
-				local r = math.random(1, 20)
+				local r = math.random(1, 1)
 				game.hook:run("preGarbageSend", r)
 				game.hook:run("garbageSend", r)
 			end
@@ -308,7 +337,7 @@ function ARENA:start()
 		game.hook("garbageDumpFull", function(solid, lines)
 		
 			local eventType = solid and e.MATRIX_SOLID or e.MATRIX_GARBAGE
-			self:enqueue(eventType, game.uniqueID, lines)
+			self:enqueue(eventType, game.uniqueID, lines, game.params.monochrome == true)
 
 
 		end)
@@ -440,79 +469,87 @@ function ARENA:sendSnapshot()
 	for _, data in pairs(self.queue) do
 	
 		local event = data[1]
-		net.writeUInt(event, 3)
-		if event == e.DAMAGE then
-			local attacker, lines, victims = data[2], data[3], data[4]
-
-			local victimCount = #victims
-			net.writeUInt(attacker, 6)
-			net.writeUInt(victimCount, 6)
-			net.writeUInt(lines, 5)
-			for _, victim in pairs(victims) do
-				net.writeUInt(victim, 6)
-			end
-
-		elseif event == e.TARGET then
-			local attacker, victims = data[2], data[3]
-			local victimCount = #victims
-			
-			net.writeUInt(attacker, 6)
-			net.writeUInt(victimCount, 6)
-			for _, victim in pairs(victims) do
-				net.writeUInt(victim, 6)
-			end
-
-		elseif event == e.DIE then
-			local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = data[2], data[3], data[4], data[5], data[6], data[7], data[8]
-
-			net.writeUInt(victim, 6)
-			net.writeUInt(killer, 6)
-			net.writeUInt(placement, 6)
-			net.writeUInt(deathFrame, 32)
-			net.writeUInt(badgeBits, 6)
-			net.writeUInt(entIndex, 8)
-			net.writeString(nick)
-
-		elseif event == e.MATRIX_PLACE then
-			local player, piece, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6], data[7]
-
-			net.writeUInt(player, 6)
-			net.writeUInt(piece, 3)
-			net.writeUInt(rot, 2)
-			net.writeInt(x, 5)
-			net.writeInt(y, 6)
-			net.writeBit(mono and 1 or 0)
-
-		elseif event == e.MATRIX_GARBAGE then
-			local player, gaps = data[2], data[3]
-			local gapCount = #gaps
-
-			net.writeUInt(player, 6)
-			net.writeUInt(gapCount, 5)
-			for _, gap in pairs(gaps) do
-				net.writeUInt(gap, 4)
-			end
-
-		elseif event == e.MATRIX_SOLID then
-			local player, lines = data[2], data[3]
-
-			net.writeUInt(player, 6)
-			net.writeUInt(lines, 5)
-
-		elseif event == e.CHANGEPHASE then
-			local phase, statedFrame = data[2], data[3]
-			net.writeUInt(phase, 2)
-			net.writeUInt(statedFrame, 32)
-		
-		elseif event == e.WINNER then
-			local player, entIndex, nick = data[2], data[3], data[4]
-			net.writeUInt(player, 6)
-			net.writeUInt(entIndex, 8)
-			net.writeString(nick)
-			gameOver = true
-		
+		if event == e.UPDATE then
+			net.writeBit(1)
+			net.writeUInt(data[2], 32)
+			net.writeData(data[3], data[2])
 		else
-			error("Unknown event type " .. tostring(event) )
+			net.writeBit(0)
+			net.writeUInt(event, 3)
+			if event == e.DAMAGE then
+				local attacker, lines, victims = data[2], data[3], data[4]
+
+				local victimCount = #victims
+				net.writeUInt(attacker, 6)
+				net.writeUInt(victimCount, 6)
+				net.writeUInt(lines, 5)
+				for _, victim in pairs(victims) do
+					net.writeUInt(victim, 6)
+				end
+
+			elseif event == e.TARGET then
+				local attacker, victims = data[2], data[3]
+				local victimCount = #victims
+				
+				net.writeUInt(attacker, 6)
+				net.writeUInt(victimCount, 6)
+				for _, victim in pairs(victims) do
+					net.writeUInt(victim, 6)
+				end
+
+			elseif event == e.DIE then
+				local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = data[2], data[3], data[4], data[5], data[6], data[7], data[8]
+
+				net.writeUInt(victim, 6)
+				net.writeUInt(killer, 6)
+				net.writeUInt(placement, 6)
+				net.writeUInt(deathFrame, 32)
+				net.writeUInt(badgeBits, 6)
+				net.writeUInt(entIndex, 8)
+				net.writeString(nick)
+
+			elseif event == e.MATRIX_PLACE then
+				local player, piece, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6], data[7]
+
+				net.writeUInt(player, 6)
+				net.writeUInt(piece, 3)
+				net.writeUInt(rot, 2)
+				net.writeInt(x, 5)
+				net.writeInt(y, 6)
+				net.writeBit(mono and 1 or 0)
+
+			elseif event == e.MATRIX_GARBAGE then
+				local player, gaps, mono = data[2], data[3], data[4]
+				local gapCount = #gaps
+
+				net.writeUInt(player, 6)
+				net.writeUInt(gapCount, 5)
+				for _, gap in pairs(gaps) do
+					net.writeUInt(gap, 4)
+				end
+				net.writeBit(mono and 1 or 0)
+
+			elseif event == e.MATRIX_SOLID then
+				local player, lines = data[2], data[3]
+
+				net.writeUInt(player, 6)
+				net.writeUInt(lines, 5)
+
+			elseif event == e.CHANGEPHASE then
+				local phase, statedFrame = data[2], data[3]
+				net.writeUInt(phase, 2)
+				net.writeUInt(statedFrame, 32)
+			
+			elseif event == e.WINNER then
+				local player, entIndex, nick = data[2], data[3], data[4]
+				net.writeUInt(player, 6)
+				net.writeUInt(entIndex, 8)
+				net.writeString(nick)
+				gameOver = true
+			
+			else
+				error("Unknown event type " .. tostring(event) )
+			end
 		end
 
 	end
@@ -533,6 +570,8 @@ function ARENA:sendSnapshot()
 
 	if gameOver then
 		self:finish()
+	elseif snapshotID % 10 == 1 then
+		self:enqueueMatrices()
 	end
 
 end

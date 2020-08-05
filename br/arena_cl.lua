@@ -13,8 +13,8 @@ require("brix/br/arena.lua")
 local ENEMY = {}
 ENEMY.__index = ENEMY
 
-function ENEMY:garbage(gap)
-	local retValue = self.matrix:garbage(gap)
+function ENEMY:garbage(gap, mono)
+	local retValue = self.matrix:garbage(gap, mono)
 	if self.matrix.cellCount >= brix.dangerCapacity then
 		self.danger = self.matrix.cellCount - brix.dangerCapacity
 	end
@@ -454,11 +454,9 @@ function ARENA:sendSnapshot()
 
 end
 
-function ARENA:handleServerSnapshot()
-	local frame = brix.getFrame(timer.realtime() - self.startTime)
+function br.decodeServerSnapshot()
 
 	local snapshot = {}
-
 	local snapshotID = net.readUInt(32)
 	local eventCount = net.readUInt(32)
 	local e = ARENA.serverEvents
@@ -466,59 +464,74 @@ function ARENA:handleServerSnapshot()
 	for _ = 1, eventCount do
 
 		local data
-		local event = net.readUInt(3)
-		if event == e.DAMAGE then
-			local attacker, victimCount, lines = net.readUInt(6), net.readUInt(6), net.readUInt(5)
-			local victims = {}
-			for i = 1, victimCount do
-				victims[i] = net.readUInt(6)
-			end
-			data = {event, attacker, lines, victims}
-		
-		elseif event == e.TARGET then
-			local attacker, victimCount = net.readUInt(6), net.readUInt(6)
-			local victims = {}
-			for i = 1, victimCount do
-				victims[i] = net.readUInt(6)
-			end
-
-			data = {event, attacker, victims}
-
-		elseif event == e.DIE then
-			local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = net.readUInt(6), net.readUInt(6), net.readUInt(6), net.readUInt(32), net.readUInt(6), net.readUInt(8), net.readString()
-
-			data = {event, victim, killer, placement, deathFrame, badgeBits, entIndex, nick}
-		
-		elseif event == e.MATRIX_PLACE then
-			local player, piece, rot, x, y, mono = net.readUInt(6), net.readUInt(3), net.readUInt(2), net.readInt(5), net.readInt(6), net.readBit() == 1
-
-			data = {event, player, piece, rot, x, y, mono}
-		
-		elseif event == e.MATRIX_GARBAGE then
-			local player, gapCount = net.readUInt(6), net.readUInt(5)
-			local gaps = {}
-
-			for i = 1, gapCount do
-				gaps[i] = net.readUInt(4)
-			end
-			data = {event, player, gaps}
-
-		elseif event == e.MATRIX_SOLID then
-			local player, lines = net.readUInt(6), net.readUInt(5)
-
-			data = {event, player, lines}
-		
-		elseif event == e.CHANGEPHASE then
-			data = {event, net.readUInt(2), net.readUInt(32)}
-		elseif event == e.WINNER then
-			data = {event, net.readUInt(6), net.readUInt(8), net.readString()}
+		local isUpdate = net.readBit() == 1
+		if isUpdate then
+			local count = net.readUInt(32)
+			local matrixData = net.readData(count)
+			data = {e.UPDATE, fastlz.decompress(matrixData)}
 		else
-			error("Unknown event type " .. tostring(event) .. " when decoding")
-		end
+			local event = net.readUInt(3)
+			if event == e.DAMAGE then
+				local attacker, victimCount, lines = net.readUInt(6), net.readUInt(6), net.readUInt(5)
+				local victims = {}
+				for i = 1, victimCount do
+					victims[i] = net.readUInt(6)
+				end
+				data = {event, attacker, lines, victims}
+			
+			elseif event == e.TARGET then
+				local attacker, victimCount = net.readUInt(6), net.readUInt(6)
+				local victims = {}
+				for i = 1, victimCount do
+					victims[i] = net.readUInt(6)
+				end
 
+				data = {event, attacker, victims}
+
+			elseif event == e.DIE then
+				local victim, killer, placement, deathFrame, badgeBits, entIndex, nick = net.readUInt(6), net.readUInt(6), net.readUInt(6), net.readUInt(32), net.readUInt(6), net.readUInt(8), net.readString()
+
+				data = {event, victim, killer, placement, deathFrame, badgeBits, entIndex, nick}
+			
+			elseif event == e.MATRIX_PLACE then
+				local player, piece, rot, x, y, mono = net.readUInt(6), net.readUInt(3), net.readUInt(2), net.readInt(5), net.readInt(6), net.readBit() == 1
+
+				data = {event, player, piece, rot, x, y, mono}
+			
+			elseif event == e.MATRIX_GARBAGE then
+				local player, gapCount = net.readUInt(6), net.readUInt(5)
+				local gaps = {}
+
+				for i = 1, gapCount do
+					gaps[i] = net.readUInt(4)
+				end
+				local mono = net.readBit() == 1
+				data = {event, player, gaps, mono}
+
+			elseif event == e.MATRIX_SOLID then
+				local player, lines = net.readUInt(6), net.readUInt(5)
+
+				data = {event, player, lines}
+			
+			elseif event == e.CHANGEPHASE then
+				data = {event, net.readUInt(2), net.readUInt(32)}
+			elseif event == e.WINNER then
+				data = {event, net.readUInt(6), net.readUInt(8), net.readString()}
+			else
+				error("Unknown event type " .. tostring(event) .. " when decoding")
+			end
+		end
 		table.insert(snapshot, data)
 
 	end
+
+	return snapshot, snapshotID
+end
+
+function ARENA:handleServerSnapshot()
+	local frame = brix.getFrame(timer.realtime() - self.startTime)
+
+	local snapshot, snapshotID = br.decodeServerSnapshot()
 
 	self:enqueue(ARENA.clientEvents.ACKNOWLEDGE, frame, snapshotID)
 	br.handleServerSnapshot(self, frame, snapshot)

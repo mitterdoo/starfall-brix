@@ -63,6 +63,8 @@ ARENA.serverEvents = {
 	WINNER = 7,			-- {UInt6 player, UInt8 playerEntIndex, string playerNick}
 						-- The winner of the match
 
+	UPDATE = 8,			-- {UInt32 dataSize, byte[dataSize] compressed matrices of all players}
+
 }
 
 ARENA.clientEvents = {
@@ -109,6 +111,7 @@ ARENA.hookNames = {
 	"playerMatrixGarbage",	-- Player gets garbage
 		-- number player
 		-- table {number gap, ...}
+		-- bool monochrome
 	
 	"playerMatrixSolid",	-- Player gets solid garbage
 		-- number player
@@ -263,15 +266,15 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				game.hook:run("playerMatrixPlace", player, pieceID, rot, x, y, mono)
 
 			elseif event == e.MATRIX_GARBAGE then
-				local player, gaps = data[2], data[3]
+				local player, gaps, mono = data[2], data[3], data[4]
 
 				local enemy = game.arena[player]
 				if player == game.uniqueID then
 					enemy = game.selfEnemy
 				end
-				enemy:garbage(gaps)
+				enemy:garbage(gaps, mono)
 
-				game.hook:run("playerMatrixGarbage", player, gaps)
+				game.hook:run("playerMatrixGarbage", player, gaps, mono)
 			
 			elseif event == e.MATRIX_SOLID then
 				local player, lines = data[2], data[3]

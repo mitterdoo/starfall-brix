@@ -252,7 +252,7 @@ function brix.makeMatrix(w, h)
 
 		if type(gap) == "table" then
 			for _, thisGap in pairs(gap) do
-				if not self:garbage(thisGap) then
+				if not self:garbage(thisGap, mono) then
 					return false
 				end
 			end
