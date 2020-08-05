@@ -77,7 +77,6 @@ function BRIX:update(frame)
 			--print("no timers")
 			self.dead = true
 			self.diedAt = frame
-			print(CLIENT and "CLIENT" or "SERVER", "NO TIMERS")
 			return false
 		end
 		
@@ -106,7 +105,7 @@ end
 
 function BRIX:callEvent(frame, name, ...)
 
-	if coroutine.status(self.mainCoroutine) == "dead" then self.dead = true print(CLIENT and "CLIENT" or "SERVER", "main coroutine dead") return false end
+	if coroutine.status(self.mainCoroutine) == "dead" then self.dead = true return false end
 
 	if frame < self.frame then
 		error("CONTRADICTION (" .. tostring(frame) .. ", " .. tostring(name) .. " [" .. tostring(self.name) .. "])")
@@ -115,7 +114,7 @@ function BRIX:callEvent(frame, name, ...)
 	self:onUpdate(frame)
 	self.lastEvent = {frame, name, ...}
 	coroutine.resume(self.mainCoroutine, name, ...)
-	if coroutine.status(self.mainCoroutine) == "dead" then self.dead = true print(CLIENT and "CLIENT" or "SERVER", "main coroutine dead") return false end
+	if coroutine.status(self.mainCoroutine) == "dead" then self.dead = true return false end
 	return true
 
 end
