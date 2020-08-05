@@ -94,5 +94,8 @@ hook.add("inputPressed", "debug", function(button)
 	if button == 50 and player() == owner() then
 		net.start("BRIX_BOT")
 		net.send()
+	elseif button == 51 and player() == owner() then
+		net.start("brixBegin")
+		net.send()
 	end
 end)
