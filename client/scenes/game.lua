@@ -1,9 +1,4 @@
 --@client
---@includedir brix/client/game
-
-requiredir("brix/client/game", {
-	"scoreboard.lua"
-})
 
 local backFont = render.createFont("Roboto", 36, 100)
 
