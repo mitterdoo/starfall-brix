@@ -1,124 +1,4 @@
-local attackGlowIntensity = 1.5
-local function fx_AttackTravel(x, y, w, h, frac, glow)
-
-	render.setRGBA(255, 255, 255, 255)
-	if glow then
-
-		render.drawRectFast(
-			x + w/2 - (w*attackGlowIntensity)/2,
-			y + h/2 - (h*attackGlowIntensity)/2,
-			w*attackGlowIntensity,
-			h*attackGlowIntensity
-		)
-	else
-		render.drawRectFast(x, y, w, h)
-	end
-
-end
-
-local spr_targetHit = sprite.sheets[1].targetHit
-
-local function fx_TargetHit(x, y, w, h, frac)
-
-	local frac_b = math.max(0, 1-frac*2)^2*255
-	local frac_g = math.max(0, 1-frac)^2
-	render.setRGBA(255, 120 + 135 * frac_g, frac_b, frac_g*255)
-	sprite.setSheet(1)
-	sprite.draw(spr_targetHit, x, y, w, h)
-
-end
-
-local koGlowIntensity = 1.5
-local function fx_KnockoutTravel(x, y, w, h, frac, glow)
-
-	if glow then
-		render.setRGBA(255, 0, 0, 255)
-	else
-		render.setRGBA(255, 200, 200, 255)
-	end
-	if glow then
-
-		render.drawRectFast(
-			x + w/2 - (w*koGlowIntensity)/2,
-			y + h/2 - (h*koGlowIntensity)/2,
-			w*koGlowIntensity,
-			h*koGlowIntensity
-		)
-	else
-		--sprite.setSheet(1, render.setMaterialEffectAdd)
-		--sprite.draw(spr_knockout, x, y, w, h)
-		render.drawRectFast(x, y, w, h)
-	end
-
-end
-
-local fx_Attacks = {}
-
-for i = 1, 5 do
-	local spr = sprite.sheets[1].attack + i-1
-
-	local setSheet = sprite.setSheet
-	local sprDraw = sprite.draw
-	local attackGlowIntensity = 1.2
-	local function thisAttack(x, y, w, h, frac, glow)
-		setSheet(1)
-		if not glow then
-			render.setRGBA(255, 255, 255, 255)
-			sprDraw(spr, x, y, w, h)
-		else
-			render.setRGBA(255, 255, 255, 255)
-			sprDraw(spr,
-				x + w/2 - (w*attackGlowIntensity)/2,
-				y + h/2 - (h*attackGlowIntensity)/2,
-				w*attackGlowIntensity,
-				h*attackGlowIntensity)
-		end
-	end
-	fx_Attacks[i] = thisAttack
-end
-
-local function fx_Connect(x, y, w, h, frac)
-
-	local down = (1-frac)^2
-	frac = frac^2
-	render.setRGBA(down*200, 255, 255, down*255)
-	render.drawRectFast(x, y, w, h)
-
-end
-
-local function fx_AttackLand(x, y, w, h, frac, glow)
-
-	frac = (1-frac)^2
-	render.setRGBA(255, 128 + frac*127, frac*255, frac*255)
-	--if glow then
-	--	render.drawRectFast(x-w/2, y-h/2, w*2, h*2)
-	--else
-		render.drawRectFast(x, y, w, h)
-	--end
-
-end
-
-local spr_attacker = sprite.sheets[1].enemy_outline
-
-local lookup = sprite.sheets[3]
-local function getEnemyPos(id, ourID)
-
-	if id > ourID then
-		id = id - 1
-	end
-
-	if id < 1 or id > 32 then
-		error("Cannot get enemy pos for ID " .. tostring(id))
-	end
-
-	return unpack(lookup[id])
-
-end
-
 hook.add("brConnect", "enemy", function(game, arena)
-
-	local enemies = {}
-	game.controls.Enemies = enemies
 
 	local AttackerOutlines = {}
 	local TargetReticles = {}
@@ -131,8 +11,65 @@ hook.add("brConnect", "enemy", function(game, arena)
 	local LayerAbove = game.controls.Attacks_Above
 	local LayerBelow = game.controls.Attacks_Below
 
-	local EnemyRT = gui.Create("RTControl", LayerBelow)
-	EnemyRT:SetSize(1024, 1024)
+	local framePos, frameSize = Vector(0, 0, 0), Vector(0, 0, 0)
+	do
+
+		local scale
+		framePos, scale = LayerAbove:AbsolutePos(Vector(148, 52, 0))
+		frameSize = Vector(728, 920, 0) * scale
+
+	end
+	local group_backgroundAttacks = {
+		enter = function()
+
+			render.setStencilWriteMask(0xFF)
+			render.setStencilTestMask(0xFF)
+			render.setStencilReferenceValue(0)
+			render.setStencilCompareFunction(STENCIL_ALWAYS)
+			render.setStencilPassOperation(STENCIL_KEEP)
+			render.setStencilFailOperation(STENCIL_KEEP)
+			render.setStencilZFailOperation(STENCIL_KEEP)
+			render.clearStencil()
+			render.setStencilEnable(true)
+
+			render.setStencilReferenceValue(1)
+			render.setStencilPassOperation(STENCIL_REPLACE)
+			render.setRGBA(255, 255, 255, 0)
+			render.drawRect(framePos[1], framePos[2], frameSize[1], frameSize[2])
+
+			render.setStencilCompareFunction(STENCIL_NOTEQUAL)
+
+		end,
+		exit = function()
+
+			render.setStencilEnable(false)
+
+		end
+	}
+
+	local ArenaCtrl = gui.Create("ArenaControl", LayerBelow)
+	ArenaCtrl.backgroundAttackGroup = group_backgroundAttacks
+	
+	local spr_attacker = sprite.sheets[1].enemy_outline
+
+	local lookup = sprite.sheets[3]
+	function ArenaCtrl:GetEnemyPos(id)
+		if id > arena.uniqueID then
+			id = id - 1
+		end
+		if id < 1 or id > 32 then
+			error("Cannot get enemy pos for ID " .. tostring(id))
+		end
+		return unpack(lookup[id])
+	end
+
+	function ArenaCtrl:GetFieldCenter()
+
+		local pos = LayerBelow:AbsolutePos(Vector(LayerBelow.w/2, LayerBelow.h/2, 0))
+		return pos
+
+	end
+
 
 	local WatchOut = gui.Create("Sprite", LayerBelow)
 	WatchOut:SetSheet(1)
@@ -158,16 +95,10 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local WatchOutStart
 	local WatchOutLineDuration = 4/15
+	ArenaCtrl._Think = ArenaCtrl.Think
+	function ArenaCtrl:Think()
 
-
-	function EnemyRT:Think()
-
-		if not self.invalid then
-			for id, Ctrl in pairs(enemies) do
-				Ctrl:Think()
-			end
-		end
-
+		self:_Think()
 		local t = timer.realtime()
 
 		if t > LastWatchOutFlash + WatchOutFlashDuration then
@@ -252,7 +183,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 			if not AttackerStartTimes[id] then
 				AttackerStartTimes[id] = timer.realtime()
 			end
-			local Enemy = enemies[id]
+			local Enemy = ArenaCtrl.Enemies[id]
 			if Enemy then
 				local Ctrl = gui.Create("Sprite", LayerAbove)
 				local x, y = Enemy:GetPos()
@@ -272,7 +203,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local function createReticle(enemyID, flash)
 
-		local Enemy = enemies[enemyID]
+		local Enemy = ArenaCtrl.Enemies[enemyID]
 		if Enemy then
 			local Ctrl = gui.Create("Reticle", LayerAbove)
 			Ctrl:SetPos(LayerBelow.w/2, LayerAbove.h/2)
@@ -290,7 +221,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	local function moveReticle(Ctrl, enemyID, flash)
 
-		local Enemy = enemies[enemyID]
+		local Enemy = ArenaCtrl.Enemies[enemyID]
 		if Enemy then
 			local x, y = Enemy:GetPos()
 			local sw, sh = Enemy.scale_w, Enemy.scale_h
@@ -389,55 +320,28 @@ hook.add("brConnect", "enemy", function(game, arena)
 	arena.hook("playerConnect", function(who)
 	
 		if who == arena.uniqueID then return end
-		local Ctrl = gui.Create("Enemy", EnemyRT)
-		local x, y, w, h = getEnemyPos(who, arena.uniqueID)
-		Ctrl:SetPos(x, y)
-
-		local scale_w, scale_h = w / 64, h / 128
-		Ctrl:SetScale(scale_w, scale_h)
-		enemies[who] = Ctrl
-		EnemyRT.invalid = true
-
-		local pos, scale = Ctrl:AbsolutePos(Vector(Ctrl.w/2, Ctrl.h/2, 0))
-		local size = Vector(Ctrl.w, Ctrl.h, 0)
-		gfx.EmitParticle(
-			{pos, pos},
-			{size*scale, size*scale*Vector(4, 0.05, 0)},
-			0, 0.15,
-			fx_Connect,
-			true, true
-		)
-
+		ArenaCtrl:AddPlayer(who)
 
 	end)
 
 	arena.hook("playerDisconnect", function(who)
 		if who == arena.uniqueID then return end
-		if enemies[who] then
-			enemies[who]:Remove()
-			enemies[who] = nil
-			EnemyRT.invalid = true
-		end
+		ArenaCtrl:RemovePlayer(who)
 	end)
 
 	arena.hook("arenaFinalized", function()
 	
 		for id, enemy in pairs(arena.arena) do
-			if enemies[id] then
-				enemies[id]:SetEnemy(enemy)
-			else
-				error("No control created for enemy " .. tostring(id))
-			end
+			ArenaCtrl:SetPlayerEnemy(id, enemy)
 		end
-		EnemyRT.invalid = true
 
 	end)
 
 	arena.hook("badgeBits", function(count, sourceID)
 	
 		if arena.dead then return end
-		if enemies[sourceID] then
-			local enemy = enemies[sourceID]
+		if ArenaCtrl.Enemies[sourceID] then
+			local enemy = ArenaCtrl.Enemies[sourceID]
 			local w, h = enemy:GetSize()
 			local pos = enemy:AbsolutePos(Vector(w/2, h/2, 0))
 			game.controls.Scoreboard:AwardBitsFromAbsolutePos(count, pos)
@@ -458,7 +362,6 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 	end)
 
-	local shrinkStart = 0.95
 	local brickSize = sprite.sheets[3].field_main[3]
 
 	arena.hook("garbageSend", function(lines)
@@ -470,188 +373,36 @@ hook.add("brConnect", "enemy", function(game, arena)
 			targets = {arena.target}
 		end
 
-		local percent = lines / arena.params.maxGarbageOut
 		local center = game.controls.LineClearCenter
 		local centerX = center:AbsolutePos(0, 0)
 		local startLeft = center:AbsolutePos(Vector(-brickSize, 0, 0) * 2)
 		local startRight = center:AbsolutePos(Vector(brickSize, 0, 0) * 2)
-		local _, gameScale = EnemyRT:AbsolutePos(Vector(0, 0, 0))
-		local size = Vector(1, 1, 0) * (250 + percent*100) * gameScale
 
 		local badges = br.getBadgeCount(arena.badgeBits)
-		badges = math.min(4, badges)
-
-		local attackFX = fx_Attacks[badges+1]
 
 		for _, id in pairs(targets) do
 
-			local enemy = enemies[id]
-			if enemy then
-				local endPos, scale = enemy:AbsolutePos(Vector(enemy.w/2, enemy.h/2, 0))
-
-				local startPos = endPos.x < centerX and startLeft or startRight
-
-				local enemySize = Vector(enemy.w, enemy.h, 0)
-				gfx.EmitParticle(
-					{{0, startPos}, {shrinkStart, endPos}, {1, endPos}},
-					{{0, size}, {shrinkStart, size}, {1, Vector(0, 0, 0)}},
-					0, 0.5 / shrinkStart,
-					attackFX,
-					true, true
-				)
-				gfx.EmitParticle(
-					{endPos, endPos},
-					{enemySize*scale, enemySize*scale*1.2},
-					0.5, 0.1,
-					fx_AttackLand,
-					true, true
-				)
-				local hitSize = Vector(enemy.w, enemy.w, 0)*scale
-				gfx.EmitParticle(
-					{endPos, endPos},
-					{hitSize, hitSize*8},
-					0.5, 1/6,
-					fx_TargetHit,
-					true, true
-				)
-			end
+			local enemy = ArenaCtrl.Enemies[id]
+			local endPos, _ = enemy:AbsolutePos(Vector(enemy.w/2, enemy.h/2, 0))
+			local startPos = endPos.x < centerX and startLeft or startRight
+			ArenaCtrl:OutgoingDamage(badges, lines, id, startPos)
 
 		end
 
 	end)
-
-	local framePos, frameSize = Vector(0, 0, 0), Vector(0, 0, 0)
-	do
-
-		local scale
-		framePos, scale = LayerAbove:AbsolutePos(Vector(148, 52, 0))
-		frameSize = Vector(728, 920, 0) * scale
-
-	end
-
-	local group_backgroundAttacks = {
-		enter = function()
-
-			render.setStencilWriteMask(0xFF)
-			render.setStencilTestMask(0xFF)
-			render.setStencilReferenceValue(0)
-			render.setStencilCompareFunction(STENCIL_ALWAYS)
-			render.setStencilPassOperation(STENCIL_KEEP)
-			render.setStencilFailOperation(STENCIL_KEEP)
-			render.setStencilZFailOperation(STENCIL_KEEP)
-			render.clearStencil()
-			render.setStencilEnable(true)
-
-			render.setStencilReferenceValue(1)
-			render.setStencilPassOperation(STENCIL_REPLACE)
-			render.setRGBA(255, 255, 255, 0)
-			render.drawRect(framePos[1], framePos[2], frameSize[1], frameSize[2])
-
-			render.setStencilCompareFunction(STENCIL_NOTEQUAL)
-
-		end,
-		exit = function()
-
-			render.setStencilEnable(false)
-
-		end
-	}
-
-	local trailCount = 3
-	local function knockoutTravel(victimID, badgeBits, attackerID)
-
-		local victimCtrl = enemies[victimID]
-		local attackerCtrl = enemies[attackerID]
-		assert(victimCtrl ~= nil, "attempt to create KO particle from unknown victim " .. tostring(victimID))
-		assert(attackerCtrl ~= nil, "attempt to create KO particle to unknown attacker " .. tostring(attackerID))
-
-		local startPos, scale = victimCtrl:AbsolutePos(Vector(victimCtrl.w/2, victimCtrl.h/2, 0))
-		local endPos = attackerCtrl:AbsolutePos(Vector(attackerCtrl.w/2, attackerCtrl.h/2, 0))
-
-		local percent = badgeBits / 20
-		local size = Vector(48, 48, 0) * scale * (1 + percent)
-
-
-		for i = 1, trailCount do
-			local sizeScale = 1 - (i-1)/trailCount
-			gfx.EmitParticle(
-				{startPos, endPos},
-				{size*sizeScale, size*sizeScale},
-				(i - 1)*(2/60), 0.5,
-				fx_KnockoutTravel,
-				true, true,
-				nil, group_backgroundAttacks
-			)
-		end
-
-	end
-
-	local function garbageTravel(attackerID, damage, targetID)
-
-		if targetID == arena.uniqueID and arena.dead then return end
-		local attackerCtrl = enemies[attackerID]
-		local targetCtrl = enemies[targetID]
-
-		if attackerCtrl == nil then return end
-		local enemySize = Vector(attackerCtrl.w, attackerCtrl.h, 0)
-		local attackerPos, scale = attackerCtrl:AbsolutePos(enemySize/2)
-		local overlay = false
-		if not targetCtrl then
-			if targetID ~= arena.uniqueID then
-				error("Tried to make garbage anim for unknown target ID " .. tostring(targetID))
-			end
-			targetCtrl = LayerBelow
-			overlay = true
-		end
-		local targetPos = targetCtrl:AbsolutePos(Vector(targetCtrl.w/2, targetCtrl.h/2, 0))
-
-		local percent = damage / arena.params.maxGarbageOut
-		local size = Vector(1, 1, 0) * (32 + 32*percent) * scale
-
-		gfx.EmitParticle(
-			{attackerPos, targetPos},
-			{size, size},
-			0, 0.5,
-			fx_AttackTravel,
-			true, true,
-			nil, not overlay and group_backgroundAttacks
-		)
-
-		gfx.EmitParticle(
-			{targetPos, targetPos},
-			{enemySize*scale, enemySize*scale*1.2},
-			0.5, 0.1,
-			fx_AttackLand,
-			true, true
-		)
-
-	end
 
 	arena.hook("playerGarbage", function(attackerID, damage, targets)
-	
-		for _, targetID in pairs(targets) do
-
-			garbageTravel(attackerID, damage, targetID)
-
+		for k,v in pairs(targets) do
+			if v == arena.uniqueID then
+				targets[k] = 0
+				break
+			end
 		end
-
+		ArenaCtrl:SendDamageToPlayers(attackerID, damage, targets)
 	end)
 
-	arena.hook("playerDie", function(victim, killer, placement, deathFrame, badgeBits)
-	
-		if enemies[victim] then
-			local Ctrl = enemies[victim]
-
-			Ctrl:Kill()
-
-		end
-		
-		if victim ~= arena.uniqueID and killer ~= arena.uniqueID and killer ~= 0 then
-
-			knockoutTravel(victim, badgeBits, killer)
-
-		end
-
+	arena.hook("playerDie", function(victim, killer, placement, deathFrame, badgeBits, entIndex, nick)
+		ArenaCtrl:KillPlayer(victim, killer, placement, badgeBits, entIndex, nick)
 	end)
 
 	local triggerActions = {
@@ -695,11 +446,11 @@ hook.add("brConnect", "enemy", function(game, arena)
 
 		end
 
-		curTarget = enemies[curTarget]
+		curTarget = ArenaCtrl.Enemies[curTarget]
 		if not curTarget then return end
 		local list = {}
 		local x, y = curTarget.x, curTarget.y
-		for id, Ctrl in pairs(enemies) do
+		for id, Ctrl in pairs(ArenaCtrl.Enemies) do
 
 			if not Ctrl.enemy.dead then
 				local cx, cy = Ctrl.x, Ctrl.y
