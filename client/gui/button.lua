@@ -82,7 +82,7 @@ hook.add("action", "ButtonControl", function(action, pressed)
 	end
 	local hot = hotButtons[action]
 	if hot then
-		if not hot.nofocus and branch.visible then hot:Focus() end
+		if not hot.nofocus and hot.visible then hot:Focus() end
 		if hot.className == "Tickbox" then
 			hot:SetValue(not hot.value)
 		end
