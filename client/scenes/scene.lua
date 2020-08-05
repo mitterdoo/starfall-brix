@@ -50,6 +50,11 @@ end)
 
 function scene.Open(name, transition)
 
+	if name == nil then
+		name = scene.Entry
+		transition = 1
+	end
+
 	if not scene.Registry[name] then
 		error("Attempt to open nil scene \"" .. tostring(name) .. "\"")
 	end
@@ -76,4 +81,3 @@ function scene.Open(name, transition)
 
 end
 
-scene.Open(scene.Entry, 1)

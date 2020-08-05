@@ -24,7 +24,17 @@ hook.add("calcview", "fps", function()
 		}
 	end
 end)
+
+local firstDraw = false
+
 hook.add("predrawhud", "brix", function()
+
+	if not firstDraw then
+		firstDraw = true
+
+		scene.Open()
+
+	end
 
 	local info = {
 		x = 0,
