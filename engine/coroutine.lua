@@ -35,7 +35,14 @@ function BRIX:start()
 			return tostring(err) .. "\n" .. tostring(stack)
 		end, self)
 		if not ok then
-			error(err)
+			if type(err) == "table" then
+				for k, v in pairs(err) do
+					print("error\t" .. tostring(k) .. ":\t" .. tostring(v))
+				end
+				error(tostring(err))
+			else
+				error(err)
+			end
 		end
 		
 	end
