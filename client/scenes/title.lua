@@ -6,8 +6,8 @@ local uiFont = render.createFont("Roboto", 36, 200)
 function SCENE.Open(from)
 
 	local w, h = render.getGameResolution()
-	local logo_w, logo_h = 1920, 1080
-	local logo_scale = gui.getFitScale(logo_w, logo_h, w, h)
+	local logo_w, logo_h = 2040, 1020
+	local logo_scale = gui.getFitScale(logo_w, logo_h, w, h, true)
 	local root = gui.Create("Control")
 	root:SetSize(w, h)
 	local Logo = gui.Create("Material", root)
