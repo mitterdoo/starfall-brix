@@ -7,16 +7,18 @@ function SCENE.Open(from)
 	
 	local root = gui.Create("Control")
 	local gw, gh = render.getGameResolution()
-	function root:Paint(w, h)
-		render.setRGBA(32, 32, 32, 255)
-		render.drawRectFast(0, 0, gw, gh)
-	end
+
+	local Background = gui.Create("Background", root)
+	Background:SetSize(render.getGameResolution())
 
 	local Arena = gui.Create("ArenaControl", root)
 	Arena:SetPos(gw/2 - Arena.w/2, gh/2 - Arena.h/2)
 
 
-		
+	local levelTimerStart
+	local levelDuration = 20
+	local lastLevel
+
 	hook.add("net", "spectate", function(name, len)
 		if name == ARENA.netTag then
 			local snapshot = br.decodeServerSnapshot()
@@ -42,12 +44,31 @@ function SCENE.Open(from)
 					elseif event == e.MATRIX_SOLID then
 						local player, lines = data[2], data[3]
 						Arena:MatrixGarbageSolid(player, lines)
+					elseif event == e.CHANGEPHASE then
+						if data[2] == 1 then
+							levelTimerStart = timer.realtime()
+						end
+					elseif event == e.WINNER then
+						hook.remove("think", "spectate")
 					end
 				end
 
 			end
 
 		end
+	end)
+
+	hook.add("think", "spectate", function()
+
+		if levelTimerStart then
+			local t = timer.realtime() - levelTimerStart
+			local level = math.floor((t+levelDuration/2) / levelDuration) + 1
+			if level ~= lastLevel then
+				lastLevel = level
+				Background:SetLevel(level)
+			end
+		end
+
 	end)
 
 	return function()
