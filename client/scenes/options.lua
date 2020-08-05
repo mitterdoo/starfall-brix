@@ -138,7 +138,20 @@ function SCENE.Open()
 		local inputHeight = 32
 		local inputSpace = 16
 
-		local lastFocusable = b_gamepad
+		local lastFocusable = xinput and b_gamepad or b_wasd
+		if not xinput then
+			b_gamepad:SetDisallowFocus(true)
+			b_gamepad:SetBGColor(Color(128, 128, 128))
+
+			local warn = gui.Create("Sprite", Scaled)
+			warn:SetPos(b_gamepad.x, b_gamepad.y - 8)
+			warn:SetSheet(2)
+			warn:SetSprite(sprite.sheets[2].xinputWarn)
+			warn:SetAlign(0, 1)
+			warn:SetScale(0.75, 0.75)
+
+		end
+
 		for k, info in pairs(optionTable) do
 			local Label = gui.Create("Sprite", Scaled)
 
@@ -161,6 +174,7 @@ function SCENE.Open()
 				if lastFocusable == b_gamepad then
 					b_guideline:SetDown(Ctrl)
 					b_wasd:SetDown(Ctrl)
+					b_gamepad:SetDown(Ctrl)
 				end
 				lastFocusable:SetDown(Ctrl)
 				Ctrl:SetUp(lastFocusable)

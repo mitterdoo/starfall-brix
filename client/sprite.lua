@@ -296,7 +296,10 @@ createSheet(2, assets.files["skin2.png"], {
 	[29] = {512, 832, 320, 32},			  -- 10 dpad overlap
 
 	credit = 30,
-	[30] = {512, 688, 512, 128}
+	[30] = {512, 688, 512, 128},
+
+	xinputWarn = 31,
+	[31] = {512, 864, 512, 112}
 })
 
 createSheet(3, assets.files["playfield.png"], {
