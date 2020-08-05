@@ -71,7 +71,7 @@ hook.add("action", "ButtonControl", function(action, pressed)
 	if focusedButton then
 		local branch = focusedButton.branches[action]
 		if branch then
-			if not branch.nofocus then branch:Focus() end
+			if not branch.nofocus and branch.visible then branch:Focus() end
 		elseif action == "ui_accept" then
 			if focusedButton.className == "Tickbox" then
 				focusedButton:SetValue(not focusedButton.value)
@@ -82,7 +82,7 @@ hook.add("action", "ButtonControl", function(action, pressed)
 	end
 	local hot = hotButtons[action]
 	if hot then
-		if not hot.nofocus then hot:Focus() end
+		if not hot.nofocus and branch.visible then hot:Focus() end
 		if hot.className == "Tickbox" then
 			hot:SetValue(not hot.value)
 		end
