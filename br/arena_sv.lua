@@ -297,6 +297,11 @@ function ARENA:start()
 		game.hook("prelock", function(piece, rot, x, y, mono)
 		
 			self:enqueue(e.MATRIX_PLACE, game.uniqueID, piece.type, rot, x, y, mono)
+			if game.bot then
+				local r = math.random(1, 20)
+				game.hook:run("preGarbageSend", r)
+				game.hook:run("garbageSend", r)
+			end
 
 		end)
 
