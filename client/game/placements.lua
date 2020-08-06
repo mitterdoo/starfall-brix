@@ -1,3 +1,4 @@
+local backFont = render.createFont("Roboto", 36, 100)
 hook.add("brConnect", "placements", function(game, arena)
 
 	local Placements = gui.Create("Placements", game.controls.HUD)
@@ -21,8 +22,29 @@ hook.add("brConnect", "placements", function(game, arena)
 			game.controls.Strategy:Remove()
 			Placements:SetVisible(true)
 			game.controls.BackLabel:SetVisible(true)
+
+
 		end)
 
+	end)
+
+	arena.hook("disconnect", function(auto)
+		if auto then
+
+			local PlayLabel = gui.Create("ActionLabel", game.controls.HUD)
+			PlayLabel:SetPos(w - 8, h - 8)
+			PlayLabel:SetAlign(1, 1)
+			PlayLabel:SetFont(backFont)
+			PlayLabel:SetText("{ui_accept} Join Next Match")
+
+			local PlayButton = gui.Create("Button", root)
+			PlayButton:SetVisible(false)
+			PlayButton:SetHotAction("ui_accept")
+			function PlayButton:DoPress()
+				scene.Open("Game", 1)
+			end
+		
+		end
 	end)
 
 	arena.hook("finalPlace", function(place)

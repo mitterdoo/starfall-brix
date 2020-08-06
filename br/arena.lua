@@ -27,15 +27,31 @@ ARENA.refreshRate = 0.2 -- Snapshots will get sent at this rate (in seconds)
 ARENA.readyUpTime = 2 -- Seconds to wait between server being ready, and game starting.
 ARENA.maxUnacknowledgedSnapshots = 40
 
+ARENA.lobbyWaitTime = 60
+ARENA.lobbyMinWaitTime = 10 -- If someone joins with the timer below this, the timer will reset to it
+
+ARENA.netConnectEvents = {
+	CONNECT = 0,		-- Request connection to server
+	DISCONNECT = 1,		-- Notify server of disconnect
+	REQUEST = 2,		-- Request information about the arena
+}
+
 ARENA.connectEvents = {
 	ACCEPT = 0,		-- {UInt32 seed, UInt6 uniqueID}
 					-- Sent to a single player attempting to connect, letting them know they were accepted.
 
-	UPDATE = 1,		-- {UInt6 playerCount, UInt6 player1ID, UInt6 player2ID, ...}
+	UPDATE = 1,		-- {float lobbyTimer, UInt6 playerCount, UInt6 player1ID, UInt6 player2ID, ...}
 					-- Broadcasted to refresh the number of players
+					-- lobbyTimer is the curtime at which the lobby will close
 
 	READY = 2,		-- {float startTime}
 					-- Broadcasted to signify the exact start time.
+
+	NO_SERVER = 3,	-- Sent in reply to a connection request when no server exists
+	CLOSED = 4,		-- {float startTime}
+					-- Sent in reply to a connection request when the current server is not accepting any more players
+	UPDATE_ONGOING = 5, -- {UInt6 remainingPlayers, UInt6 startingSize}
+					-- Sent in reply to REQUEST event when there is an ongoing match
 
 	
 }
@@ -137,8 +153,12 @@ ARENA.hookNames = {
 		-- number playerID
 		-- number playerEntIndex
 		-- string playerNick
+	
+	"lobbyTimer",			-- Lobby timer updated
+		-- float lobbyClose (curtime)
 
-	"disconnect"			-- Called when the match is over
+	"disconnect"			-- Called when we've been disconnected
+		-- bool automatic (whether the match ended and forced us to disconnect)
 }
 
 for _, name in pairs(BR.hookNames) do
@@ -243,13 +263,10 @@ function br.handleServerSnapshot(game, frame, snapshot)
 						game.arena[killer]:giveBadgeBits(badgeBits)
 					end
 
-					if game.remainingPlayers <= 1 then
-						if not game.dead then
-							game.hook:run("win")
-							game.hook:run("finalPlace", 1)
-							game.hook:run("gameover", "win")
-						end
-						game:disconnect()
+					if game.remainingPlayers <= 1 and not game.dead then
+						game.hook:run("win")
+						game.hook:run("finalPlace", 1)
+						game.hook:run("gameover", "win")
 					end
 				end
 
@@ -293,6 +310,7 @@ function br.handleServerSnapshot(game, frame, snapshot)
 				local player, entIndex, nick = data[2], data[3], data[4]
 
 				game.hook:run("winnerDeclared", player, entIndex, nick)
+				game:disconnect(true)
 
 			end
 

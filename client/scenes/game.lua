@@ -207,34 +207,6 @@ function SCENE.Open()
 
 		end)
 
-		hook.add("xinputPressed", "debug", function(controller, button, when)
-			if button == 0x0010 and player() == owner() and not arena.started then -- start
-				net.start("brixBegin")
-				net.send()
-			elseif button == 0x0020 and player() == owner() then
-				if not arena.started then
-					net.start("BRIX_BOT")
-					net.send()
-				else
-					hook.run("DEBUG")
-				end
-			end
-		end)
-
-		hook.add("inputPressed", "debug", function(button)
-			if button == 51 and player() == owner() and not arena.started then
-				net.start("brixBegin")
-				net.send()
-			elseif button == 50 and player() == owner() then
-				if not arena.started then
-					net.start("BRIX_BOT")
-					net.send()
-				else
-					hook.run("DEBUG")
-				end
-			end
-		end)
-
 		hook.add("guiPreDraw", "brix", function()
 
 			if arena.started and not arena.dead then
@@ -257,6 +229,12 @@ function SCENE.Open()
 		Container:SetVisible(true)
 
 
+	end, function(err)
+		if err == "noserver" then
+			scene.Open("Title", 0.5)
+		elseif err == "closed" then
+			scene.Open("Spectate")
+		end
 	end)
 
 	return function()
@@ -266,13 +244,12 @@ function SCENE.Open()
 		end
 		hook.run("brDisconnect", game, game.arena)
 		hook.remove("action", "brix")
-		hook.remove("xinputPressed", "debug")
-		hook.remove("inputPressed", "debug")
 		hook.remove("guiPreDraw", "brix")
 
 		Container:Remove()
 		Background:Remove()
 		game.controls = nil
+		gfx.KillAllParticles()
 
 
 	end

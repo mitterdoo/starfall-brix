@@ -11,6 +11,12 @@ hook.add("brCreateGame", "countdown", function(game)
 	getReady:SetPos(center_x, center_y / 2 * 3)
 	game.controls.getReady = getReady
 
+	local Timer = gui.Create("LobbyTimer", getReady)
+	Timer:SetAlign(0)
+	Timer:SetPos(0, 64)
+	Timer:SetSize(64, 80)
+	game.controls.Timer = Timer
+
 end)
 hook.add("brConnect", "countdown", function(game, arena)
 
@@ -18,9 +24,14 @@ hook.add("brConnect", "countdown", function(game, arena)
 	local root = game.controls.HUD
 	local center_x, center_y = root.w/2, root.h/2
 	local getReady = game.controls.getReady
+	local Timer = game.controls.Timer
 
 	arena.hook("arenaFinalized", function()
 		game.controls.BackLabel:SetVisible(false)
+	end)
+
+	arena.hook("lobbyTimer", function(t)
+		Timer:SetFinish(t)
 	end)
 
 	arena.hook("init", function()
@@ -73,6 +84,7 @@ hook.add("brConnect", "countdown", function(game, arena)
 
 	arena.hook("arenaFinalized", function()
 
+		Timer:Remove()
 		getReady:SetSprite(66)
 
 	end)

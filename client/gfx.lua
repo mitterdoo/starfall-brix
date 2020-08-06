@@ -109,7 +109,17 @@ function gfx.KillParticles(refs) -- keys must be refs to particle
 				i = i + 1
 			end
 		end
+
+		if i == 1 and #particles == 0 then -- destroy group if no particles exist in it
+			g_groups[groupRef] = nil
+		end
 	end
+
+end
+
+function gfx.KillAllParticles()
+
+	g_groups = {}
 
 end
 

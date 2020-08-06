@@ -266,10 +266,11 @@ function br.createArena(seed, uniqueID)
 
 end
 
-function br.connectToServer(callback)
+-- callback(arena), errCallback(reason)
+function br.connectToServer(callback, errCallback)
 
 	net.start(ARENA.netConnectTag)
-	net.writeBit(1)
+	net.writeUInt(ARENA.netConnectEvents.CONNECT, 2)
 	net.send()
 
 	local hookName = tostring(math.random(2^31-1))
@@ -279,7 +280,7 @@ function br.connectToServer(callback)
 		if name == ARENA.netConnectTag then
 
 			local e = ARENA.connectEvents
-			local event = net.readUInt(2)
+			local event = net.readUInt(3)
 			if event == e.ACCEPT then
 				local seed, uniqueID = net.readUInt(32), net.readUInt(6)
 				arena = br.createArena(seed, uniqueID)
@@ -290,6 +291,9 @@ function br.connectToServer(callback)
 
 			elseif event == e.UPDATE then
 				if not arena then return end
+				local lobbyTimer = net.readFloat()
+
+				arena.hook:run("lobbyTimer", lobbyTimer > 0 and lobbyTimer or nil)
 				local playerCount = net.readUInt(6)
 				local players = {}
 				local newPlayers = {}
@@ -304,6 +308,8 @@ function br.connectToServer(callback)
 
 					end
 				end
+
+				local finalized = net.readBit() == 1
 
 				local disconnected = {}
 				for id, _ in pairs(arena.tempArena) do
@@ -336,9 +342,68 @@ function br.connectToServer(callback)
 
 				hook.remove("net", hookName)
 				arena.connectHookName = nil
+			elseif event == e.NO_SERVER then
+				errCallback("noserver")
+				hook.remove("net", hookName)
+			elseif event == e.CLOSED then
+				errCallback("closed")
+				hook.remove("net", hookName)
 			end
 		end
 	end)
+
+end
+
+function br.getServerStatus(callback)
+
+	net.start(ARENA.netConnectTag)
+	net.writeUInt(ARENA.netConnectEvents.REQUEST, 2)
+	net.send()
+
+	local hookName = "status" .. tostring(math.random(2^31-1))
+
+	hook.add("net", hookName, function(name)
+		if name == ARENA.netConnectTag then
+			hook.remove("net", hookName)
+
+			local e = ARENA.connectEvents
+			local event = net.readUInt(3)
+			if event == e.NO_SERVER then
+				callback()
+			elseif event == e.UPDATE then
+				local lobbyTimer = net.readFloat()
+				if lobbyTimer == 0 then lobbyTimer = nil end
+				local playerCount = net.readUInt(6)
+				local info = {
+					players={},
+					playerCount = playerCount,
+					lobbyTimer = lobbyTimer
+				}
+				for i = 1, playerCount do
+					info.players[net.readUInt(6)] = true
+				end
+				local finalized = net.readBit() == 1
+				info.finalized = finalized
+				callback(info)
+			elseif event == e.UPDATE_ONGOING then
+				local remainingPlayers = net.readUInt(6)
+				local playerCount = net.readUInt(6)
+				local info = {
+					players={},
+					playerCount = playerCount,
+					remainingPlayers = remainingPlayers,
+					finalized = true,
+				}
+				for i = 1, playerCount do
+					info.players[net.readUInt(6)] = true
+				end
+				callback(info)
+			else
+				error("Unexpected status response from server " .. tostring(event))
+			end
+		end
+	end)
+
 
 end
 
@@ -389,7 +454,7 @@ function ARENA:onReady()
 end
 
 -- Disconnects from the server
-function ARENA:disconnect()
+function ARENA:disconnect(automatic)
 
 	self.connected = false
 	self.dead = true -- don't allow any more inputs
@@ -402,10 +467,10 @@ function ARENA:disconnect()
 	if self.connectHookName then
 		hook.remove("net", self.connectHookName)
 	end
-	self.hook:run("disconnect")
+	self.hook:run("disconnect", automatic)
 	
 	net.start(ARENA.netConnectTag)
-	net.writeBit(0)
+	net.writeUInt(ARENA.netConnectEvents.DISCONNECT, 2)
 	net.send()
 
 end

@@ -9,13 +9,22 @@
 
 require("brix/br/arena.lua")
 
-local openServers = {}
-local arenas = {}
+local currentArena
 
 -- Opens the server for connections
 function ARENA:open()
 
-	openServers[self] = true
+	currentArena = self
+	self.open = true
+
+	hook.add("think", "arenaLobbyTimer", function()
+
+		if self.lobbyTimer and timer.curtime() > self.lobbyTimer then
+			hook.remove("think", "arenaLobbyTimer")
+			self:readyUp()
+		end
+
+	end)
 
 end
 
@@ -27,13 +36,24 @@ function ARENA:onConnect(ply)
 
 end
 
+function ARENA:updateTimer()
+	if self.playerCount == self.maxPlayers then
+		self.lobbyTimer = timer.curtime() - 1
+	elseif self.playerCount >= 2 then
+		self.lobbyTimer = math.max(self.lobbyTimer or timer.curtime() + ARENA.lobbyWaitTime, timer.curtime() + ARENA.lobbyMinWaitTime)
+	else
+		self.lobbyTimer = nil
+	end
+end
+
 function ARENA:connectPlayer(ply)
 
-	if not self:preConnect(ply) then return end
+	if not self.open then return false end
+	if not self:preConnect(ply) then return false end
 
 	if self.playerCount == self.maxPlayers then
 		print("Max players reached!")
-		return
+		return false
 	end
 
 	for k, v in pairs(self.arena) do
@@ -59,25 +79,30 @@ function ARENA:connectPlayer(ply)
 	self.players[ply] = id
 
 	net.start(ARENA.netConnectTag)
-	net.writeUInt(ARENA.connectEvents.ACCEPT, 2)
+	net.writeUInt(ARENA.connectEvents.ACCEPT, 3)
 	net.writeUInt(self.seed, 32)
 	net.writeUInt(id, 6)
 	net.send(ply)
 
+	self:updateTimer()
 	self.playerCount = self.playerCount + 1
 	self.remainingPlayers = self.remainingPlayers + 1
 
 	net.start(ARENA.netConnectTag)
-	net.writeUInt(ARENA.connectEvents.UPDATE, 2)
+	net.writeUInt(ARENA.connectEvents.UPDATE, 3)
+	net.writeFloat(self.lobbyTimer or 0)
 	net.writeUInt(self.playerCount, 6)
 
 	for plyID, _ in pairs(self.arena) do
 		net.writeUInt(plyID, 6)
 	end
+	net.writeBit(0)
 
 	net.send()
 
 	self:onConnect(ply)
+
+	return true
 
 end
 
@@ -86,7 +111,6 @@ function ARENA:disconnectPlayer(ply)
 	local id = self.players[ply]
 	if not id then return end
 
-	print("Disconnecting player", ply)
 	if self.finalized then
 		if not self.started then
 			table.insert(self.playersToKick, id)
@@ -114,13 +138,19 @@ function ARENA:disconnectPlayer(ply)
 		self.playerCount = self.playerCount - 1
 		self.remainingPlayers = self.remainingPlayers - 1
 
+		if self.playerCount < 2 then
+			self.lobbyTimer = nil
+		end
+
 		net.start(ARENA.netConnectTag)
-		net.writeUInt(ARENA.connectEvents.UPDATE, 2)
+		net.writeUInt(ARENA.connectEvents.UPDATE, 3)
+		net.writeFloat(self.lobbyTimer or 0)
 		net.writeUInt(self.playerCount, 6)
 
 		for plyID, _ in pairs(self.arena) do
 			net.writeUInt(plyID, 6)
 		end
+		net.writeBit(0)
 
 		net.send()
 
@@ -130,6 +160,7 @@ end
 
 function ARENA:connectBot()
 
+	if not self.open then return end
 	if self.playerCount == self.maxPlayers then
 		print("Max players reached!")
 		return
@@ -137,6 +168,7 @@ function ARENA:connectBot()
 
 	local index = math.random(1, #self.uniqueIDs)
 	local id = table.remove(self.uniqueIDs, index)
+	
 
 	local game = br.createGame(BR, self.seed, id)
 	game.bot = true
@@ -146,14 +178,17 @@ function ARENA:connectBot()
 	
 	self.playerCount = self.playerCount + 1
 	self.remainingPlayers = self.remainingPlayers + 1
+	self:updateTimer()
 
 	net.start(ARENA.netConnectTag)
-	net.writeUInt(ARENA.connectEvents.UPDATE, 2)
+	net.writeUInt(ARENA.connectEvents.UPDATE, 3)
+	net.writeFloat(self.lobbyTimer or 0)
 	net.writeUInt(self.playerCount, 6)
 
 	for plyID, _ in pairs(self.arena) do
 		net.writeUInt(plyID, 6)
 	end
+	net.writeBit(0)
 
 	net.send()
 
@@ -162,7 +197,8 @@ end
 -- Call this when the server has been populated and should start
 function ARENA:readyUp()
 
-	openServers[self] = nil -- Close the server
+	if not self.open then return end
+	self.open = false -- Close the server
 	self.finalized = true
 	self.startTime = timer.curtime() + ARENA.readyUpTime
 
@@ -172,13 +208,9 @@ function ARENA:readyUp()
 		self.startTime denotes when the game object should actually begin its coroutine.
 	]]
 	net.start(ARENA.netConnectTag)
-	net.writeUInt(ARENA.connectEvents.READY, 2)
+	net.writeUInt(ARENA.connectEvents.READY, 3)
 	net.writeFloat(self.startTime)
-	if #self.connectedPlayers > 0 then
-		net.send(self.connectedPlayers)
-	else
-		net.send()
-	end
+	net.send()
 
 	self.phaseStartHalfway = math.max(2, math.ceil(self.playerCount / 2))		-- Playercount at which the game speeds up
 	self.phaseStartShowdown = math.max(2, math.ceil(self.playerCount * 0.24))	-- Playercount at which garbage delay is quick
@@ -248,6 +280,7 @@ end
 
 function ARENA:start()
 
+	if self.started then print("already started") return end
 	self.started = true
 	local e = ARENA.serverEvents
 	-- Setup each game object
@@ -327,7 +360,7 @@ function ARENA:start()
 		
 			self:enqueue(e.MATRIX_PLACE, game.uniqueID, piece.type, rot, x, y, mono)
 			if game.bot then
-				local r = math.random(1, 1)
+				local r = math.random(1, 6)
 				game.hook:run("preGarbageSend", r)
 				game.hook:run("garbageSend", r)
 			end
@@ -439,6 +472,17 @@ function ARENA:sendSnapshot()
 			game:update(currentFrame)
 			game:userInput(currentFrame, br.inputEvents.CHANGE_TARGET, 0)
 		end
+	end
+
+	if #self.playersToKick > 0 then
+		for k, v in pairs(self.playersToKick) do
+			local game = self.arena[v]
+			if game and not game.dead then
+				game:killGame()
+				game.kickReason = "Player manually disconnected"
+			end
+		end
+		self.playersToKick = {}
 	end
 
 	for id, game in pairs(self.arena) do
@@ -579,7 +623,10 @@ end
 function ARENA:finish()
 
 	hook.remove("think", self.hookName)
-	arenas[self] = nil
+	currentArena = nil
+	if self.onFinish then
+		self:onFinish()
+	end
 
 end
 
@@ -606,8 +653,6 @@ function br.createArena()
 		self.uniqueIDs[i] = i
 	end
 
-	arenas[self] = true
-
 	return setmetatable(self, ARENA)
 
 end
@@ -616,24 +661,61 @@ hook.add("net", "brixConnect", function(name, len, ply)
 
 	if name == ARENA.netConnectTag then
 
-		local joining = net.readBit() == 1
-		if joining then
-			for arena, _ in pairs(openServers) do
-				arena:connectPlayer(ply)
-			end
-		else
-			for arena, _ in pairs(arenas) do
-				if arena.players[ply] then
-					arena:disconnectPlayer(ply)
+		local e = net.readUInt(2)
+		if e == ARENA.netConnectEvents.CONNECT then
+			if currentArena then
+				if not currentArena:connectPlayer(ply) then
+					net.start(ARENA.netConnectTag)
+					net.writeUInt(ARENA.connectEvents.CLOSED, 3)
+					net.writeFloat(currentArena.startTime)
+					net.send(ply)
 				end
+			else
+				net.start(ARENA.netConnectTag)
+				net.writeUInt(ARENA.connectEvents.NO_SERVER, 3)
+				net.send(ply)
+			end
+
+		elseif e == ARENA.netConnectEvents.DISCONNECT then
+			if currentArena and currentArena.players[ply] then
+				currentArena:disconnectPlayer(ply)
+			end
+		elseif e == ARENA.netConnectEvents.REQUEST then
+			if currentArena then
+				net.start(ARENA.netConnectTag)
+				if currentArena.started then
+					net.writeUInt(ARENA.connectEvents.UPDATE_ONGOING, 3)
+					net.writeUInt(currentArena.remainingPlayers, 6)
+					net.writeUInt(currentArena.playerCount, 6)
+					for plyID, _ in pairs(currentArena.arena) do
+						net.writeUInt(plyID, 6)
+					end
+					net.send(ply)
+				else
+					net.writeUInt(ARENA.connectEvents.UPDATE, 3)
+					net.writeFloat(currentArena.lobbyTimer or 0)
+					net.writeUInt(currentArena.playerCount, 6)
+
+					for plyID, _ in pairs(currentArena.arena) do
+						net.writeUInt(plyID, 6)
+					end
+
+					net.writeBit(currentArena.finalized and 1 or 0)
+
+					net.send(ply)
+				end
+			else
+				net.start(ARENA.netConnectTag)
+				net.writeUInt(ARENA.connectEvents.NO_SERVER, 3)
+				net.send(ply)
 			end
 		end
 
 
 	elseif name == "BRIX_BOT" and ply == owner() then
 
-		for arena, _ in pairs(openServers) do
-			arena:connectBot()
+		if currentArena then
+			currentArena:connectBot()
 		end
 
 	end

@@ -32,9 +32,6 @@ function SCENE.Open(from)
 	b_play:SetPos(w/2, h - 128 - 80)
 	b_play:SetAlign(0, 0)
 	b_play:SetBGColor(Color(100, 255, 100))
-	function b_play:DoPress()
-		scene.Open("Game", 1)
-	end
 
 	local b_about = gui.Create("BlockButton", root)
 	b_about:SetLabel(sprite.sheets[2].b_about)
@@ -59,6 +56,27 @@ function SCENE.Open(from)
 	b_play:SetRight(b_about)
 	b_about:SetLeft(b_play)
 
+	local c_ongoing = gui.Create("Control", b_play)
+	c_ongoing:SetPos(0, -84)
+	c_ongoing:SetVisible(false)
+		local s_ongoing = gui.Create("Sprite", c_ongoing)
+		s_ongoing:SetSheet(2)
+		s_ongoing:SetSprite(sprite.sheets[2].ongoingMatch)
+		s_ongoing:SetAlign(0, 1)
+
+		local n_ongoing = gui.Create("Number", c_ongoing)
+		n_ongoing:SetSize(32, 40)
+		n_ongoing:SetAlign(0)
+		n_ongoing:SetValue("0/0")
+
+
+	function b_play:DoPress()
+		if c_ongoing.visible then
+			scene.Open("Spectate", 1)
+		else
+			scene.Open("Game", 1)
+		end
+	end
 	if from == "Options" then
 		b_options:Focus()
 	elseif from == "About" then
@@ -72,9 +90,39 @@ function SCENE.Open(from)
 	CreatorInfo:SetSheet(2)
 	CreatorInfo:SetSprite(sprite.sheets[2].credit)
 
+	local function getServerInfo()
+		br.getServerStatus(function(info)
+		
+			if not info then
+				b_play:SetBGColor(Color(100, 100, 100))
+				if b_play.focused then
+					b_about:Focus()
+				end
+				b_about:SetLeft(b_options)
+				b_options:SetRight(b_about)
+			else
+				b_play:SetBGColor(Color(100, 255, 100))
+				b_about:SetLeft(b_play)
+				b_options:SetRight(b_play)
+
+				if info.remainingPlayers then
+					c_ongoing:SetVisible(true)
+					n_ongoing:SetValue(info.remainingPlayers .. "/" .. info.playerCount)
+				else
+					c_ongoing:SetVisible(false)
+				end
+
+			end
+
+		end)
+	end
+	timer.create("title_requestServer", 5, 0, getServerInfo)
+	getServerInfo()
+
 
 	return function()
 		root:Remove()
+		timer.remove("title_requestServer")
 	end
 
 end

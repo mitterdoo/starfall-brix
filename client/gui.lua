@@ -435,6 +435,7 @@ end
 gui.Classes["Control"] = CTRL
 
 requiredir("brix/client/gui", {
+	"number.lua",
 	"rtcontrol.lua",
 	"piece.lua",
 	"sprite.lua",
