@@ -276,7 +276,7 @@ function PANEL:SendDamage(attackerID, damage, targetID)
 			error("Tried to make garbage anim for unknown target ID " .. tostring(targetID))
 		end
 		targetPos = self:GetFieldCenter()
-		overlay = true
+		under = false
 	else
 		targetPos = targetCtrl:AbsolutePos(Vector(targetCtrl.w/2, targetCtrl.h/2, 0))
 	end
