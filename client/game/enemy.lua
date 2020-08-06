@@ -392,13 +392,15 @@ hook.add("brConnect", "enemy", function(game, arena)
 	end)
 
 	arena.hook("playerGarbage", function(attackerID, damage, targets)
+		local targs = {}
 		for k,v in pairs(targets) do
 			if v == arena.uniqueID then
-				targets[k] = 0
-				break
+				targs[k] = 0
+			else
+				targs[k] = v
 			end
 		end
-		ArenaCtrl:SendDamageToPlayers(attackerID, damage, targets)
+		ArenaCtrl:SendDamageToPlayers(attackerID, damage, targs)
 	end)
 
 	arena.hook("playerDie", function(victim, killer, placement, deathFrame, badgeBits, entIndex, nick)
