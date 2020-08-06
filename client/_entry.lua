@@ -31,29 +31,48 @@ hook.add("calcview", "fps", function()
 	end
 end)
 
-local firstDraw = false
+hook.add("huddisconnected", "brix", function()
+	scene.Close()
+end)
 
+local sentExitMsg = false
 hook.add("predrawhud", "brix", function()
 
-	if not firstDraw then
-		firstDraw = true
-
-		scene.Open()
-
-	end
-
+	local w, h = render.getGameResolution()
 	local info = {
 		x = 0,
 		y = 0,
-		w = 1920,
-		h = 1080,
+		w = w,
+		h = h,
 		type = "2D"
 	}
 	render.pushViewMatrix(info)
-	render.setRGBA(0, 0, 0, 255)
-	render.drawRectFast(0, 0, 1920, 1080)
-	lastHudDraw = timer.realtime()
-	gui.Draw()
+	if not isValid(player():getVehicle()) then
+		render.setRGBA(255, 0, 0, 128)
+		render.drawRectFast(0, 0, w, h)
+		render.setRGBA(255, 255, 255, 255)
+		render.setFont("DermaLarge")
+		render.drawText(w/2, h/2-64, "Please sit in a seat instead of\nmanually connecting to this HUD.\nPress ALT to unlink from this.", 1)
+	else
+		if not input.isControlLocked() then
+			if not sentExitMsg then
+				sentExitMsg = true
+				net.start("exitVehicle")
+				net.send()
+			end
+		else
+			sentExitMsg = false
+			if not scene.Active then
+				scene.Open()
+			end
+
+			render.setRGBA(0, 0, 0, 255)
+			render.drawRectFast(0, 0, w, h)
+			lastHudDraw = timer.realtime()
+			gui.Draw()
+		end
+
+	end
 	render.popViewMatrix()
 
 end)

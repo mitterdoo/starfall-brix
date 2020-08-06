@@ -38,6 +38,10 @@ function loader.resume(useHook)
 		-- Getting here implies the coroutine did not error. Errors would halt execution
 		co = nil
 		hook.remove("think", "loaderCoroutine")
+		
+		if render.isHUDActive() then
+			input.lockControls(true)
+		end
 		hook.run("load")
 	end
 
@@ -114,11 +118,19 @@ Please press USE on the chip
 to temporarily change them.]], 1)
 			end
 
+			hook.add("think", "loader", function()
+				if render.isHUDActive() then
+					input.lockControls(false)
+				end
+			end)
+
 			hook.add("postdrawhud", "loader", function()
 				local w, h = render.getGameResolution()
+				local bw, bh = w/3, w/3
 				render.setRGBA(0, 0, 0, 255)
-				render.drawRect(0, 0, w, h)
+				render.drawRect(w / 2 - bw/2, h / 2 - bh/2, bw, bh)
 				drawPerm(w / 2 - 256, h / 2 - 256)
+				input.lockControls(false)
 			end)
 
 			hook.add("render", "loader", function()
@@ -131,6 +143,7 @@ to temporarily change them.]], 1)
 				if permissionRequestSatisfied() then
 					hook.remove("permissionrequest", "loader")
 					hook.remove("postdrawhud", "loader")
+					hook.remove("think", "loader")
 					loader.resume()
 				end
 			end)

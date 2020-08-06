@@ -75,3 +75,12 @@ function scene.Open(name, transition)
 
 end
 
+function scene.Close()
+
+	if scene.Active then
+		hook.run("sceneClosing", scene.ActiveName)
+		closeActiveScene()
+	end
+
+end
+

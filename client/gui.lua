@@ -564,4 +564,10 @@ function gui.Draw()
 	local perc = math.ceil(quotaAverage() / quotaMax() * 100)
 	render.drawText(32 + 128/2, 32 + 16, perc .. "%", 1)
 
+	if input.isControlLocked() then
+		render.setFont("DermaDefault")
+		render.setRGBA(255, 255, 255, 255)
+		render.drawText(4, game_h-2-16, "Press ALT to exit")
+	end
+
 end
