@@ -43,6 +43,7 @@ function loader.resume(useHook)
 			input.lockControls(true)
 		end
 		hook.run("load")
+		hook.run("postload")
 	end
 
 end
@@ -133,11 +134,19 @@ to temporarily change them.]], 1)
 				input.lockControls(false)
 			end)
 
+			hook.add("render", "loader", function()
+				local ent = render.getScreenEntity()
+				if ent:getModel():find("1x1") then
+					drawPerm(0, 0)
+				end
+			end)
+
 			hook.add("permissionrequest", "loader", function()
 				if permissionRequestSatisfied() then
 					hook.remove("permissionrequest", "loader")
 					hook.remove("postdrawhud", "loader")
 					hook.remove("think", "loader")
+					hook.remove("render", "loader")
 					loader.resume()
 				end
 			end)
@@ -146,6 +155,7 @@ to temporarily change them.]], 1)
 		end
 	end
 	
+	hook.run("preload")
 	
 	local title = render.createFont("Roboto", 64, 900)
 	local subtitle = render.createFont("Roboto", 32, 500)

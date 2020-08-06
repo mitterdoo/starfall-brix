@@ -56,10 +56,29 @@ function ARENA:connectPlayer(ply)
 		return false
 	end
 
-	for k, v in pairs(self.arena) do
-		if v.player == ply then
-			print("Player", ply, "attempted to connect again!")
-			return
+	for id, game in pairs(self.arena) do
+		if game.player == ply then
+			print("Player", ply, "attempted to connect again! Re-sending info")
+
+			net.start(ARENA.netConnectTag)
+			net.writeUInt(ARENA.connectEvents.ACCEPT, 3)
+			net.writeUInt(self.seed, 32)
+			net.writeUInt(id, 6)
+			net.send(ply)
+					
+			net.start(ARENA.netConnectTag)
+			net.writeUInt(ARENA.connectEvents.UPDATE, 3)
+			net.writeFloat(self.lobbyTimer or 0)
+			net.writeUInt(self.playerCount, 6)
+
+			for plyID, _ in pairs(self.arena) do
+				net.writeUInt(plyID, 6)
+			end
+			net.writeBit(0)
+
+			net.send()
+
+			return true
 		end
 	end
 
@@ -668,7 +687,7 @@ hook.add("net", "brixConnect", function(name, len, ply)
 				if not currentArena:connectPlayer(ply) then
 					net.start(ARENA.netConnectTag)
 					net.writeUInt(ARENA.connectEvents.CLOSED, 3)
-					net.writeFloat(currentArena.startTime)
+					net.writeFloat(currentArena.startTime or 0)
 					net.send(ply)
 				end
 			else

@@ -267,6 +267,7 @@ function br.createArena(seed, uniqueID)
 end
 
 -- callback(arena), errCallback(reason)
+-- returns {close()}
 function br.connectToServer(callback, errCallback)
 
 	net.start(ARENA.netConnectTag)
@@ -275,10 +276,19 @@ function br.connectToServer(callback, errCallback)
 
 	local hookName = tostring(math.random(2^31-1))
 	local arena
+	
+	local conn = {}
+	local function closeFunc()
+		hook.remove("net", hookName)
+		conn.close = nil
+	end
+
+	conn.close = closeFunc
 
 	hook.add("net", hookName, function(name)
 		if name == ARENA.netConnectTag then
 
+			--print(timer.realtime(), "connectToServer")
 			local e = ARENA.connectEvents
 			local event = net.readUInt(3)
 			if event == e.ACCEPT then
@@ -340,17 +350,20 @@ function br.connectToServer(callback, errCallback)
 
 				arena:onReady()
 
-				hook.remove("net", hookName)
+				closeFunc()
+
 				arena.connectHookName = nil
 			elseif event == e.NO_SERVER then
+				closeFunc()
 				errCallback("noserver")
-				hook.remove("net", hookName)
 			elseif event == e.CLOSED then
+				closeFunc()
 				errCallback("closed")
-				hook.remove("net", hookName)
 			end
 		end
 	end)
+
+	return conn
 
 end
 
@@ -362,9 +375,17 @@ function br.getServerStatus(callback)
 
 	local hookName = "status" .. tostring(math.random(2^31-1))
 
+	local conn = {}
+	local function closeFunc()
+		hook.remove("net", hookName)
+		conn.close = nil
+	end
+	conn.close = closeFunc
+
 	hook.add("net", hookName, function(name)
 		if name == ARENA.netConnectTag then
-			hook.remove("net", hookName)
+			--print(timer.realtime(), "getServerStatus")
+			closeFunc()
 
 			local e = ARENA.connectEvents
 			local event = net.readUInt(3)
@@ -404,6 +425,7 @@ function br.getServerStatus(callback)
 		end
 	end)
 
+	return conn
 
 end
 

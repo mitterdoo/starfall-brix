@@ -1,4 +1,3 @@
-if LITE then return end
 local PANEL = {}
 
 
@@ -32,12 +31,17 @@ local SPRITE_LOOKUP = {
 	["["] = 16
 }
 
+local _blockFunc = drawBlock
+if not LITE then
+	_blockFunc = sprite.draw
+end
+
 function PANEL:Paint(w, h)
 
 	if not self.field then return end
 	local BRICK_SIZE = self.brickSize
 	local sky = self.allowSkyline
-	sprite.setSheet(1)
+	if not LITE then sprite.setSheet(1) end
 	render.setRGBA(220, 220, 220, 255)
 	local bottomY = BRICK_SIZE * (sky and 21 or 20)
 
@@ -49,7 +53,7 @@ function PANEL:Paint(w, h)
 
 			local spr = SPRITE_LOOKUP[self.field:get(x, y)]
 			if spr then
-				sprite.draw(spr, x * BRICK_SIZE, bottomY - BRICK_SIZE * (y+1), BRICK_SIZE, BRICK_SIZE)
+				_blockFunc(spr, x * BRICK_SIZE, bottomY - BRICK_SIZE * (y+1), BRICK_SIZE, BRICK_SIZE)
 			end
 
 		end

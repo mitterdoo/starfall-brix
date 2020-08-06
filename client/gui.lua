@@ -5,11 +5,15 @@
 --@name GUI
 --@author Ranthos
 --@client
---@includedir brix/client/gui
+--@includedir brix/client/controls
+
+VIEW_W, VIEW_H = render.getGameResolution()
 
 gui = {}
 gui.Classes = {}
 gui.SmallResolution = ({render.getGameResolution()})[2] < 1024
+
+local CTX
 
 local protected = {
 	"DrawChildren",
@@ -143,16 +147,15 @@ function gui.popRT()
 end
 
 local glowRT = "guiGlow"
-render.createRenderTarget(glowRT)
+if not render.renderTargetExists(glowRT) then
+	render.createRenderTarget(glowRT)
+end
 
 function gui.clearGlow()
 	gui.pushRT(glowRT)
 	render.clear(Color(0, 0, 0, 0), true)
 	gui.popRT()
 end
-
-local game_w, game_h = render.getGameResolution()
-local glow_scaleW, glow_scaleH = 1024 / game_w, 1024 / game_h
 
 local prevMatrixStack
 
@@ -164,7 +167,7 @@ function gui.startGlow()
 	end
 
 	prevMatrixStack = gui.popAllMatrices()
-	local m = gui.getMatrix(0, 0, glow_scaleW, glow_scaleH)
+	local m = gui.getMatrix(0, 0, CTX.glow_scaleW, CTX.glow_scaleH)
 	gui.pushRT(glowRT)
 	gui.pushMatrix(m)
 	gui.pushMatrices(prevMatrixStack)
@@ -434,7 +437,8 @@ end
 
 gui.Classes["Control"] = CTRL
 
-requiredir("brix/client/gui", {
+dodir("brix/client/controls", {
+	[0] = "_____",
 	"number.lua",
 	"rtcontrol.lua",
 	"piece.lua",
@@ -455,7 +459,7 @@ local _noParent_reference = {} -- store a reference to this table we only create
 function gui.Create(className, parent)
 
 	if not gui.Classes[className] then
-		error("attempt to create gui element of unknown class \"" .. tostring(classname) .. "\"")
+		error("attempt to create gui element of unknown class \"" .. tostring(className) .. "\"")
 	end
 	
 	local ctrl = {}
@@ -483,6 +487,22 @@ function gui.Create(className, parent)
 
 end
 
+-- Creates a new GUI context with the given resolution.
+-- Can be used to make a separate GUI for a starfall screen
+function gui.NewContext(context_w, context_h)
+
+	local ctx = gui.Create("Control", _noParent_reference)
+	ctx:SetSize(context_w, context_h)
+	ctx.blurw, ctx.blurh = 8, 8
+	if context_h < 1024 then
+		ctx.blurw, ctx.blurh = 4, 4
+	end
+	ctx.glow_scaleW, ctx.glow_scaleH = 1024 / context_w, 1024 / context_h
+
+	return ctx
+
+end
+
 local fade = {
 	start = 0,
 	finish = 1,
@@ -506,20 +526,16 @@ function gui.fadeIn(duration, col)
 	fade.active = false
 end
 
-root = gui.Create("Control", _noParent_reference)
-root:SetSize(render.getGameResolution())
-root:SetPos(-1, -1)
+root = gui.NewContext(VIEW_W, VIEW_H)
 
-local blurw, blurh = 8, 8
-if gui.SmallResolution then
-	blurw, blurh = 4, 4
-end
-function gui.Draw()
+function gui.Draw(context)
+	context = context or root
+	CTX = context
 	hook.run("guiPreDraw")
 	gui.clearGlow()
-	gui.pushMatrix(root._matrix)
+	gui.pushMatrix(context._matrix)
 	
-	root:Draw()
+	context:Draw()
 	
 	
 	gui.popMatrix()
@@ -528,17 +544,17 @@ function gui.Draw()
 	gui.pushRT(glowRT)
 
 
-	render.drawBlurEffect(blurw * glow_scaleW, blurh * glow_scaleH, 1)
+	render.drawBlurEffect(context.blurw * context.glow_scaleW, context.blurh * context.glow_scaleH, 1)
 	render.setMaterialEffectBloom(glowRT, 1, 1, 1, 10)
 	gui.popRT()
 
 	render.setMaterialEffectAdd(glowRT)
 	render.setRGBA(255, 255, 255, 255)
 	for i = 1, 2 do
-		render.drawTexturedRect(0, 0, game_w, game_h)
+		render.drawTexturedRect(0, 0, context.w, context.h)
 	end
 
-	do
+	if context == root then
 		local frac = timeFrac(timer.realtime(), fade.start, fade.finish, true)
 		if frac < 1 then
 			local alpha
@@ -549,11 +565,11 @@ function gui.Draw()
 			end
 			fade.col.a = alpha
 			render.setColor(fade.col)
-			render.drawRect(-1, -1, game_w, game_h)
+			render.drawRect(-1, -1, context.w, context.h)
 		elseif fade.active then
 			fade.col.a = 255
 			render.setColor(fade.col)
-			render.drawRect(-1, -1, game_w, game_h)
+			render.drawRect(-1, -1, context.w, context.h)
 		end
 	end
 
@@ -564,10 +580,14 @@ function gui.Draw()
 	local perc = math.ceil(quotaAverage() / quotaMax() * 100)
 	render.drawText(32 + 128/2, 32 + 16, perc .. "%", 1)
 
+	--render.drawText(32 + 128/2, 32+32, tostring(RTCount), 1)
+
 	if input.isControlLocked() then
 		render.setFont("DermaDefault")
 		render.setRGBA(255, 255, 255, 255)
-		render.drawText(4, game_h-2-16, "Press ALT to exit")
+		render.drawText(4, context.h-2-16, "Press ALT to exit")
 	end
+
+	CTX = nil
 
 end

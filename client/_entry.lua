@@ -63,6 +63,9 @@ hook.add("predrawhud", "brix", function()
 		else
 			sentExitMsg = false
 			if not scene.Active then
+				if CUR_ARENA_CTRL then
+					CUR_ARENA_CTRL:Remove() -- Don't let this interfere with net messages
+				end
 				scene.Open()
 			end
 

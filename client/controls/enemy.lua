@@ -1,4 +1,3 @@
-if LITE then return end
 local PANEL = {}
 
 local function fx_Kill(x, y, w, h, frac, glow)
@@ -10,7 +9,9 @@ local function fx_Kill(x, y, w, h, frac, glow)
 end
 
 local enemyRT = "brix_Enemies"
-render.createRenderTarget(enemyRT)
+if not render.renderTargetExists(enemyRT) then
+	render.createRenderTarget(enemyRT)
+end
 
 local badgeSize = 14
 local badgeSpacing = (60 - 4*badgeSize)/5
@@ -22,7 +23,7 @@ function PANEL:Init()
 	self:SetDivisionSize(64, 128)
 	self:SetSize(64, 128)
 
-	if self.divisionCount < 32 then
+	if self.divisionCount < 33 then
 		error("Your current game resolution is too low to play BRIX: Stack To The Death")
 	end
 
@@ -40,10 +41,8 @@ function PANEL:SetEnemy(enemy)
 		self.badges = {}
 		for i = 1, 4 do
 
-			local Badge = gui.Create("Sprite", self)
+			local Badge = gui.Create("Badge", self)
 			Badge:SetSize(badgeSize, badgeSize)
-			Badge:SetSheet(1)
-			Badge:SetSprite(36)
 			Badge:SetVisible(false)
 			Badge:SetPos(2 + badgeSpacing + (i-1) * (badgeSpacing + badgeSize), 4 + badgeSpacing)
 			self.badges[i] = Badge
@@ -57,10 +56,6 @@ function PANEL:SetEnemy(enemy)
 
 end
 
-local off_badgeBits = sprite.sheets[1].badgeBits
-local spr_fullBadge = off_badgeBits + 15
-local spr_ko = sprite.sheets[1].ko
-local spr_ko_us = sprite.sheets[1].ko_us
 function PANEL:SetBadgeBits(totalBits)
 
 	local badges, bits = br.getBadgeCount(totalBits)
@@ -69,10 +64,10 @@ function PANEL:SetBadgeBits(totalBits)
 
 		if i <= badges then
 			spr[i]:SetVisible(true)
-			spr[i]:SetSprite(spr_fullBadge)
+			spr[i]:SetIndex(16)
 		elseif i == badges + 1 and bits > 0 then
 			spr[i]:SetVisible(true)
-			spr[i]:SetSprite(math.floor(off_badgeBits - 1 + bits * 16))
+			spr[i]:SetIndex(math.floor(bits * 16))
 		else
 			spr[i]:SetVisible(false)
 		end
@@ -80,6 +75,8 @@ function PANEL:SetBadgeBits(totalBits)
 
 end
 
+local KOFont = render.createFont("Roboto", 24, 900)
+local PlaceFont = render.createFont("Roboto", 48, 900)
 function PANEL:Kill()
 
 	while #self.children > 0 do
@@ -91,21 +88,47 @@ function PANEL:Kill()
 	self.badges = nil
 
 	local enemy = self.enemy
-	local spr = gui.Create("Sprite", self)
-	spr:SetSheet(1)
-	if enemy.killedByUs then
-		spr:SetSprite(spr_ko_us)
-	else
-		spr:SetSprite(spr_ko)
-	end
-	spr:SetAlign(0, 0)
-	spr:SetPos(32, 64 - 16)
 
-	local placement = gui.Create("Number", self)
-	placement:SetValue(enemy.placement)
-	placement:SetAlign(0)
-	placement:SetPos(32, 64 + 8)
-	placement:SetSize(16, 24)
+	if not LITE then
+		local spr_ko = sprite.sheets[1].ko
+		local spr_ko_us = sprite.sheets[1].ko_us
+		local spr = gui.Create("Sprite", self)
+		spr:SetSheet(1)
+		if enemy.killedByUs then
+			spr:SetSprite(spr_ko_us)
+		else
+			spr:SetSprite(spr_ko)
+		end
+		spr:SetAlign(0, 0)
+		spr:SetPos(32, 64 - 16)
+
+		local placement = gui.Create("Number", self)
+		placement:SetValue(enemy.placement or 0)
+		placement:SetAlign(0)
+		placement:SetPos(32, 64 + 8)
+		placement:SetSize(16, 24)
+
+	else
+		local label = gui.Create("Control", self)
+		label:SetPos(32, 64-16)
+		label:SetSize(64, 24)
+
+		function label:Paint(w, h)
+			render.setRGBA(0, 0, 0, 255)
+			render.drawRectFast(w/-2, h/-2, w, h)
+			render.setRGBA(85, 140, 174, 255)
+			render.drawRectFast(w/-2 + 2, h/-2 + 2, w-4, h-4)
+
+			render.setRGBA(255, 255, 255, 255)
+			render.setFont(KOFont)
+			render.drawText(0, -12, "K.O.", 1)
+
+			render.setFont(PlaceFont)
+			render.drawText(0, 22, tostring(enemy.placement), 1)
+
+		end
+
+	end
 
 	self.invalid = true
 	if self.parent then
@@ -146,9 +169,14 @@ end
 
 function PANEL:Paint(w, h)
 	if self.enemy and self.enemy.dead then return end
-	render.setRGBA(255, 255, 255, 255)
-	sprite.setSheet(1)
-	sprite.draw(18, 0, 0, w, h)
+	if LITE then
+		render.setRGBA(0, 0, 0, 220)
+		render.drawRect(0, 0, w, h)
+	else
+		render.setRGBA(255, 255, 255, 255)
+		sprite.setSheet(1)
+		sprite.draw(18, 0, 0, w, h)
+	end
 	if self.enemy and self.enemy.danger > 0 then
 		render.setRGBA(255, 0, 0, 64)
 		render.drawRect(2, 4, 60, 120)

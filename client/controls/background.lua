@@ -30,12 +30,12 @@ function PANEL:Paint(w, h)
 
 	local t = timer.realtime()
 	local sheet = self.bg
+	local scale = gui.getFitScale(1920, 1080, w, h)
+	local nw, nh = 1920 * scale, 1080*scale
 	if t > self.lerpEnd then
 		render.setRGBA(255, 255, 255, 255)
 		sprite.setSheet(sheet)
-		local scale = gui.getFitScale(1920, 1080, w, h)
 
-		local nw, nh = w * scale, h*scale
 		sprite.draw(0, w/2 - nw/2, h/2 - nh/2, nw, nh)
 		return
 	end
@@ -43,11 +43,11 @@ function PANEL:Paint(w, h)
 	local percent = (t - (self.lerpEnd - fadeTime)) / fadeTime
 	render.setRGBA(255, 255, 255, 255)
 	sprite.setSheet(self.lastBg)
-	sprite.draw(0, 0, 0, w, h)
+	sprite.draw(0, w/2 - nw/2, h/2 - nh/2, nw, nh)
 
 	render.setRGBA(255, 255, 255, percent * 255)
 	sprite.setSheet(sheet)
-	sprite.draw(0, 0, 0, w, h)
+	sprite.draw(0, w/2 - nw/2, h/2 - nh/2, nw, nh)
 
 end
 

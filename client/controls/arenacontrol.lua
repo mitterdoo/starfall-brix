@@ -15,7 +15,8 @@ local PANEL = {}
 		Creates an enemy object for this player.
 		[Allows for restoring an existing state of this enemy]
 
-	Arena:SendDamage(attackerID, lines, {victimIDs})
+	Arena:SendDamage(attackerID, lines, victimID)
+	Arena:SendDamageToPlayers(attackerID, lines, {victimIDs})
 	Arena:OutgoingDamage(badges, lines, victimID, startPosAbsolute)
 	Arena:KillPlayer(victimID, killerID, placement, badgeBits, entIndex, nick)
 
@@ -37,6 +38,56 @@ overridable
 
 
 ]]
+
+local function fx_TargetHit() end
+local fx_Attacks = {}
+
+if LITE then
+	for i = 1, 5 do
+		fx_Attacks[i] = function() end
+	end
+else
+	local spr_targetHit = sprite.sheets[1].targetHit
+
+	fx_TargetHit = function(x, y, w, h, frac)
+
+		local frac_b = math.max(0, 1-frac*2)^2*255
+		local frac_g = math.max(0, 1-frac)^2
+		render.setRGBA(255, 120 + 135 * frac_g, frac_b, frac_g*255)
+		sprite.setSheet(1)
+		sprite.draw(spr_targetHit, x, y, w, h)
+
+	end
+
+
+
+	for i = 1, 5 do
+		local spr = sprite.sheets[1].attack + i-1
+
+		local setSheet = sprite.setSheet
+		local sprDraw = sprite.draw
+		local outgoingAttackGlowIntensity = 1.2
+		local function thisAttack(x, y, w, h, frac, glow)
+			setSheet(1)
+			if not glow then
+				render.setRGBA(255, 255, 255, 255)
+				sprDraw(spr, x, y, w, h)
+			else
+				render.setRGBA(255, 255, 255, 255)
+				sprDraw(spr,
+					x + w/2 - (w*outgoingAttackGlowIntensity)/2,
+					y + h/2 - (h*outgoingAttackGlowIntensity)/2,
+					w*outgoingAttackGlowIntensity,
+					h*outgoingAttackGlowIntensity)
+			end
+		end
+		fx_Attacks[i] = thisAttack
+	end
+
+
+end
+
+
 local attackGlowIntensity = 1.5
 local function fx_AttackTravel(x, y, w, h, frac, glow)
 
@@ -52,18 +103,6 @@ local function fx_AttackTravel(x, y, w, h, frac, glow)
 	else
 		render.drawRectFast(x, y, w, h)
 	end
-
-end
-
-local spr_targetHit = sprite.sheets[1].targetHit
-
-local function fx_TargetHit(x, y, w, h, frac)
-
-	local frac_b = math.max(0, 1-frac*2)^2*255
-	local frac_g = math.max(0, 1-frac)^2
-	render.setRGBA(255, 120 + 135 * frac_g, frac_b, frac_g*255)
-	sprite.setSheet(1)
-	sprite.draw(spr_targetHit, x, y, w, h)
 
 end
 
@@ -87,31 +126,6 @@ local function fx_KnockoutTravel(x, y, w, h, frac, glow)
 		render.drawRectFast(x, y, w, h)
 	end
 
-end
-
-local fx_Attacks = {}
-
-for i = 1, 5 do
-	local spr = sprite.sheets[1].attack + i-1
-
-	local setSheet = sprite.setSheet
-	local sprDraw = sprite.draw
-	local outgoingAttackGlowIntensity = 1.2
-	local function thisAttack(x, y, w, h, frac, glow)
-		setSheet(1)
-		if not glow then
-			render.setRGBA(255, 255, 255, 255)
-			sprDraw(spr, x, y, w, h)
-		else
-			render.setRGBA(255, 255, 255, 255)
-			sprDraw(spr,
-				x + w/2 - (w*outgoingAttackGlowIntensity)/2,
-				y + h/2 - (h*outgoingAttackGlowIntensity)/2,
-				w*outgoingAttackGlowIntensity,
-				h*outgoingAttackGlowIntensity)
-		end
-	end
-	fx_Attacks[i] = thisAttack
 end
 
 local function fx_Connect(x, y, w, h, frac)
@@ -173,16 +187,24 @@ local spectatorPosArray = {
 }
 
 function PANEL:Init()
+
+	if CUR_ARENA_CTRL then
+		CUR_ARENA_CTRL:Remove()
+	end
+
 	PANEL.super.Init(self)
 	self:SetSize(1024, 1024)
 
 	-- {[enemyID] = EnemyControl}
 	self.Enemies = {}
 
+	CUR_ARENA_CTRL = self
+
 end
 
 function PANEL:GetEnemyPos(uniqueID)
-	return unpack(spectatorPosArray[uniqueID])
+	local pos = spectatorPosArray[uniqueID]
+	return pos[1], pos[2], pos[3], pos[4]
 end
 
 function PANEL:GetFieldCenter()
@@ -382,7 +404,10 @@ function PANEL:KillPlayerFull(victimID, killerID, placement, badgeBits, entIndex
 
 	local Ctrl = self.Enemies[victimID]
 	local Killer = self.Enemies[killerID]
-	Killer.enemy:giveBadgeBits(badgeBits)
+
+	if Killer then
+		Killer.enemy:giveBadgeBits(badgeBits)
+	end
 	Ctrl.enemy.dead = true
 	Ctrl.enemy.placement = placement
 
@@ -443,6 +468,120 @@ function PANEL:Load(data)
 
 	self.Loaded = true
 end
+
+
+function PANEL:StartListening(levelTimerCallback, gameOverCallback, noServerCallback)
+	local curPlayers = {}
+
+	hook.add("net", "spectate", function(name, len)
+		if name == ARENA.netTag then
+			local snapshot = br.decodeServerSnapshot()
+			local e = ARENA.serverEvents
+			for _, data in pairs(snapshot) do
+
+				local event = data[1]
+				if not self.Loaded and event == e.UPDATE then
+					self:Load(data[2])
+					self.finalized = true
+				elseif self.Loaded then
+					if event == e.DAMAGE then
+						local attacker, lines, victims = data[2], data[3], data[4]
+						self:SendDamageToPlayers(attacker, lines, victims)
+					elseif event == e.DIE then
+						local victim, killer, placement, badgeBits, entIndex, nick = data[2], data[3], data[4], data[6], data[7], data[8]
+						if not LITE and render.isHUDActive() then sound.play("se_game_ko2") end
+						self:KillPlayerFull(victim, killer, placement, badgeBits, entIndex, nick)
+					elseif event == e.MATRIX_PLACE then
+						local player, piece, rot, x, y, mono = data[2], data[3], data[4], data[5], data[6], data[7]
+						self:MatrixPlace(player, piece, rot, x, y, mono)
+					elseif event == e.MATRIX_GARBAGE then
+						local player, gaps, mono = data[2], data[3], data[4]
+						self:MatrixGarbage(player, gaps, mono)
+					elseif event == e.MATRIX_SOLID then
+						local player, lines = data[2], data[3]
+						self:MatrixGarbageSolid(player, lines)
+					elseif event == e.CHANGEPHASE then
+						if data[2] == 1 and levelTimerCallback then
+							levelTimerCallback(timer.realtime())
+						end
+					elseif event == e.WINNER then
+						hook.remove("net", "spectate")
+						if gameOverCallback then
+							gameOverCallback()
+						end
+					end
+				end
+
+			end
+
+		elseif name == ARENA.netConnectTag then
+
+			--print(timer.realtime(), "listener")
+			local e = ARENA.connectEvents
+			local event = net.readUInt(3)
+			if event == e.UPDATE then
+				self.Loaded = true
+				local lobbyTimer = net.readFloat()
+				local playerCount = net.readUInt(6)
+				local players = {}
+				for i = 1, playerCount do
+					table.insert(players, net.readUInt(6))
+				end
+
+				local newPlayers, dcPlayers = table.delta(curPlayers, players)
+				curPlayers = players
+
+				for k, v in pairs(newPlayers) do
+					self:AddPlayer(v)
+				end
+
+				for k, v in pairs(dcPlayers) do
+					self:RemovePlayer(v)
+				end
+
+				local finalized = net.readBit() == 1
+				if finalized and not self.finalized then
+					self.finalized = true
+					for id, Ctrl in pairs(self.Enemies) do
+						self:CreatePlayerEnemy(id)
+					end
+				end
+
+			elseif event == e.READY then
+				if self.Loaded and not self.finalized then
+					self.finalized = true
+					for id, Ctrl in pairs(self.Enemies) do
+						self:CreatePlayerEnemy(id)
+					end
+				end
+
+			elseif event == e.NO_SERVER and noServerCallback then
+				noServerCallback()
+
+			elseif event == e.UPDATE_ONGOING then
+				-- do nothing; just catch the next fullupdate
+			end
+
+		end
+	end)
+
+	net.start(ARENA.netConnectTag)
+	net.writeUInt(ARENA.netConnectEvents.REQUEST, 2)
+	net.send()
+
+end
+
+function PANEL:OnRemove()
+
+	CUR_ARENA_CTRL = nil
+
+	hook.remove("net", "spectate")
+
+	PANEL.super.OnRemove(self)
+
+end
+
+
 
 function PANEL:Think()
 	if not self.invalid then

@@ -61,6 +61,10 @@ function PANEL:GetPiecePos(x, y)
 	return px, py
 
 end
+local _blockFunc = drawBlock
+if not LITE then
+	_blockFunc = sprite.draw
+end
 
 local sub = string.sub
 local getShapeIndex = brix.getShapeIndex
@@ -69,7 +73,7 @@ function PANEL:Paint(w, h, ox, oy)
 	ox = ox or 0
 	oy = oy or 0
 	render.setRGBA(255, 255, 255, 255)
-	sprite.setSheet(1)
+	if not LITE then sprite.setSheet(1) end
 	local p = self.piece
 	local size = p.size
 
@@ -97,7 +101,7 @@ function PANEL:Paint(w, h, ox, oy)
 		for x = 0, size-1 do
 			local i = getShapeIndex(x, y, rot, size)
 			if sub(shape, i, i) == "x" then
-				sprite.draw(spr, ox + x * brickSize, oy + (y + 1) * -brickSize, brickSize, brickSize)
+				_blockFunc(spr, ox + x * brickSize, oy + (y + 1) * -brickSize, brickSize, brickSize)
 			end
 		end
 	end

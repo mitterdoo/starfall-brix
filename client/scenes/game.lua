@@ -163,7 +163,7 @@ function SCENE.Open()
 
 	hook.run("brCreateGame", game)
 
-	br.connectToServer(function(arena)
+	local conn = br.connectToServer(function(arena)
 
 		game.arena = arena
 		local mat = arena.matrix
@@ -241,6 +241,9 @@ function SCENE.Open()
 
 		if game.arena and game.arena.connected then
 			game.arena:disconnect()
+		end
+		if conn.close then
+			conn.close()
 		end
 		hook.run("brDisconnect", game, game.arena)
 		hook.remove("action", "brix")

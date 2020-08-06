@@ -1,4 +1,3 @@
-if LITE then return end
 local PANEL = {}
 local FIELD = gui.Classes["Field"]
 

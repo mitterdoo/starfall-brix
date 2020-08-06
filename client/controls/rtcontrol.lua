@@ -8,7 +8,7 @@ local nativeWidth, nativeHeight = render.getGameResolution()
 nativeWidth = math.min(1024, nativeWidth)
 nativeHeight = math.min(1024, nativeHeight)
 
-local RTUniqueID = 0
+RTUniqueID = RTUniqueID or 0
 function PANEL:Init()
 	self.invalid = true
 	self.RTName = "gui_RT" .. RTUniqueID
@@ -25,7 +25,9 @@ local transparent = Color(0, 0, 0, 0)
 
 function PANEL:OnRemove()
 
-	render.destroyRenderTarget(self.RTName)
+	if render.renderTargetExists(self.RTName) then
+		render.destroyRenderTarget(self.RTName)
+	end
 
 end
 

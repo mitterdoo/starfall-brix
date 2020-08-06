@@ -14,6 +14,12 @@ function render.createRenderTarget(rt)
 	return create(rt)
 end
 
+local destroy = render.destroyRenderTarget
+function render.destroyRenderTarget(rt)
+	RTCount = RTCount - 1
+	return destroy(rt)
+end
+
 function timeFrac(delta, from, to, clamp)
 	
 	if clamp then
@@ -93,7 +99,6 @@ function table.delta(a, b)
 end
 
 require("brix/client/lite/lite.lua")
---[[
 require("brix/client/loader.lua")
 
 hook.add("load", "", function()
@@ -101,4 +106,4 @@ hook.add("load", "", function()
 	require("brix/client/_entry.lua")
 
 
-end)]]
+end)

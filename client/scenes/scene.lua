@@ -80,6 +80,7 @@ function scene.Close()
 	if scene.Active then
 		hook.run("sceneClosing", scene.ActiveName)
 		closeActiveScene()
+		scene.NextScene = nil
 	end
 
 end

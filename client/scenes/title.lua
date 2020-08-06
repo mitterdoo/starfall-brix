@@ -57,7 +57,7 @@ function SCENE.Open(from)
 	b_about:SetLeft(b_play)
 
 	local c_ongoing = gui.Create("Control", b_play)
-	c_ongoing:SetPos(0, -84)
+	c_ongoing:SetPos(0, 84)
 	c_ongoing:SetVisible(false)
 		local s_ongoing = gui.Create("Sprite", c_ongoing)
 		s_ongoing:SetSheet(2)
@@ -85,13 +85,14 @@ function SCENE.Open(from)
 		b_play:Focus()
 	end
 	local CreatorInfo = gui.Create("Sprite", root)
-	CreatorInfo:SetAlign(0, 1)
-	CreatorInfo:SetPos(w/2, h)
+	CreatorInfo:SetAlign(0, -1)
+	CreatorInfo:SetPos(w/2, 0)
 	CreatorInfo:SetSheet(2)
 	CreatorInfo:SetSprite(sprite.sheets[2].credit)
 
+	local conn = {}
 	local function getServerInfo()
-		br.getServerStatus(function(info)
+		conn = br.getServerStatus(function(info)
 		
 			if not info then
 				b_play:SetBGColor(Color(100, 100, 100))
@@ -121,6 +122,9 @@ function SCENE.Open(from)
 
 
 	return function()
+		if conn.close then
+			conn.close()
+		end
 		root:Remove()
 		timer.remove("title_requestServer")
 	end
