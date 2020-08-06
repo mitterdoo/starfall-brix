@@ -63,6 +63,34 @@ function render.resetStencil()
 
 end
 
+-- Returns additions and removals from table a to table b
+function table.delta(a, b)
+	
+	local ai = {}
+	local bi = {}
+	
+	for k,v in pairs(a) do ai[v] = k end
+	for k,v in pairs(b) do bi[v] = k end
+	
+	local removed = {}
+	local added = {}
+	
+	for k, v in pairs(a) do
+		if not bi[v] then
+			table.insert(removed, v)
+		end
+	end
+	
+	for k, v in pairs(b) do
+		if not ai[v] then
+			table.insert(added, v)
+		end
+	end
+	
+	return added, removed
+	
+end
+
 require("brix/client/loader.lua")
 
 hook.add("load", "", function()
