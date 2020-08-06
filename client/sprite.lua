@@ -298,7 +298,10 @@ createSheet(2, assets.files["skin2.png"], {
 	[30] = {512, 688, 512, 128},
 
 	xinputWarn = 31,
-	[31] = {512, 864, 512, 112}
+	[31] = {512, 864, 512, 112},
+
+	spectating = 32,
+	[32] = {0, 896, 512, 64}
 })
 
 createSheet(3, assets.files["playfield.png"], {
