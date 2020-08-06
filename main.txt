@@ -7,6 +7,24 @@
 
 require("brix/br/arena_sv.lua")
 
+hook.add("net", "seating", function(name, len, ply)
+
+    if name == "exitVehicle" and ply:inVehicle() then
+        local v = ply:getVehicle()
+        if hasPermission("vehicle.eject", v) then
+            v:ejectDriver()
+        end
+    end
+
+end)
+
+local comps = chip():getLinkedComponents()
+for _, ent in pairs(comps) do
+    if ent:getClass() == "starfall_hud" then
+        ent:setComponentLocksControls(true)
+    end
+end
+
 local makeGame
 makeGame = function()
     
