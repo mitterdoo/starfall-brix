@@ -5,7 +5,7 @@ $	About screen
 $	Options
 $		Option to have constant background
 		Option to test controls
-	Spectator screen (when attempting to play during active match)
+$	Spectator screen (when attempting to play during active match)
 		Additional screen that doesn't require permissions, to attract players
 	Tracker OST
 	Final SFX mix
