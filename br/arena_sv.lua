@@ -623,6 +623,7 @@ end
 function ARENA:finish()
 
 	hook.remove("think", self.hookName)
+	hook.remove("net", self.hookName)
 	currentArena = nil
 	if self.onFinish then
 		self:onFinish()
