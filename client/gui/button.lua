@@ -1,3 +1,4 @@
+if LITE then return end
 local PANEL = {}
 
 local focusedButton -- The current button that has focus and will receive input

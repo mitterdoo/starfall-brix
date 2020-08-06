@@ -133,12 +133,6 @@ to temporarily change them.]], 1)
 				input.lockControls(false)
 			end)
 
-			hook.add("render", "loader", function()
-				
-				drawPerm(0, 0)
-
-			end)
-
 			hook.add("permissionrequest", "loader", function()
 				if permissionRequestSatisfied() then
 					hook.remove("permissionrequest", "loader")

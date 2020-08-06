@@ -1,5 +1,6 @@
 --@name BRIX: Stack To The Death
 --@client
+--@include brix/client/lite/lite.lua
 --@include brix/client/loader.lua
 --@include brix/client/_entry.lua
 --[[
@@ -91,6 +92,8 @@ function table.delta(a, b)
 	
 end
 
+require("brix/client/lite/lite.lua")
+--[[
 require("brix/client/loader.lua")
 
 hook.add("load", "", function()
@@ -98,4 +101,4 @@ hook.add("load", "", function()
 	require("brix/client/_entry.lua")
 
 
-end)
+end)]]

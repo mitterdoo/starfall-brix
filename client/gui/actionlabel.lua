@@ -1,3 +1,4 @@
+if LITE then return end
 --[[
 	A single-line label that allows insertion of action icons.
 	{action_name} to insert

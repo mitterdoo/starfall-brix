@@ -1,3 +1,4 @@
+if LITE then return end
 local PANEL = {}
 
 local setSheet = sprite.setSheet

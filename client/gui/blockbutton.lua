@@ -1,3 +1,4 @@
+if LITE then return end
 local PANEL = {}
 function PANEL:Init()
 	PANEL.super.Init(self)

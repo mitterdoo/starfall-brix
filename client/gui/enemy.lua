@@ -1,3 +1,4 @@
+if LITE then return end
 local PANEL = {}
 
 local function fx_Kill(x, y, w, h, frac, glow)

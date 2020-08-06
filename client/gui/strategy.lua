@@ -1,3 +1,4 @@
+if LITE then return end
 local PANEL = {}
 
 local offset_label = sprite.sheets[1].strategy
