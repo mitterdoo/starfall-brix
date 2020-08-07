@@ -217,10 +217,13 @@ function br.handleServerSnapshot(game, frame, snapshot)
 		elseif SERVER then
 
 			if event == e.DIE then
-				local victim = data[2]
+				local victim, killer, badgeBits = data[2], data[3], data[6]
 				local enemy = game.arena.arena[victim]
 				if enemy then
 					game:removeAttacker(victim)
+				end
+				if killer == game.uniqueID then
+					game:giveBadgeBits(badgeBits, victim)
 				end
 			end
 
