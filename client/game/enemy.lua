@@ -287,6 +287,7 @@ hook.add("brConnect", "enemy", function(game, arena)
 					local Ctrl = TargetReticles[i]
 					if not Ctrl then break end
 					if not targetKeys[Ctrl.uniqueID] then
+						Ctrl:Remove()
 						table.remove(TargetReticles, i)
 					else
 						i = i + 1
