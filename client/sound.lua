@@ -53,7 +53,8 @@ sound.soundGroups = { -- Even groups = new sounds stop current ones, odd groups 
 	se_game_ko2 = 2,
 	se_target_adjust = 4,
 	se_target_found = 6,
-	se_target_warn = 8
+	se_target_warn = 8,
+	se_game_badgebit = 10,
 }
 local activeGroups = {}
 

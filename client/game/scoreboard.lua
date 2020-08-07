@@ -138,7 +138,9 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 
 	end
 
-
+	function Scoreboard:AddBadgeBit()
+		self:SetBadgeBits(curBadgeBits + 1)
+	end
 
 	local badgeTravelTime = 0.5
 	local badgeDelay = 0.1
@@ -162,7 +164,7 @@ hook.add("brConnect", "scoreboard", function(game, arena)
 			)
 
 			timer.simple(badgeDelay * (i-1) + badgeTravelTime, function()
-				self:SetBadgeBits(startBadgeBits + i)
+				self:AddBadgeBit()
 			end)
 
 
