@@ -103,9 +103,9 @@ function ARENA:connectPlayer(ply)
 	net.writeUInt(id, 6)
 	net.send(ply)
 
-	self:updateTimer()
 	self.playerCount = self.playerCount + 1
 	self.remainingPlayers = self.remainingPlayers + 1
+	self:updateTimer()
 
 	net.start(ARENA.netConnectTag)
 	net.writeUInt(ARENA.connectEvents.UPDATE, 3)
@@ -232,7 +232,7 @@ function ARENA:readyUp()
 	net.send()
 
 	self.phaseStartHalfway = math.max(2, math.ceil(self.playerCount / 2))		-- Playercount at which the game speeds up
-	self.phaseStartShowdown = math.max(2, math.ceil(self.playerCount * 0.24))	-- Playercount at which garbage delay is quick
+	self.phaseStartShowdown = math.max(3, math.ceil(self.playerCount * 0.24))	-- Playercount at which garbage delay is quick
 
 	self.hookName = "brixNet" .. self.seed
 	hook.add("net", self.hookName, function(name, len, ply)
@@ -378,7 +378,7 @@ function ARENA:start()
 		game.hook("prelock", function(piece, rot, x, y, mono)
 		
 			self:enqueue(e.MATRIX_PLACE, game.uniqueID, piece.type, rot, x, y, mono)
-			if game.bot then
+			if game.bot and math.random() < 0.4 then
 				local r = math.random(1, 6)
 				game.hook:run("preGarbageSend", r)
 				game.hook:run("garbageSend", r)
@@ -409,6 +409,14 @@ function ARENA:start()
 		end
 
 	end)
+
+	if self.remainingPlayers <= self.phaseStartShowdown then
+		self.phase = 2
+		self:enqueue(e.CHANGEPHASE, self.phase, 6*60)
+	elseif self.remainingPlayers <= self.phaseStartHalfway then
+		self.phase = 1
+		self:enqueue(e.CHANGEPHASE, self.phase, 6*60)
+	end
 
 end
 
@@ -601,7 +609,7 @@ function ARENA:sendSnapshot()
 			elseif event == e.CHANGEPHASE then
 				local phase, statedFrame = data[2], data[3]
 				net.writeUInt(phase, 2)
-				net.writeUInt(statedFrame, 32)
+				net.writeInt(statedFrame, 32)
 			
 			elseif event == e.WINNER then
 				local player, entIndex, nick = data[2], data[3], data[4]

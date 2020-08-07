@@ -70,18 +70,25 @@ local function reloadArena()
 	Arena:SetPos(0, 0)
 	Arena:SetScale(1, 1)
 
-	Arena:StartListening()
+	Arena:StartListening(nil, function()
+		timer.create("liteReload", 10, 1, reloadArena)
+	end,
+	function()
+		timer.create("liteReload", 5, 1, reloadArena)
+	end)
 end
 reloadArena()
 
 local titleFont = render.createFont("Roboto", 64, 900)
 local subtitleFont = render.createFont("Roboto", 36, 900)
+local infoFont = render.createFont("Roboto", 20, 200)
 local loading = false
 
 local liteRT = "liteRT"
 render.createRenderTarget(liteRT)
 
 hook.add("renderoffscreen", "lite", function()
+	if render.isHUDActive() then return end
 	if not loading then
 
 		if CUR_ARENA_CTRL == nil and not render.isHUDActive() then
@@ -97,6 +104,7 @@ hook.add("renderoffscreen", "lite", function()
 end)
 
 hook.add("render", "lite", function()
+	if render.isHUDActive() then return end
 	local ent = render.getScreenEntity()
 	if ent:getModel():find("4x4") and not loading then
 
@@ -121,6 +129,17 @@ hook.add("render", "lite", function()
 			render.setRGBA(255, 128, 0, 255)
 			render.drawText(256, 512 - 8 - 64, "STACK TO THE DEATH", 1)
 
+		else
+
+			render.setFont(infoFont)
+			if LITE then
+				render.setRGBA(255, 0, 0, 255)
+				render.drawText(256, 512 - 40, "Please press USE on the Starfall chip\noutside to be able to play BRIX.", 1)
+			else
+				render.setRGBA(255, 255, 0, 255)
+				render.drawText(256, 512 -20, "Sit in a seat to play!", 1)
+			end
+
 		end
 
 	end
@@ -130,7 +149,8 @@ hook.add("inputPressed", "debug", function(button)
 	if button == 50 and player() == owner() then
 		net.start("BRIX_BOT")
 		net.send()
-	elseif button == 51 and player() == owner() then
+	elseif button == 48 and player() == owner() then
+		print("send")
 		net.start("brixBegin")
 		net.send()
 	end
@@ -138,6 +158,7 @@ end)
 
 hook.add("preload", "lite", function()
 
+	timer.remove("liteReload")
 	liteCtx:Remove()
 	Arena = nil
 	LITE = false

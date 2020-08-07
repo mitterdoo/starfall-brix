@@ -7,7 +7,9 @@
 --@client
 --@includedir brix/client/controls
 
+local PROFILING = false--owner() == player()
 VIEW_W, VIEW_H = render.getGameResolution()
+local glow_scaleW, glow_scaleH
 
 gui = {}
 gui.Classes = {}
@@ -167,7 +169,7 @@ function gui.startGlow()
 	end
 
 	prevMatrixStack = gui.popAllMatrices()
-	local m = gui.getMatrix(0, 0, CTX.glow_scaleW, CTX.glow_scaleH)
+	local m = gui.getMatrix(0, 0, glow_scaleW, glow_scaleH)
 	gui.pushRT(glowRT)
 	gui.pushMatrix(m)
 	gui.pushMatrices(prevMatrixStack)
@@ -195,6 +197,7 @@ end
 
 local CTRL = {}
 CTRL.__index = CTRL
+CTRL.className = "Control"
 
 function gui.Register(className, panelTable, baseName)
 
@@ -213,9 +216,9 @@ function gui.Register(className, panelTable, baseName)
 			error("cannot inherit gui element from itself")
 		end
 		panelTable.super = baseTable
-		panelTable.className = className
 		setmetatable(panelTable, {__index = baseTable})
 	end
+	panelTable.className = className
 	panelTable.__index = panelTable
 	gui.Classes[className] = panelTable
 
@@ -376,6 +379,7 @@ function CTRL:SetParent(newParent)
 
 end
 
+local sys = timer.systime
 function CTRL:DrawChildren()
 
 	for _, child in pairs(self.children) do
@@ -383,13 +387,26 @@ function CTRL:DrawChildren()
 		if child.visible then
 			gui.pushMatrix(child._matrix)
 			
+			local start = sys()
 			child:Think()
+			local totalTime = sys() - start
 			if child.glow and not gui.isGlowing then
 				gui.startGlow()
+				start = sys()
 				child:Draw()
+				totalTime = totalTime + (sys() - start)
 				gui.endGlow()
 			end
+			start = sys()
 			child:Draw()
+			totalTime = totalTime + (sys() - start)
+
+			if PROFILING then
+				child.perf_total = totalTime
+				child.perf_average = child:perf_movingAvg()
+				child.perf_total = 0
+				child.perf_drawn = true
+			end
 			
 			gui.popMatrix()
 		end
@@ -471,6 +488,15 @@ function gui.Create(className, parent)
 	ctrl.scale_h = 1
 	ctrl.visible = true
 	ctrl.children = {}
+
+	if PROFILING then
+		ctrl.perf_total = 0
+		ctrl.perf_average = 0
+	end
+
+	function ctrl:perf_movingAvg()
+		return self.perf_average + (self.perf_total - self.perf_average) * 1/100
+	end
 	
 	setmetatable(ctrl, gui.Classes[className])
 	if parent == nil then
@@ -528,30 +554,97 @@ end
 
 root = gui.NewContext(VIEW_W, VIEW_H)
 
+local perf_x, perf_y = 32, 32 + 64 + 8
+local perf_tab = 24
+local function drawProfile(ctrl, info, parentMax)
+
+	if not ctrl.perf_drawn then
+		ctrl.perf_total = 0
+		ctrl.perf_average = ctrl:perf_movingAvg()
+	end
+	ctrl.perf_drawn = nil
+
+	render.drawText(perf_x + info[1]*perf_tab, perf_y + info[2]*12, ctrl.className)
+	render.drawLine(perf_x + info[1]*perf_tab + 64, perf_y + info[2]*12+6, perf_x + perf_tab*19, perf_y + info[2]*12+6)
+	render.drawLine(perf_x + perf_tab*9, perf_y + info[2]*12+1, perf_x + perf_tab*9, perf_y + info[2]*12+10)
+	render.drawLine(perf_x + perf_tab*19, perf_y + info[2]*12+1, perf_x + perf_tab*19, perf_y + info[2]*12+10)
+
+	local perf = ctrl.perf_average / parentMax
+	local totalPerf = ctrl.perf_average / 0.006
+	if perf ~= perf then
+		perf = 0
+	end
+	render.drawRectFast(perf_x + perf_tab*9+1, perf_y+info[2]*12+2, (perf_tab*10-2)*perf, 4)
+	render.drawRectFast(perf_x + perf_tab*9+1, perf_y+info[2]*12+6, (perf_tab*10-2)*totalPerf, 4)
+
+	render.drawText(perf_x + perf_tab*20, perf_y + info[2]*12, tostring(math.ceil(perf*10000)/100))
+	info[2] = info[2] + 1
+	if ctrl.className ~= "Enemy" then
+		for k, child in pairs(ctrl.children) do
+			info[1] = info[1] + 1
+			drawProfile(child, info, ctrl.perf_average)
+			info[1] = info[1] - 1
+		end
+	end
+
+end
+
+local fakeGFXControl = {
+	perf_total = 0,
+	perf_average = 0,
+	perf_movingAvg = function(self)
+		return self.perf_average + (self.perf_total - self.perf_average) * 1/100
+	end,
+	children = {},
+	className = "GFX"
+		
+}
+
 function gui.Draw(context)
+
 	context = context or root
 	CTX = context
+	glow_scaleW = context.glow_scaleW
+	glow_scaleH = context.glow_scaleH
+	local cw, ch, bw, bh = context.w, context.h, context.blurw, context.blurh
+
 	hook.run("guiPreDraw")
 	gui.clearGlow()
 	gui.pushMatrix(context._matrix)
 	
+	local ctxStart = timer.systime()
 	context:Draw()
-	
+	local CONTEXT_TIME = timer.systime() - ctxStart
+	if PROFILING then
+		context.perf_total = CONTEXT_TIME
+		context.perf_average = context:perf_movingAvg()
+		context.perf_total = 0
+		context.perf_drawn = true
+	end
 	
 	gui.popMatrix()
+
+	ctxStart = timer.systime()
 	hook.run("guiPostDraw")
 
+	if PROFILING then
+		local total = timer.systime() - ctxStart
+		fakeGFXControl.perf_total = total
+		fakeGFXControl.perf_average = fakeGFXControl:perf_movingAvg()
+		fakeGFXControl.perf_total = 0
+		fakeGFXControl.perf_drawn = true
+	end
 	gui.pushRT(glowRT)
 
 
-	render.drawBlurEffect(context.blurw * context.glow_scaleW, context.blurh * context.glow_scaleH, 1)
+	render.drawBlurEffect(bw * glow_scaleW, bh * glow_scaleH, 1)
 	render.setMaterialEffectBloom(glowRT, 1, 1, 1, 10)
 	gui.popRT()
 
 	render.setMaterialEffectAdd(glowRT)
 	render.setRGBA(255, 255, 255, 255)
 	for i = 1, 2 do
-		render.drawTexturedRect(0, 0, context.w, context.h)
+		render.drawTexturedRect(0, 0, cw, ch)
 	end
 
 	if context == root then
@@ -565,20 +658,26 @@ function gui.Draw(context)
 			end
 			fade.col.a = alpha
 			render.setColor(fade.col)
-			render.drawRect(-1, -1, context.w, context.h)
+			render.drawRect(-1, -1, cw, ch)
 		elseif fade.active then
 			fade.col.a = 255
 			render.setColor(fade.col)
-			render.drawRect(-1, -1, context.w, context.h)
+			render.drawRect(-1, -1, cw, ch)
 		end
 	end
 
-	render.setRGBA(128, 128, 128, 128)
-	render.drawRect(32, 32, 128, 64)
-	render.setRGBA(255, 255, 255, 255)
-	render.setFont("DermaLarge")
-	local perc = math.ceil(quotaAverage() / quotaMax() * 100)
-	render.drawText(32 + 128/2, 32 + 16, perc .. "%", 1)
+
+
+
+
+
+	if PROFILING then
+		context.count = context.count and (context.count + 1) or 1
+		local info = {0, 0, context.count}
+		render.setFont("DermaDefault")
+		drawProfile(fakeGFXControl, info, 0.006)
+		drawProfile(context, info, 0.006)
+	end
 
 	--render.drawText(32 + 128/2, 32+32, tostring(RTCount), 1)
 
@@ -589,5 +688,14 @@ function gui.Draw(context)
 	end
 
 	CTX = nil
+
+	
+
+	render.setRGBA(128, 128, 128, 128)
+	render.drawRect(32, 32, 128, 64)
+	render.setRGBA(255, 255, 255, 255)
+	render.setFont("DermaLarge")
+	local perc = math.ceil(quotaAverage() / quotaMax() * 100)
+	render.drawText(32 + 128/2, 32 + 16, perc .. "%", 1)
 
 end

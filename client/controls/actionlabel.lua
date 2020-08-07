@@ -103,7 +103,7 @@ end
 
 function PANEL:Paint(w, h)
 	local tw, th = self.info.w, self.info.h
-	local offset_x, offset_y
+	local offset_x, offset_y = 0, 0
 	local halign, valign = self.halign, self.valign
 	if halign == -1 then
 		offset_x = 0

@@ -83,7 +83,7 @@ local levelFrames = 1200
 
 function BR:calcLevel(nolimit)
 
-	if self.levelTimer < 0 then return 1 end
+	if self.levelTimer == -1 then return 1 end
 	local frame = self.frame
 	local timeSpent = frame - self.levelTimer
 	local max = maxLevel
@@ -148,7 +148,7 @@ function BR:changePhase(newPhase, frame)
 	end
 
 	self.phase = newPhase
-	if newPhase == 1 then
+	if self.levelTimer == -1 then
 		self:startLevelTimer(frame)
 	end
 	local nagDelay = BR.garbageNagLookup[newPhase]

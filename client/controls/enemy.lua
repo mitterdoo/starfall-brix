@@ -153,10 +153,13 @@ end
 function PANEL:Think()
 
 	if self.fieldCtrl and self.fieldCtrl.field.invalid then
-		self.invalid = true
-		self.fieldCtrl.field.invalid = false
-		if self.parent then
-			self.parent.invalid = true
+
+		if quotaAverage() < quotaMax() * 0.8 then
+			self.invalid = true
+			self.fieldCtrl.field.invalid = false
+			if self.parent then
+				self.parent.invalid = true
+			end
 		end
 
 		self:SetBadgeBits(self.enemy.badgeBits)

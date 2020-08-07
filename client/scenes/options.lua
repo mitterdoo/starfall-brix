@@ -4,7 +4,7 @@ local uiFont = render.createFont("Roboto", 36, 200)
 local inputFont = render.createFont("Roboto", 32, 200)
 function SCENE.Open()
 
-
+	settings.lookedAtOptions = true
 
 
 	local w, h = render.getGameResolution()

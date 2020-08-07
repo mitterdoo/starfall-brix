@@ -601,7 +601,7 @@ function br.decodeServerSnapshot()
 				data = {event, player, lines}
 			
 			elseif event == e.CHANGEPHASE then
-				data = {event, net.readUInt(2), net.readUInt(32)}
+				data = {event, net.readUInt(2), net.readInt(32)}
 			elseif event == e.WINNER then
 				data = {event, net.readUInt(6), net.readUInt(8), net.readString()}
 			else

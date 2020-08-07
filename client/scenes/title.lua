@@ -50,6 +50,16 @@ function SCENE.Open(from)
 	function b_options:DoPress()
 		scene.Open("Options", 1)
 	end
+
+	if not settings.lookedAtOptions then
+		local controlsTip = gui.Create("Control", b_options)
+		controlsTip:SetPos(0, -114)
+		function controlsTip:Paint()
+			render.setRGBA(255, 255, 255, 255)
+			render.setFont(uiFont)
+			render.drawText(0, 0, "You should review the\ncontrols before playing!", 1)
+		end
+	end
 	
 	b_options:SetRight(b_play)
 	b_play:SetLeft(b_options)
