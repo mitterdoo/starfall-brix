@@ -4,6 +4,7 @@
 --@include brix/client/main.lua
 --@clientmain brix/client/main.lua
 --@include brix/br/arena_sv.lua
+--@superuser
 
 require("brix/br/arena_sv.lua")
 
