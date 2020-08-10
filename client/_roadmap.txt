@@ -6,10 +6,22 @@ $	Options
 $		Option to have constant background
 		Option to test controls
 $	Spectator screen (when attempting to play during active match)
-		Additional screen that doesn't require permissions, to attract players
+$		Additional screen that doesn't require permissions, to attract players
+	Music cues
 	Tracker OST
-	Final SFX mix
+		resultA		(win)
+		resultB		(lose)
+		level1
+		level2
+		level3
+		menu
+		matching
 	
+	Postgame stats
+	Popup (not distracting) hints for controls when playing for the first time
+
+	Final SFX mix
+
 	On death, all badges are depleted and fed to the killer in an animation
 
 	Bots
