@@ -13,5 +13,9 @@ If you would like to play this on your Garry's Mod server, you must have [Starfa
 
 The Starfall chip requires 33 linked vehicles (preferably seats), and a Starfall HUD linked to each vehicle. Lastly, to keep players' inputs from making them exit their seats, a Wire Keyboard should be linked to each vehicle. It doesn't need to be *wired* to anything, as the inputs are handled by the Starfall chip, but it does need to be *linked* to the vehicles. Lastly, a Starfall screen may be linked so that outside players may spectate ongoing matches.
 
+## Demos
+[Demo Playlist](https://www.youtube.com/playlist?list=PLiY0S5J6PIvjcVaIJ5wwwPZSGlQYfCEoU) on YouTube.
+
+
 ## DISCLAIMER
 The code was written for learning purposes for its developer, and was not made with the purpose of commercial profit. If there are any other concerns, please review the [LICENSE.md](https://github.com/mitterdoo/starfall-brix/blob/master/LICENSE.md), or contact the developer at mitterdoo@live.com
